@@ -5,11 +5,23 @@ var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var swig = require('swig');
+var mongoose = require('mongoose');
 
 var routes = require('./routes/index');
 var users = require('./routes/users');
 
+// express app initialization
 var app = express();
+
+// connect to db and attach it to the request object
+mongoose.connect('mongodb://localhost/tricorder_app_db');
+var db = mongoose.connection;
+db.once('open', function() {
+    app.use(function(req, res, next) {
+        req.db = db;
+        next();
+    });
+});
 
 // view engine setup
 app.engine('html', swig.renderFile);
@@ -24,6 +36,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// routes
 app.use('/', routes);
 app.use('/users', users);
 

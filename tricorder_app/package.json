@@ -12,6 +12,7 @@
     "express": "~4.11.1",
     "swig": "*",
     "morgan": "~1.5.1",
-    "serve-favicon": "~2.2.0"
+    "serve-favicon": "~2.2.0",
+    "mongoose": "*"
   }
 }
