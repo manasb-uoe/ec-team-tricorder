@@ -1,7 +1,0 @@
-*.log
-*.pot
-*.pyc
-.idea/
-db.sqlite3
-ec/media/
-.coverage
