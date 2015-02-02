@@ -1,0 +1,7 @@
+# jetbrains config files
+.idea/
+
+# npm
+node_modules
+*.log
+*.gz
