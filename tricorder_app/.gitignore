@@ -5,3 +5,9 @@
 node_modules
 *.log
 *.gz
+
+# widnows script for starting mongodb and connecting to it
+start_mongodb.bat
+
+# mongodb
+data
