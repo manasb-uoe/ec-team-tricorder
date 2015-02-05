@@ -6,6 +6,7 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var swig = require('swig');
 var mongoose = require('mongoose');
+var moment = require('moment');
 
 var routes = require('./routes/index');
 var users = require('./routes/users');
@@ -274,6 +275,9 @@ https.get("https://tfe-opendata.com/api/v1/vehicle_locations", function(res){
     });
 });
 
+var mtime = moment('8:73', 'HH:mm');
+
+console.log('time ' + mtime);
 
 
 module.exports = app;

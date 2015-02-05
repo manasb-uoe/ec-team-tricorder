@@ -1,7 +1,7 @@
 var mongoose = require('mongoose');
 
-var VehicleStatsSchema = new mongoose.Schema({
-    vehicle_id : {type: Number, index: true},
+var StopStatsSchema = new mongoose.Schema({
+    stop_id : {type: Number, index: true},
     early_5_plus: Number,
     early_4: Number,
     early_3: Number,
@@ -15,4 +15,4 @@ var VehicleStatsSchema = new mongoose.Schema({
 
 });
 
-mongoose.model('VehicleStats', JourneySchema);
+mongoose.model('StopStats', JourneySchema);
