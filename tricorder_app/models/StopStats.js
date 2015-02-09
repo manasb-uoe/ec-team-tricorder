@@ -11,8 +11,9 @@ var StopStatsSchema = new mongoose.Schema({
     late_3: Number,
     late_4: Number,
     late_5_plus: Number,
-    total_count: Number
+    total_count: Number,
+    modified: {type: Boolean, index: true}
 
 });
 
-mongoose.model('StopStats', JourneySchema);
+mongoose.model('StopStats', StopStatsSchema);
