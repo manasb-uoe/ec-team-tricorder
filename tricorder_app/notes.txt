@@ -82,3 +82,5 @@ busses_near_stops.forEach(function(j,k){
 	
 });
 
+2015-02-10
+near [] prints before the list of modified stats documents, which makes me think things are happening out of order and busses_near_stops is getting wiped before it gets used
