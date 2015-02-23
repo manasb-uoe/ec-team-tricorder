@@ -7,6 +7,7 @@ var bodyParser = require('body-parser');
 var swig = require('swig');
 var mongoose = require('mongoose');
 var moment = require('moment');
+var async = require('async');
 
 var routes = require('./routes/index');
 var users = require('./routes/users');
@@ -149,8 +150,8 @@ app.use(function(err, req, res, next) {
 // 	    stopDoc.coordinates = coordinates;
 // 	    delete stopDoc.latitude;
 // 	    delete stopDoc.longitude;
-	    
-	    
+
+
 // 	    var stop = new Stop(stopDoc);
 // 	    stop.save(function(err, post) {
 // 	    	if(err){return next(err);}
@@ -175,7 +176,7 @@ app.use(function(err, req, res, next) {
 // 	    var service = new Service(json.services[i]);
 // 	    service.save(function(err, post) {
 // 		if(err){return next(err);}
-		
+
 // 	    });
 // 	}
 //     });
@@ -198,7 +199,7 @@ app.use(function(err, req, res, next) {
 // //		console.log('body2 ' + body);
 // 	    });
 
-	   
+
 
 // 	 //   console.log('body ' + body);
 // 	    res.on('end', function() {
@@ -206,7 +207,7 @@ app.use(function(err, req, res, next) {
 // 	   	var timetable = new Timetable(json);
 // 	    	timetable.save(function(err, post) {
 // 	    	    if(err){return next(err);}
-		    
+
 // 	    	});
 // 	    });
 // 	});
@@ -287,218 +288,416 @@ app.use(function(err, req, res, next) {
 //     });
 
 // ====== Updating Bus locations and stats every 15 seconds ====== //
-
-function findBusesNearStops() {
-    
-//    console.log('finding buses'); 
-    var buses_near_stops = [];
-    
-    // return these fields of each location document in the database
-    Location.find({}, 'service_name coordinates vehicle_id last_gps_fix', function(err, doc){
-	if(err){return next(err);}
-
-	doc.forEach(function(j,k) {
-	    //Find a stop that is near enough to each given bus that we can say the bus is 'at' that stop
-	    //Making sure it returns 1 stop now because I don't know proper distance
-	    Stop.findOne({
-		coordinates: { $near : j.coordinates, $maxDistance: .00001}
-	    }, function(err, stop){
-		if(err){return next(err);}
-
-		// service_name is null if bus is out of service (I believe)
-		if(stop !== null && j.service_name !== null) {
-		    var service_name_of_bus = j.service_name;
-
-		    // Find the service document associated with service_name_of_bus
-		    var service_of_name = Service.findOne({name: service_name_of_bus}, function(err, service_of_name){
-			if(err){return next(err);}
-			
-			// If the service has 'stop' on its route
-			if(service_of_name.routes[0].stops.indexOf(stop.stop_id) > -1) {
-
-			    // We have now found a bus that is stopped at a stop on its route
-			    buses_near_stops.push(
-				{
-				    time: j.last_gps_fix,
-				    bus_coords: j.coordinates,
-				    stop_coords: stop.coordinates,
-				    vehicle_id: j.vehicle_id,
-				    stop_id: stop.stop_id,
-				    service_name: service_name_of_bus
-				});
-			}
-		    });
-		    
-		}
-	    });
-
-	});
-    });
-
-    return buses_near_stops;
-}
+//'service_name coordinates vehicle_id last_gps_fix',
+//Location.find({},  function(err, doc) {
+//    if(err){return next(err);}
+//    console.log('doc goes here ' + JSON.stringify(doc));
+//});
 
 function updateStats(buses_near_stops) {
 //    console.log('updating stats');
-    buses_near_stops.forEach(function(j,k) {
-	console.log('near stops ');
-	console.log('count of buses near stops ' + k);
 
-	// Comparing the current time with the time that the bus is supposed to be at this stop
-	var journey = Journey.find({service_name: j.service_name});
-	var departures = journey.departures;
-
-	// Journey gives a timetable of a particular service
-	// Iterate over all docs in that Journey to find the time that the bus is supposed to be at this stop
-	//THIS PROBABLY ISN'T RIGHT---BUS SHOULD BE AT EACH STOP ON JOURNEY MULTIPLE TIMES PER DAY
-	for(var i = 0; i < departures.length; i++) {
-	    console.log('departures');
-	    var curDeparture = departures[i];
-	    if(curDeparture.stop_id === j.stop_id) {
-		var vehicleStat = VehicleStat.find({vehicle_id : j.vehicle_id}, function(err, doc){
-
-		    console.log('stat found ' + doc);
-		    if(err){return next(err);}
-
-		    var stopStat = StopStat.find({stop_id : j.stop_id}, function(err, doc) {
-			if(err){return next(err);}
-			var journeyTime = moment(curDeparture.time, 'HH:mm');
-			
-			var timeDif = j.time - journeyTime;
-			
-			var minutesDif = timeDif / 60000;
-
-			if(minutesDif < 5) {
-			    stopStat.early_5_plus++;
-			    vehicleStat.early_5_plus++;
-			}
-
-			else if(minutesDif > 4 && minutesDif < 3) {
-			    stopStat.early_4++;
-			    vehicleStat.early_4++;
-			}
-
-			else if(minutesDif > 3 && minutesDif < 2) {
-			    stopStat.early_3++;
-			    vehicleStat.early_3++;
-			}
-			
-			else if(minutesDif > 2 && minutesDif < 1) {
-			    stopStat.early_2++;
-			    vehicleStat.early_2++;
-			}
-
-			else if(minutesDif < 2 && minutesDif > 1) {
-			    stopStat.late_2++;
-			    vehicleStat.late_2++;
-			}
-
-			else if(minutesDif < 3 && minutesDif > 2) {
-			    stopStat.late_3++;
-			    vehicleStat.late_3++;
-			}
-			
-			else if(minutesDif < 4 && minutesDif > 3) {
-			    stopStat.late_4++;
-			    vehicleStat.late_4++;
-			}
-
-			else if(minutesDif > 5) {
-			    stopStat.late_5_plus++;
-			    vehicleStat.late_5_plus++;
-			}
-
-			else {
-			    console.log('minutesDif: ' + minutesDif);
-			}
-			console.log('before find');
-			//Print any stats documents that have been modified, so that I know if anything is working
-			VehicleStat.find({modified: {$ne: false}}, function(err, doc) {
-			    console.log('after find');
-			    if(err){return next(err);}
-
-			    console.log(JSON.stringify(doc));
-
-			    StopStat.find({modified: {$ne: false}}, function(err, doc) {
-				if(err){return next(err);}
-				console.log(JSON.stringify(doc));
-			    });
-			});
-
-		    });
-		});
-		
-	    }
-	}
-	
-    });
 }
 
+//VehicleStat.find({modified: {$ne: false}}, function (err, doc) {
+//    console.log('after find');
+//    if (err) {
+//        return next(err);
+//    }
+//
+//    console.log(JSON.stringify(doc));
+//
+//    StopStat.find({modified: {$ne: false}}, function (err, doc) {
+//        if (err) {
+//            return next(err);
+//        }
+//        console.log(JSON.stringify(doc));
+//    });
+//});
+
+//Location.find({}, 'service_name coordinates vehicle_id last_gps_fix', function(err, doc) {
+//    console.log('this is a doc ' + doc);
+//});
+
+//setInterval(function() {
+
+//Location.remove({}, function(err){
+//  if(err){return next(err);}
+
+async.waterfall(
+    [
+        function(callback) {
+            https.get("https://tfe-opendata.com/api/v1/vehicle_locations", function(res){
+                //Clear the old data
+                //Location.remove({}, function(err) {
+                //    if(err){return next(err);}
+                //});
 
 
-setInterval(function() {
+                var body = '';
+                res.on('data', function(chunk){
+                    body += chunk;
 
-    // ====== Live Bus Locations ====== //
-    https.get("https://tfe-opendata.com/api/v1/vehicle_locations", function(res){
-	//Clear the old data
-	Location.remove({}, function(err) {
-	    if(err){return next(err);}
-	});
+                });
+
+                res.on('end', function() {
+                    console.log('end data');
+
+                    callback(null, body);
+                });
+            });
+
+        },
+
+        function(body, callback) {
+            var json = JSON.parse(body);
+            var doc = {};
+            for(var i in json.vehicles) {
+                var vehicleDoc = json.vehicles[i];
+
+                var coordinates = [];
+                coordinates.push(vehicleDoc.longitude);
+                coordinates.push(vehicleDoc.latitude);
+                vehicleDoc.coordinates = coordinates;
+                delete vehicleDoc.latitude;
+                delete vehicleDoc.longitude;
+
+                //Convert unix timestamp to "HH:MM" so that it can be compared with departure times in Journeys or Timetables
+                //12 Hour format
+                var date = new Date(vehicleDoc.last_gps_fix * 1000);
+                var hour = date.getHours();
+                if(hour > 12)
+                    hour = hour % 12;
+                var hourString = String(hour);
+                var minutes = date.getMinutes();
+                var minutesString = String(minutes);
+                if(minutes < 10)
+                    minutesString = "0" + minutesString;
+                var time = hourString + ":" + minutesString;
+                vehicleDoc.time = time;
+
+                var loc = new Location(vehicleDoc);
+
+            }
+            loc.save(function (err, post) {
+                if (err) {
+                    return next(err);
+                }
+
+                callback(err);
+            });
+        },
+
+        function(callback) {
+            // return these fields of each location document in the database
+            Location.find({}, 'service_name coordinates vehicle_id last_gps_fix', function(err, doc) {
+                //console.log('location found ' + JSON.stringify(doc));
+                if(err){return next(err);}
+
+                callback(err, doc);
+            });
+        },
+
+        function(doc, callback) {
+
+            var buses_near_stops = [];
+
+            //console.log('doc ' + doc);
+            async.eachSeries(doc, function(item, callbackA) {
+
+                //console.log('near buses top ' + buses_near_stops);
+                //console.log('testing ' + item);
+                //console.log('item ' + item);
+
+                Stop.findOne({coordinates: { $near : item.coordinates, $maxDistance: .0001}
+                }, function(err, stop) {
+                    if(err){return next(err);}
+
+                    //console.log('stop ' + stop);
+
+                    //console.log('stop found ' + item.service_name + " " + JSON.stringify(stop));
+                    // service_name is null if bus is out of service (I believe)
+                    if(stop !== null && item.service_name !== null) {
+
+                        var service_name_of_bus = item.service_name;
+                        //console.log('service name of bus ' + service_name_of_bus);
+
+                        // Find the service document associated with service_name_of_bus
+                        var service_of_name = Service.findOne({name: service_name_of_bus}, function(err, service_of_name) {
+                            //console.log('service_of_name');
+                            if(err){return next(err);}
+
+                            // If the service has 'stop' on its route
+                            // Why is this able to equal null?
+                            if(service_of_name != null && service_of_name.routes[0].stops.indexOf(stop.stop_id) > -1) {
+                                //console.log('bus found');
+                                //console.log('stop found on service');
+                                // We have now found a bus that is stopped at a stop on its route
+                                //console.log('test ' + buses_near_stops.test);
+                                buses_near_stops.push(
+                                    {
+                                        time: item.last_gps_fix,
+                                        bus_coords: item.coordinates,
+                                        stop_coords: stop.coordinates,
+                                        vehicle_id: item.vehicle_id,
+                                        stop_id: stop.stop_id,
+                                        service_name: service_name_of_bus
+                                    });
+
+                                //console.log('length ' + buses_near_stops.length);
+                            }
+                            callbackA();
+                        });
+
+                    }
+                    else {
+                        callbackA();
+                    }
+
+                });
+
+            }, function(err) {
+                console.log('booses ' + buses_near_stops);
+                callback(null, buses_near_stops);
+            });
 
 
-	var body = '';
-	res.on('data', function(chunk){
-	    body += chunk;
 
-	});
+        },
 
-	res.on('end', function() {
-	    console.log('end data');
-	    var json = JSON.parse(body);
-	    var doc = {};
-	    for(var i in json.vehicles) {
-		var vehicleDoc = json.vehicles[i];
+        function(buses_near_stops, callback) {
+            async.eachSeries(buses_near_stops, function(item, callbackA) {
+                console.log('near stops ');
+                //console.log('count of buses near stops ' + k);
 
-		var coordinates = [];
-		coordinates.push(vehicleDoc.longitude);
-		coordinates.push(vehicleDoc.latitude);
-		vehicleDoc.coordinates = coordinates;
-		delete vehicleDoc.latitude;
-		delete vehicleDoc.longitude;
-		
-		//Convert unix timestamp to "HH:MM" so that it can be compared with departure times in Journeys or Timetables
-		//12 Hour format
-		var date = new Date(vehicleDoc.last_gps_fix * 1000);
-		var hour = date.getHours();
-		if(hour > 12)
-		    hour = hour % 12;
-		var hourString = String(hour);
-		var minutes = date.getMinutes();
-		var minutesString = String(minutes);
-		if(minutes < 10)
-		    minutesString = "0" + minutesString;
-		var time = hourString + ":" + minutesString;
-		vehicleDoc.time = time;
+                // Comparing the current time with the time that the bus is supposed to be at this stop
+                var journey = Journey.find({service_name: item.service_name}, function(err, doc){
+                    var departures = journey.departures;
+                    console.log('departures ' + departures);
 
-		var loc = new Location(vehicleDoc);
-		loc.save(function(err, post) {
-	    	    if(err){return next(err);}
+                    /////////////////////////////////departures is undefined????????/////////////////////////////////////////////
 
-		    var buses_near_stops = findBusesNearStops();
-		    
-		    updateStats(buses_near_stops);
-		});
-	    }
-	});
-   });
+                    // Journey gives a timetable of a particular service
+                    // Iterate over all docs in that Journey to find the time that the bus is supposed to be at this stop
+                    //THIS PROBABLY ISN'T RIGHT---BUS SHOULD BE AT EACH STOP ON JOURNEY MULTIPLE TIMES PER DAY
+                    async.eachSeries(departures, function(item, callbackB) {
+                  //      console.log('departures');
+                        var curDeparture = item;
+                        if (curDeparture.stop_id === item.stop_id) {
+                            var vehicleStat = VehicleStat.find({vehicle_id: item.vehicle_id}, function (err, doc) {
+
+                    //            console.log('stat found ' + doc);
+                                if (err) {
+                                    return next(err);
+                                }
+
+                                var stopStat = StopStat.find({stop_id: item.stop_id}, function (err, doc) {
+                                    if (err) {
+                                        return next(err);
+                                    }
+                                    var journeyTime = moment(curDeparture.time, 'HH:mm');
+
+                                    var timeDif = item.time - journeyTime;
+
+                                    var minutesDif = timeDif / 60000;
+
+                                    if (minutesDif < 5) {
+                                        stopStat.early_5_plus++;
+                                        vehicleStat.early_5_plus++;
+                                    }
+
+                                    else if (minutesDif > 4 && minutesDif < 3) {
+                                        stopStat.early_4++;
+                                        vehicleStat.early_4++;
+                                    }
+
+                                    else if (minutesDif > 3 && minutesDif < 2) {
+                                        stopStat.early_3++;
+                                        vehicleStat.early_3++;
+                                    }
+
+                                    else if (minutesDif > 2 && minutesDif < 1) {
+                                        stopStat.early_2++;
+                                        vehicleStat.early_2++;
+                                    }
+
+                                    else if (minutesDif < 2 && minutesDif > 1) {
+                                        stopStat.late_2++;
+                                        vehicleStat.late_2++;
+                                    }
+
+                                    else if (minutesDif < 3 && minutesDif > 2) {
+                                        stopStat.late_3++;
+                                        vehicleStat.late_3++;
+                                    }
+
+                                    else if (minutesDif < 4 && minutesDif > 3) {
+                                        stopStat.late_4++;
+                                        vehicleStat.late_4++;
+                                    }
+
+                                    else if (minutesDif > 5) {
+                                        stopStat.late_5_plus++;
+                                        vehicleStat.late_5_plus++;
+                                    }
+
+                                    else {
+                                        console.log('minutesDif: ' + minutesDif);
+                                    }
+                      //              console.log('before find');
+                                    //Print any stats documents that have been modified, so that I know if anything is working
+
+                                    callbackB();
+
+                                });
+                            });
+
+                        }
+                    }, function(err){
+                        callbackA();
+                    });
 
 
 
-    // Iterating over all buses currently stopped at stops on their respective routes
-    
+                });
 
-}, 15000);
 
+            }, function(err) {
+                callback(err);
+            });
+        }
+    ],
+    function(err, results){
+        console.log('end');
+    });
+
+// ====== Live Bus Locations ====== //
+//    https.get("https://tfe-opendata.com/api/v1/vehicle_locations", function(res){
+//        //Clear the old data
+//        //Location.remove({}, function(err) {
+//        //    if(err){return next(err);}
+//        //});
+//
+//
+//        var body = '';
+//        res.on('data', function(chunk){
+//            body += chunk;
+//
+//        });
+//
+//        res.on('end', function() {
+//            console.log('end data');
+//            var json = JSON.parse(body);
+//            var doc = {};
+//            for(var i in json.vehicles) {
+//                var vehicleDoc = json.vehicles[i];
+//
+//                var coordinates = [];
+//                coordinates.push(vehicleDoc.longitude);
+//                coordinates.push(vehicleDoc.latitude);
+//                vehicleDoc.coordinates = coordinates;
+//                delete vehicleDoc.latitude;
+//                    delete vehicleDoc.longitude;
+//
+//                    //Convert unix timestamp to "HH:MM" so that it can be compared with departure times in Journeys or Timetables
+//                    //12 Hour format
+//                    var date = new Date(vehicleDoc.last_gps_fix * 1000);
+//                    var hour = date.getHours();
+//                    if(hour > 12)
+//                        hour = hour % 12;
+//                    var hourString = String(hour);
+//                    var minutes = date.getMinutes();
+//                    var minutesString = String(minutes);
+//                    if(minutes < 10)
+//                        minutesString = "0" + minutesString;
+//                    var time = hourString + ":" + minutesString;
+//                    vehicleDoc.time = time;
+//
+//                    var loc = new Location(vehicleDoc);
+//
+//                    (function() {
+//                        loc.save(function (err, post) {
+//                            if (err) {
+//                                return next(err);
+//                            }
+//
+//
+//                        });
+//                    }());
+//                }
+//
+//var buses_near_stops = [];
+//buses_near_stops.test = "TEST";
+//
+//
+//// return these fields of each location document in the database
+//Location.find({}, 'service_name coordinates vehicle_id last_gps_fix', function(err, doc) {
+//                        //console.log('location found ' + JSON.stringify(doc));
+//    if(err){return next(err);}
+//
+//    doc.forEach(function(j,k) {
+//        //console.log('for each');
+//        //Find a stop that is near enough to each given bus that we can say the bus is 'at' that stop
+//        //Making sure it returns 1 stop now because I don't know proper distance
+//        (function(buses_near_stops) {
+//            Stop.findOne({coordinates: { $near : j.coordinates, $maxDistance: .0001}
+//        }, function(err, stop){
+//            if(err){return next(err);}
+//
+//            console.log('stop found ' + j.service_name + " " + JSON.stringify(stop));
+//            // service_name is null if bus is out of service (I believe)
+//            if(stop !== null && j.service_name !== null) {
+//                var service_name_of_bus = j.service_name;
+//                console.log('service name of bus ' + service_name_of_bus);
+//
+//                // Find the service document associated with service_name_of_bus
+//                var service_of_name = Service.findOne({name: service_name_of_bus}, function(err, service_of_name){
+//                    if(err){return next(err);}
+//
+//                    // If the service has 'stop' on its route
+//    // Why is this able to equal null?
+//                    if(service_of_name != null && service_of_name.routes[0].stops.indexOf(stop.stop_id) > -1) {
+//                        console.log('stop found on service');
+//                        // We have now found a bus that is stopped at a stop on its route
+//                        console.log('test ' + buses_near_stops.test);
+//                        buses_near_stops.push(
+//                            {
+//                                time: j.last_gps_fix,
+//                                bus_coords: j.coordinates,
+//                                stop_coords: stop.coordinates,
+//                                vehicle_id: j.vehicle_id,
+//                                stop_id: stop.stop_id,
+//                                service_name: service_name_of_bus
+//                            });
+//
+//                        console.log('length ' + buses_near_stops.length);
+//                    }
+//                });
+//
+//            }
+//        })}(buses_near_stops));
+//
+//    });
+//    console.log('buses near stops ' + JSON.stringify(buses_near_stops));
+//});
+
+
+
+
+//updateStats(buses_near_stops);
+//    });
+//});
+
+
+//  });
+
+
+
+// Iterating over all buses currently stopped at stops on their respective routes
+
+
+//}, 15000);
 
 
 module.exports = app;
+

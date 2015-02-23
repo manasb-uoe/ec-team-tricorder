@@ -84,3 +84,11 @@ busses_near_stops.forEach(function(j,k){
 
 2015-02-10
 near [] prints before the list of modified stats documents, which makes me think things are happening out of order and busses_near_stops is getting wiped before it gets used
+
+2015-02-11
+I can fix async problems by putting all asyncs that are within loops, within closures.  All nonlooped asyncs should just be carefully nested.  I feel like there is probably a mongoose solution
+to this, but I don't know what it is.
+
+Also for some reason I can't break this into seperate functions so I will need to go with nested closures/anonymous functions
+
+It seems that if I delete the locations then add the new ones, there are not any locations in the database when I try to find them.  No idea why.
