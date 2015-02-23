@@ -56,9 +56,6 @@ var ServiceStatus = mongoose.model('ServiceStatus');
 var Locations = require('./models/Locations.js');
 var Location = mongoose.model('Location');
 
-var routes = require('./routes/index');
-var users = require('./routes/users');
-
 var https = require('https');//Do I need to add this to dependencies?
 
 
