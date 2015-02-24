@@ -1,6 +1,6 @@
 var mongoose = require('mongoose');
 
-var LocationSchema = new mongoose.Schema({
+var LiveLocationSchema = new mongoose.Schema({
     vehicle_id: {type: String, index: true},
     last_gps_fix: {type: Number, index: true},
     time: {type: String, index: true},
@@ -11,4 +11,4 @@ var LocationSchema = new mongoose.Schema({
     destination: {type: String, index: true}
 });
 
-mongoose.model('Location', LocationSchema);
+module.exports.LiveLocation = mongoose.model('LiveLocation', LiveLocationSchema);

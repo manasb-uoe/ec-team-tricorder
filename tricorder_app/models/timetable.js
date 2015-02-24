@@ -6,4 +6,4 @@ var TimetableSchema = new mongoose.Schema({
     departures: {type: Array, "default": []}
 });
 
-mongoose.model('Timetable', TimetableSchema);
+module.exports.Timetable = mongoose.model('Timetable', TimetableSchema);

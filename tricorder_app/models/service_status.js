@@ -10,4 +10,4 @@ var ServiceStatusSchema = new mongoose.Schema({
     web_link: String
 });
 
-mongoose.model('ServiceStatus', ServiceStatusSchema);
+module.exports.ServiceStatus = mongoose.model('ServiceStatus', ServiceStatusSchema);

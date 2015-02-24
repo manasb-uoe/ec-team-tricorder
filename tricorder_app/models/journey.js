@@ -5,4 +5,4 @@ var JourneySchema = new mongoose.Schema({
     journeys: {type: Array, "default": []}
 });
 
-mongoose.model('Journey', JourneySchema);
+module.exports.Journey = mongoose.model('Journey', JourneySchema);
