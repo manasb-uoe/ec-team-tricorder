@@ -480,7 +480,6 @@ async.waterfall(
                 });
 
             }, function(err) {
-                console.log('booses ' + buses_near_stops);
                 callback(null, buses_near_stops);
             });
 
@@ -495,16 +494,19 @@ async.waterfall(
                 //console.log('count of buses near stops ' + k);
 
                 // Comparing the current time with the time that the bus is supposed to be at this stop
-                var journey = Journey.find({service_name: item.service_name}, function(err, doc) {
+               Journey.find({service_name: item.service_name}, function(err, doc) {
 
-                    console.log(item.service_name);
-                    var journeys = parseJSON(doc).journeys;
+                   //console.log(doc);
 
-                    for(var field in doc) {
-                        console.log('field ' + field);
-                    }
+                    //console.log('doc ' + JSON.parse(doc));
+                    //var journeys = JSON.parse(doc)[0].journeys;
+                    //for(var field in doc[0]) {
+                    //    console.log('field ' + field);
+                    //}
 
-                    console.log('journeys ' + journeys);
+                   var journeys = doc[0].journeys;
+
+                    //console.log('journeys ' + journeys);
 
                     //if(departures !== 'undefined')
                     //console.log('departures ' + departures);
@@ -514,96 +516,113 @@ async.waterfall(
                     // Journey gives a timetable of a particular service
                     // Iterate over all docs in that Journey to find the time that the bus is supposed to be at this stop
                     //THIS PROBABLY ISN'T RIGHT---BUS SHOULD BE AT EACH STOP ON JOURNEY MULTIPLE TIMES PER DAY
-                    async.eachSeries(journeys, function(item, callbackC) {
-                        var departures = item.departures;
+                    if(journeys.length > 0) {
 
-                        async.eachSeries(departures, function(item, callbackB) {
-                            //      console.log('departures');
-                            var curDeparture = item;
-                            if (curDeparture.stop_id === item.stop_id) {
-                                var vehicleStat = VehicleStat.find({vehicle_id: item.vehicle_id}, function (err, doc) {
+                        //console.log('found journeys ' + JSON.stringify(journeys));
+                        //console.log('type of journeys ' + typeof JSON.parse(journeys));
 
-                                    //            console.log('stat found ' + doc);
-                                    if (err) {
-                                        return next(err);
-                                    }
+                        async.eachSeries(journeys, function (item, callbackC) {
+                            console.log('departing');
+                            var departures = item.departures;
 
-                                    var stopStat = StopStat.find({stop_id: item.stop_id}, function (err, doc) {
+                            async.eachSeries(departures, function (item, callbackB) {
+                                //      console.log('departures');
+                                var curDeparture = item;
+                                if (curDeparture.stop_id === item.stop_id) {
+                                    var vehicleStat = VehicleStat.find({vehicle_id: item.vehicle_id}, function (err, doc) {
+
+                                        //            console.log('stat found ' + doc);
                                         if (err) {
                                             return next(err);
                                         }
-                                        var journeyTime = moment(curDeparture.time, 'HH:mm');
 
-                                        var timeDif = item.time - journeyTime;
+                                        var stopStat = StopStat.find({stop_id: item.stop_id}, function (err, doc) {
+                                            if (err) {
+                                                return next(err);
+                                            }
+                                            var journeyTime = moment(curDeparture.time, 'HH:mm');
+                                            //var itemTime = moment(item.time, 'HH:mm');
 
-                                        var minutesDif = timeDif / 60000;
+                                            //console.log('itemtime ' + itemTime);
+                                            //console.log('journey time ' + journeyTime);
 
-                                        if (minutesDif < 5) {
-                                            stopStat.early_5_plus++;
-                                            vehicleStat.early_5_plus++;
-                                        }
+                                            //var timeDif = itemTime - journeyTime;
+                                            var timeDif = journeyTime- new Date().getTime();
+                                            //console.log('timedif ' + timeDif);
 
-                                        else if (minutesDif > 4 && minutesDif < 3) {
-                                            stopStat.early_4++;
-                                            vehicleStat.early_4++;
-                                        }
+                                            var minutesDif = timeDif / 60000;
+                                            //console.log('minutesDif: ' + minutesDif);
 
-                                        else if (minutesDif > 3 && minutesDif < 2) {
-                                            stopStat.early_3++;
-                                            vehicleStat.early_3++;
-                                        }
 
-                                        else if (minutesDif > 2 && minutesDif < 1) {
-                                            stopStat.early_2++;
-                                            vehicleStat.early_2++;
-                                        }
+                                            if (minutesDif < 5) {
+                                                stopStat.early_5_plus++;
+                                                vehicleStat.early_5_plus++;
+                                            }
 
-                                        else if (minutesDif < 2 && minutesDif > 1) {
-                                            stopStat.late_2++;
-                                            vehicleStat.late_2++;
-                                        }
+                                            else if (minutesDif > 4 && minutesDif < 3) {
+                                                stopStat.early_4++;
+                                                vehicleStat.early_4++;
+                                            }
 
-                                        else if (minutesDif < 3 && minutesDif > 2) {
-                                            stopStat.late_3++;
-                                            vehicleStat.late_3++;
-                                        }
+                                            else if (minutesDif > 3 && minutesDif < 2) {
+                                                stopStat.early_3++;
+                                                vehicleStat.early_3++;
+                                            }
 
-                                        else if (minutesDif < 4 && minutesDif > 3) {
-                                            stopStat.late_4++;
-                                            vehicleStat.late_4++;
-                                        }
+                                            else if (minutesDif > 2 && minutesDif < 1) {
+                                                stopStat.early_2++;
+                                                vehicleStat.early_2++;
+                                            }
 
-                                        else if (minutesDif > 5) {
-                                            stopStat.late_5_plus++;
-                                            vehicleStat.late_5_plus++;
-                                        }
+                                            else if (minutesDif < 2 && minutesDif > 1) {
+                                                stopStat.late_2++;
+                                                vehicleStat.late_2++;
+                                            }
 
-                                        else {
-                                            console.log('minutesDif: ' + minutesDif);
-                                        }
-                                        //              console.log('before find');
-                                        //Print any stats documents that have been modified, so that I know if anything is working
+                                            else if (minutesDif < 3 && minutesDif > 2) {
+                                                stopStat.late_3++;
+                                                vehicleStat.late_3++;
+                                            }
 
-                                        callbackB();
+                                            else if (minutesDif < 4 && minutesDif > 3) {
+                                                stopStat.late_4++;
+                                                vehicleStat.late_4++;
+                                            }
 
+                                            else if (minutesDif > 5) {
+                                                stopStat.late_5_plus++;
+                                                vehicleStat.late_5_plus++;
+                                            }
+
+                                            else {
+                                                //console.log('minutesDif: ' + minutesDif);
+                                            }
+                                            //              console.log('before find');
+                                            //Print any stats documents that have been modified, so that I know if anything is working
+
+                                            callbackB();
+
+                                        });
                                     });
-                                });
 
-                            }
-                        }, function(err){
-                            callbackC();
+                                }
+                            }, function (err) {
+                                callbackC();
+                            });
+                        }, function (err) {
+                            callbackA();
                         });
-                    }, function(err){
-                        allbackA();
-                    });
-
-
+                    }
+                    else {
+                        callbackA();
+                    }
 
 
                 });
 
 
             }, function(err) {
+                console.log('callback');
                 callback(err);
             });
         }
