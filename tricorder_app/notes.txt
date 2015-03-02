@@ -92,3 +92,7 @@ to this, but I don't know what it is.
 Also for some reason I can't break this into seperate functions so I will need to go with nested closures/anonymous functions
 
 It seems that if I delete the locations then add the new ones, there are not any locations in the database when I try to find them.  No idea why.
+
+2015-03-01
+I need to make the database more relational to speed up queries.  A Journey needs to be its own document, mapped to a service by its service_id.
+Each Journey has service_name as a field and index.  I also need a document for Departures.  Each Departure will be indexed by stop_id.

@@ -16,4 +16,4 @@ var VehicleStatsSchema = new mongoose.Schema({
 
 });
 
-mongoose.model('VehicleStats', VehicleStatsSchema);
+mongoose.model('VehicleStat', VehicleStatsSchema);
