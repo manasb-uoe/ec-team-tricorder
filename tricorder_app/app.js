@@ -131,34 +131,39 @@ app.use(function(err, req, res, next) {
 //======= All below have been populated already========
 
 //  ====== Stops ======
-// https.get("https://tfe-opendata.com/api/v1/stops", function(res){
-//     var body = '';
-//     res.on('data', function(chunk){
-// 	body += chunk;
-
-//     });
-
-//     res.on('end', function() {
-// 	var json = JSON.parse(body);
-// 	var doc = {};
-// 	for(var i in json.stops) {
-// 	    var stopDoc = json.stops[i];
-
-// 	    var coordinates = [];
-// 	    coordinates.push(stopDoc.longitude);
-// 	    coordinates.push(stopDoc.latitude);
-// 	    stopDoc.coordinates = coordinates;
-// 	    delete stopDoc.latitude;
-// 	    delete stopDoc.longitude;
-
-
-// 	    var stop = new Stop(stopDoc);
-// 	    stop.save(function(err, post) {
-// 	    	if(err){return next(err);}
-// 	    });
-// 	}
-//     });
-// });
+//https.get("https://tfe-opendata.com/api/v1/stops", function(res){
+//    var body = '';
+//    res.on('data', function(chunk){
+//        body += chunk;
+//
+//    });
+//
+//    res.on('end', function() {
+//        var json = JSON.parse(body);
+//        var stops = json.stops;
+//        async.eachSeries(stops,function(stop, callbackA){
+//            console.log('blah');
+//
+//            var coordinates = [];
+//            coordinates.push(stop.longitude);
+//            coordinates.push(stop.latitude);
+//            stop.coordinates = coordinates;
+//            delete stop.latitude;
+//            delete stop.longitude;
+//
+//
+//            var stopDoc = new Stop(stop);
+//            stopDoc.save(function(err, post) {
+//                if(err){return next(err);}
+//                callbackA();
+//            });
+//        });
+//
+//
+//
+//
+//    });
+//});
 
 
 // ====== Services and Journeys ====== //
@@ -243,12 +248,14 @@ app.use(function(err, req, res, next) {
 
 // ====== New and Improved Timetables! ====== //
 //Flatten the data so that each departure is indexable by stop_id and servicename to improve lookup times
+// ====== WARNING THIS TAKES ~1 HOUR TO RUN USE WITH CAUTION ======= //
 //Stop.find({}, 'stop_id',function(err,doc) {
+//    console.log('start ' + new Date().toUTCString());
 //    var stops = doc;
 //
 //    async.eachSeries(stops, function(stop, callbackA) {
 //        https.get("https://tfe-opendata.com/api/v1/timetables/" + stop.stop_id, function(res){
-//
+//            console.log('request');
 //            //  console.log('res ' + res.statusCode);
 //
 //            var body = '';
@@ -262,7 +269,7 @@ app.use(function(err, req, res, next) {
 //                var json = JSON.parse(body);
 //                var departures = json.departures;
 //                async.eachSeries(departures, function(curDeparture, callbackB){
-//
+//                    //console.log('departure');
 //                    var timestamp = new Date().getTime(curDeparture.time);
 //
 //                    var result = {
@@ -280,6 +287,7 @@ app.use(function(err, req, res, next) {
 //                    var timetable = new Timetable(result);
 //
 //                    timetable.save(function(err, post) {
+//                        //console.log('saving timetable');
 //
 //                        if(err){return next(err);}
 //
@@ -293,7 +301,7 @@ app.use(function(err, req, res, next) {
 //            });
 //        });
 //    }, function(err) {
-//        console.log('timetables done');
+//        console.log('timetables done ' + new Date().toUTCString());
 //    });
 //});
 
@@ -420,20 +428,21 @@ setInterval(function() {
                         if (err) {
                             return next(err);
                         }
+                        var body = '';
+                        res.on('data', function (chunk) {
+                            body += chunk;
+
+                        });
+
+                        res.on('end', function () {
+                            console.log('end data');
+
+                            callback(null, body);
+                        });
                     });
 
 
-                    var body = '';
-                    res.on('data', function (chunk) {
-                        body += chunk;
 
-                    });
-
-                    res.on('end', function () {
-                        console.log('end data');
-
-                        callback(null, body);
-                    });
                 });
 
             },
@@ -479,7 +488,8 @@ setInterval(function() {
 
                 callback();
 
-            },
+            }
+            ,
 
             function (callback) {
                 // return these fields of each location document in the database
@@ -510,7 +520,7 @@ setInterval(function() {
 
 
                     Stop.findOne({
-                        coordinates: {$near: bus.coordinates, $maxDistance: .0001}
+                        coordinates: {$near: bus.coordinates, $maxDistance: .00001}
                     }, function (err, stop) {
                         if (err) {
                             return next(err);
@@ -561,17 +571,17 @@ setInterval(function() {
             function (buses_near_stops, callback) {
                 var i = 1;
                 async.eachSeries(buses_near_stops, function (bus, callbackA) {
-                    console.log('near stops ' + buses_near_stops.length);
+                    //console.log('near stops ' + buses_near_stops.length);
                     //console.log('count of buses near stops ' + k);
 
                     // Comparing the current time with the time that the bus is supposed to be at this stop
-                    console.log('name ' + bus.service_name);
+                    //console.log('name ' + bus.service_name);
                     Timetable.find({
-                        service_name: bus.service_name//,
-                        //stop_id: bus.stop_id
+                        service_name: bus.service_name,
+                        stop_id: bus.stop_id
                     }, 'timestamp', function (err, timestamps) {
 
-                        console.log('timestamp before ' + timestamps);
+                        //console.log('timestamp before ' + timestamps);
                         if (err) {
                             return next(err);
                         }
@@ -579,7 +589,7 @@ setInterval(function() {
                         if(timestamps.length > 0) {
 
 
-                            console.log(timestamps);
+                            //console.log(timestamps);
 
                             var curTime = new Date().getTime();
 
@@ -596,7 +606,9 @@ setInterval(function() {
                                 //console.log('curTime ' + curTime);
                                 //console.log('negDif ' + negDif);
                                 var absDif = Math.abs(negDif);
-                                if (absDif === null || absDif < minDif) {
+                                //console.log('absDif ' + absDif);
+                                if (minDif === null || absDif < Math.abs(minDif)) {
+                                    //console.log('not null dif');
                                     minDif = negDif;
                                 }
                             }
@@ -639,76 +651,86 @@ setInterval(function() {
 
                             //if (curDeparture.stop_id === bus.stop_id) {
                             VehicleStat.findOne({vehicle_id: bus.vehicle_id}, function (err, vehicleStat) {
-                                console.log('vehicle stat ' + vehicleStat);
-                                console.log('vehicle id ' + bus.vehicle_id);
+
+                                //console.log('vehicle stat ' + vehicleStat);
+                                //console.log('vehicle id ' + bus.vehicle_id);
+
 
                                 //            console.log('stat found ' + doc);
                                 if (err) {
                                     console.log('vehicle error');
                                     return next(err);
                                 }
-
-                                var minutesDif = minDif / 60000;
-                                console.log('minDif ' + minDif);
-                                console.log('minutesDif: ' + minutesDif);
-
-
-                                if (minutesDif < 5) {
-                                    //stopStat.early_5_plus++;
-                                    vehicleStat.early_5_plus++;
-                                    console.log('1');
+                                if(vehicleStat === null) {
+                                    console.log('null stat ' + bus.vehicle_id);
+                                    console.log('There is a mismatch between locations and vehiclestats');
+                                    callbackA();
                                 }
-
-                                else if (minutesDif > 4 && minutesDif < 3) {
-                                    // stopStat.early_4++;
-                                    vehicleStat.early_4++;
-                                    console.log('2');
-                                }
-
-                                else if (minutesDif > 3 && minutesDif < 2) {
-                                    //stopStat.early_3++;
-                                    vehicleStat.early_3++;
-                                    console.log('3');
-                                }
-
-                                else if (minutesDif > 2 && minutesDif < 1) {
-                                    //stopStat.early_2++;
-                                    vehicleStat.early_2++;
-                                    console.log('4');
-                                }
-
-                                else if (minutesDif < 2 && minutesDif > 1) {
-                                    //stopStat.late_2++;
-                                    vehicleStat.late_2++;
-                                    console.log('5');
-                                }
-
-                                else if (minutesDif < 3 && minutesDif > 2) {
-                                    //stopStat.late_3++;
-                                    vehicleStat.late_3++;
-                                    console.log('6');
-                                }
-
-                                else if (minutesDif < 4 && minutesDif > 3) {
-                                    //stopStat.late_4++;
-                                    vehicleStat.late_4++;
-                                    console.log('7');
-                                }
-
-                                else if (minutesDif > 5) {
-                                    //stopStat.late_5_plus++;
-                                    vehicleStat.late_5_plus++;
-                                    console.log('8');
-                                }
-
                                 else {
+                                //if(vehicleStat !== null) {
+                                    var minutesDif = minDif / 60000;
+                                    console.log('minDif ' + minDif);
                                     console.log('minutesDif: ' + minutesDif);
+
+
+                                    if (minutesDif < 5) {
+                                        //stopStat.early_5_plus++;
+                                        vehicleStat.early_5_plus++;
+                                        console.log('1');
+                                    }
+
+                                    else if (minutesDif > 4 && minutesDif < 3) {
+                                        // stopStat.early_4++;
+                                        vehicleStat.early_4++;
+                                        console.log('2');
+                                    }
+
+                                    else if (minutesDif > 3 && minutesDif < 2) {
+                                        //stopStat.early_3++;
+                                        vehicleStat.early_3++;
+                                        console.log('3');
+                                    }
+
+                                    else if (minutesDif > 2 && minutesDif < 1) {
+                                        //stopStat.early_2++;
+                                        vehicleStat.early_2++;
+                                        console.log('4');
+                                    }
+
+                                    else if (minutesDif < 2 && minutesDif > 1) {
+                                        //stopStat.late_2++;
+                                        vehicleStat.late_2++;
+                                        console.log('5');
+                                    }
+
+                                    else if (minutesDif < 3 && minutesDif > 2) {
+                                        //stopStat.late_3++;
+                                        vehicleStat.late_3++;
+                                        console.log('6');
+                                    }
+
+                                    else if (minutesDif < 4 && minutesDif > 3) {
+                                        //stopStat.late_4++;
+                                        vehicleStat.late_4++;
+                                        console.log('7');
+                                    }
+
+                                    else if (minutesDif > 5) {
+                                        //stopStat.late_5_plus++;
+                                        vehicleStat.late_5_plus++;
+                                        console.log('8');
+                                    }
+
+                                    else {
+                                        console.log('minutesDif: ' + minutesDif);
+                                    }
+
+                                    vehicleStat.modified = true;
+                                    vehicleStat.save(function (err, product, numberAffected) {
+                                        callbackA();
+                                    });
+
                                 }
-
-                                vehicleStat.modified = true;
-                                vehicleStat.save();
-
-
                                 //StopStat.findOne({stop_id: bus.stop_id}, function (err, stopStat) {
                                 //    console.log('stop stat ' + stopStat);
                                 //    console.log('bus id ' + bus.stop_id);
@@ -773,10 +795,11 @@ setInterval(function() {
                                 //});
                             });
 
-                            callbackA();
+
                         }
                         else {
-                            console.log('no timestamps');
+                            callbackA();
+                            //console.log('no timestamps');
                         }
                     });
 

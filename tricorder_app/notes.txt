@@ -96,3 +96,9 @@ It seems that if I delete the locations then add the new ones, there are not any
 2015-03-01
 I need to make the database more relational to speed up queries.  A Journey needs to be its own document, mapped to a service by its service_id.
 Each Journey has service_name as a field and index.  I also need a document for Departures.  Each Departure will be indexed by stop_id.
+
+2015-03-03
+I think I have fixed all asynchronous bugs.  I had a problem where the number of locations did not match the number of vehicleStats.  This was probably caused by interrupting the script in
+the middle of deleting the locations and then building the vehicleStats.  Also, I did not build nearly all of the timetables.  This might take ~1 hour.
+I don't see a way to speed that up algorithmically right now.  It needs to be done every day so that the timestamps are kept current.
+This could be avoided by just updating the timestamps to the current day.
