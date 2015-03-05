@@ -1,7 +1,7 @@
-var mongoose = require('mongoose'),
-    schema = mongoose.Schema;
+var mongoose = require('mongoose');
+
 var StopStatsSchema = new mongoose.Schema({
-    stop_id: {type: schema.Types.ObjectId, ref: 'Stop'},
+    stop_id: {type: Number, index: true},
     early_5_plus: Number,
     early_4: Number,
     early_3: Number,
