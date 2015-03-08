@@ -1,0 +1,63 @@
+.nearby-stops-container {
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 20px;
+}
+
+.nearby-stops-container .filter-container .left {
+    display: inline-block;
+}
+
+
+.nearby-stops-container .filter-container .right {
+    display: inline-block;
+    float: right;
+}
+
+
+.nearby-stops-container .filter-container .left .label {
+    font-size: 110%;
+    color: #000000;
+}
+
+.nearby-stops-container .filter-container .left .count {
+    color: #337ab7;
+}
+
+.nearby-stops-container .filter-container hr {
+    border-color: darkgray;
+}
+
+.nearby-stops-container .stop-container {
+    padding: 15px;
+    background-color: #ffffff;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 1px rgba(0,0,0,0.08);
+    cursor: pointer;
+}
+
+.nearby-stops-container .stop-container:hover {
+    background-color: #e5e5e5;
+}
+
+.nearby-stops-container .stop-container .title-container .title {
+    display: inline-block;
+    font-size: 120%;
+    font-weight: bold;
+    margin-bottom: 0;
+}
+
+.nearby-stops-container .stop-container .title-container .distance {
+    display: inline-block;
+    float: right;
+    font-size: 120%;
+    color: limegreen;
+}
+
+.nearby-stops-container .stop-container .locality {
+    margin-bottom: 10px;
+}
+
+
+
+

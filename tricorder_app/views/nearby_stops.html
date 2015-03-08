@@ -1,0 +1,45 @@
+{% extends "master.html" %}
+
+{% block head %}
+    <title>{{ title }}</title>
+    <link href="/stylesheets/nearby_stops.css" rel="stylesheet" type="text/css">
+{% endblock %}
+
+{% block body %}
+    <div class="container">
+        <div class="nearby-stops-container">
+            <div class="filter-container">
+                <div class="left">
+                    <div class="number-filter">
+                        <p class="label">Number of results shown: <span class="count">{{ stops.length }}</span></p>
+                    </div>
+                    <div class="service-filter">
+                        <p class="label">Services shown: </p>
+                    </div>
+                </div>
+                <div class="right">
+                    <button class="btn btn-primary">Change Filter</button>
+                </div>
+                <hr>
+            </div>
+            <div class="row">
+                {% for stop in stops %}
+                <div class="col-md-6">
+                    <div class="stop-container">
+                        <div class="title-container">
+                            <p class="title">{{ stop.name }} ({{ stop.direction }})</p>
+                            <p class="distance">{{ stop.distanceFromUser }}</p>
+                        </div>
+                        <p class="locality">{% if stop.locality  %} {{ stop.locality }} {% else %} (locality not available) {% endif %}</p>
+                        <p class="services">{{ stop.services }}</p>
+                    </div>
+                </div>
+                {% if loop.index % 2 == 0 %}
+            </div>
+            <div class="row">
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endblock %}
