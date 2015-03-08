@@ -25,7 +25,7 @@
 }
 
 .nearby-stops-container .filter-container hr {
-    border-color: darkgray;
+    border-color: lightgrey;
 }
 
 .nearby-stops-container .stop-container {
@@ -58,6 +58,10 @@
 
 .nearby-stops-container .stop-container .locality {
     margin-bottom: 10px;
+}
+
+.nearby-stops-container .stop-container .services {
+    word-break: break-all;
 }
 
 .nothing-to-see-here-container {
