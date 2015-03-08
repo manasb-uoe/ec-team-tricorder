@@ -11,10 +11,10 @@
             <div class="filter-container">
                 <div class="left">
                     <div class="number-filter">
-                        <p class="label">Number of results shown: <span class="count">{{ stops.length }}</span></p>
+                        <p class="label">Number of results shown: <span class="value">{{ stops.length }}</span></p>
                     </div>
                     <div class="service-filter">
-                        <p class="label">Services shown: </p>
+                        <p class="label">Services shown: <span class="value">{{ service_selected }}</span> </p>
                     </div>
                 </div>
                 <div class="right">
@@ -22,30 +22,37 @@
                 </div>
                 <hr>
             </div>
-            <div class="row">
+            {% if stops.length > 0 %}
+                <div class="row">
                 {% for stop in stops %}
-                <div class="col-md-6">
-                    <div class="stop-container">
-                        <div class="title-container">
-                            <p class="title">{{ stop.name }} ({{ stop.direction }})</p>
-                            <p class="distance">{{ stop.distanceFromUser }}</p>
+                    <div class="col-md-6">
+                        <div class="stop-container">
+                            <div class="title-container">
+                                <p class="title">{{ stop.name }} ({{ stop.direction }})</p>
+                                <p class="distance">{{ stop.distanceFromUser }}</p>
+                            </div>
+                            <p class="locality">{% if stop.locality  %} {{ stop.locality }} {% else %} (locality not available) {% endif %}</p>
+                            <p class="services">{{ stop.services }}</p>
                         </div>
-                        <p class="locality">{% if stop.locality  %} {{ stop.locality }} {% else %} (locality not available) {% endif %}</p>
-                        <p class="services">{{ stop.services }}</p>
                     </div>
-                </div>
-                {% if loop.index % 2 == 0 %}
-            </div>
-            <div class="row">
-                {% endif %}
+                    {% if loop.index % 2 == 0 %}
+                        </div>
+                        <div class="row">
+                    {% endif %}
                 {% endfor %}
-            </div>
+                </div>
+            {% else %}
+                <div class="nothing-to-see-here-container">
+                    <p>Nothing To See Here...</p>
+                </div>
+            {% endif %}
         </div>
     </div>
 
     <!-- Filter modal -->
     <div id="filter-modal" class="modal fade">
         <p id="count-selected" hidden="">{{ count_selected }}</p>
+        <p id="service-selected" hidden="">{{ service_selected }}</p>
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -57,6 +64,12 @@
                     <select class="form-control" id="filter-modal-count-select">
                         {% for count in count_choices %}
                             <option value="{{ count }}">{{ count }}</option>
+                        {% endfor %}
+                    </select>
+                    <p>Services to display:</p>
+                    <select class="form-control" size="10" id="filter-modal-service-select" multiple>
+                        {% for service in service_choices %}
+                            <option value="{{ service }}">{{ service }}</option>
                         {% endfor %}
                     </select>
                 </div>

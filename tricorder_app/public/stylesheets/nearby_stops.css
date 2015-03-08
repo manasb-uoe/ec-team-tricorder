@@ -20,7 +20,7 @@
     color: #000000;
 }
 
-.nearby-stops-container .filter-container .left .count {
+.nearby-stops-container .filter-container .left .value {
     color: #337ab7;
 }
 
@@ -50,12 +50,20 @@
 .nearby-stops-container .stop-container .title-container .distance {
     display: inline-block;
     float: right;
-    font-size: 120%;
-    color: limegreen;
+    font-size: 100%;
+    background-color: #f1f1f1;
+    border-radius: 3px;
+    padding: 3px;
 }
 
 .nearby-stops-container .stop-container .locality {
     margin-bottom: 10px;
+}
+
+.nothing-to-see-here-container {
+    padding: 50px;
+    border: dashed 1px gray;
+    text-align: center;
 }
 
 

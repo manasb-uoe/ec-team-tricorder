@@ -37,15 +37,17 @@ var LocationFetcher = function () {
 var NearbyStops = function () {
     var config = {
         changeFilterButton: $("#change-filter-button"),
-        countSelected: $("#count-selected"),
+        countSelected: $("#count-selected").text(),
+        serviceSelected: $("#service-selected").text().split(","),
         filterModal: $("#filter-modal"),
         filterModalBody: $("#filter-modal-body"),
         filterModalCountSelect: $("#filter-modal-count-select"),
+        filterModalServiceSelect: $("#filter-modal-service-select"),
         filterModalPositiveButton: $("#filter-modal-positive-button")
     };
 
     function init() {
-        var params = getParamsFromUrl();
+        var params = getLocationParamsFromUrl();
         if (params["lat"] == null || params["lng"] == null) {
             // append user's current location to url and reload
             LocationFetcher.getCurrentPosition(function (position) {
@@ -61,22 +63,25 @@ var NearbyStops = function () {
         });
 
         config.filterModalPositiveButton.click(function () {
-            var params = getParamsFromUrl();
+            var params = getLocationParamsFromUrl();
             params["count"] = config.filterModalCountSelect.val();
+            params["service"] = config.filterModalServiceSelect.val();
             window.location.href = generateUrl(params);
         });
     }
 
     function showFilterModal() {
-        config.filterModalCountSelect.find("option[value='" + config.countSelected.text() + "']").attr("selected", true);
+        config.filterModalCountSelect.find("option[value='" + config.countSelected + "']").attr("selected", true);
+        for (var i=0; i<config.serviceSelected.length; i++) {
+            config.filterModalServiceSelect.find("option[value='" + config.serviceSelected[i] + "']").attr("selected", true);
+        }
         config.filterModal.modal();
     }
 
-    function getParamsFromUrl() {
+    function getLocationParamsFromUrl() {
         var params = window.location.search.substr(1).split('&');
         var lat = null;
         var lng = null;
-        var count = null;
         for (var i=0; i < params.length; i++) {
             if (params[i].indexOf('lat') > -1) {
                 lat = params[i].substr(4);
@@ -84,14 +89,10 @@ var NearbyStops = function () {
             if (params[i].indexOf('lng') > -1) {
                 lng = params[i].substr(4);
             }
-            if (params[i].indexOf('count') > -1) {
-                count = params[i].substr(6);
-            }
         }
         return {
             lat: lat,
-            lng: lng,
-            count: count
+            lng: lng
         }
     }
 
@@ -99,12 +100,17 @@ var NearbyStops = function () {
         var lat = params["lat"] || 0;
         var lng = params["lng"] || 0;
         var count = params["count"] || 10;
+        var service = params["service"] || ["All"];
 
         var url = window.location.href;
         if (url.indexOf('?') > -1) {
             url = url.substr(0, url.indexOf('?'));
         }
-        return url + '?lat=' + lat + '&lng=' + lng + '&count=' + count;
+        url += '?lat=' + lat + '&lng=' + lng + '&count=' + count;
+        for (var i=0; i<service.length; i++) {
+            url += "&service[]=" + service[i];
+        }
+        return url;
     }
 
     return {
