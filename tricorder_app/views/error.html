@@ -1,7 +1,11 @@
-{% extends "layout.html" %}
-
-{% block content %}
+<!doctype html>
+<html lang="en">
+<head>
+    <title>{{ title }}</title>
+    <link rel="stylesheet" type="text/css" href="/stylesheets/error.css">
+</head>
+<body>
     <h1>{{ message }}</h1>
     <h2>{{ error.status }}</h2>
     <pre>{{ error.stack }}</pre>
-{% endblock %}
+</body>
