@@ -1,6 +1,5 @@
 var globals = require('../utilities/globals');
 var util = require('../utilities/util');
-var async = require('async');
 var Stop = require('../models/stop').Stop;
 var Service = require('../models/service').Service;
 
@@ -16,10 +15,10 @@ module.exports.home = function(req, res) {
 
 /* GET stops near me page */
 module.exports.nearbyStops = function (req, res) {
-    var currentUserLocation = {lat: req.query["lat"], lng: req.query["lng"]};
-
     Stop.find(function (err, stops) {
         if (!err) {
+            var currentUserLocation = {lat: req.query["lat"], lng: req.query["lng"]};
+
             // find distance from user for each stop
             for (var i=0; i<stops.length; i++) {
                 var stop = stops[i];
@@ -35,7 +34,11 @@ module.exports.nearbyStops = function (req, res) {
             });
 
             // humanize sorted results
-            var requestedStops = stops.slice(0, 10);
+            var count = req.query["count"] || 10;
+            if (count == "All") {
+                count = stops.length;
+            }
+            var requestedStops = stops.slice(0, count);
             for (var i=0; i<requestedStops.length; i++) {
                 requestedStops[i].distanceFromUser = util.humanizeDistance(requestedStops[i].distanceFromUser);
             }
@@ -45,7 +48,9 @@ module.exports.nearbyStops = function (req, res) {
                     title: "Nearby Stops",
                     current_url: globals.urls.nearby_stops,
                     urls: globals.urls,
-                    stops: requestedStops
+                    stops: requestedStops,
+                    count_choices: [10, 50, 100, "All"],
+                    count_selected: count == stops.length ? "All" : count
                 }
             );
         }

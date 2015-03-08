@@ -18,7 +18,7 @@
                     </div>
                 </div>
                 <div class="right">
-                    <button class="btn btn-primary">Change Filter</button>
+                    <button id="change-filter-button" class="btn btn-primary">Change Filter</button>
                 </div>
                 <hr>
             </div>
@@ -42,4 +42,29 @@
             </div>
         </div>
     </div>
+
+    <!-- Filter modal -->
+    <div id="filter-modal" class="modal fade">
+        <p id="count-selected" hidden="">{{ count_selected }}</p>
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">Change Filter</h4>
+                </div>
+                <div id="filter-modal-body" class="modal-body">
+                    <p>Number of stops to display:</p>
+                    <select class="form-control" id="filter-modal-count-select">
+                        {% for count in count_choices %}
+                            <option value="{{ count }}">{{ count }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button id="filter-modal-negative-button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button id="filter-modal-positive-button" type="button" class="btn btn-primary">Apply changes</button>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
 {% endblock %}
