@@ -30,7 +30,8 @@
         </div>
         <div id="navbar" class="collapse navbar-collapse">
             <ul class="nav navbar-nav">
-                <li {% if current_url == urls.home %} class="active" {% endif %}><a href="{{ urls.home }}">Home</a></li>
+                <li {% if current_url == urls.home %} class="active" {% endif %}><a id="home-tab-link" href="{{ urls.home }}">Home</a></li>
+                <li {% if current_url == urls.nearby_stops %} class="active" {% endif %}><a id="stops-near-me-tab-link" href="{{ urls.nearby_stops }}">Nearby Stops</a></li>
             </ul>
         </div><!--/.nav-collapse -->
     </div>
@@ -44,5 +45,6 @@
 <!-- Placed at the end of the document so the pages load faster -->
 <script src="/javascripts/jquery/jquery-2.1.3.min.js"></script>
 <script src="/javascripts/bootstrap/bootstrap.min.js"></script>
+<script src="/javascripts/main.js"></script>
 </body>
 </html>
