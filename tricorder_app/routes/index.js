@@ -14,7 +14,7 @@ module.exports.home = function(req, res) {
     );
 };
 
-/* GET stops near me page */
+/* GET nearby stops page */
 module.exports.nearbyStops = function (req, res) {
     var allServices = ["All"];
     var requestedServices = req.query["service"] || [];
@@ -92,4 +92,17 @@ module.exports.nearbyStops = function (req, res) {
     );
 };
 
+/* GET stop page */
+module.exports.stop = function (req, res, next) {
+    console.log(req.params["id"]);
+    Stop.find({stop_id: req.params["id"]}, function (err, stop) {
+        if (!err) {
+            if (stop.length != 0) {
+                res.send("EXISTS");
+            } else {
+                util.raise404(next);
+            }
+        }
+    });
+};
 

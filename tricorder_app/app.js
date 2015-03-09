@@ -31,6 +31,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // routes go here
 app.get(globals.urls.home, routesIndex.home);
 app.get(globals.urls.nearby_stops, routesIndex.nearbyStops);
+app.get(globals.urls.stop + "/:id", routesIndex.stop);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
