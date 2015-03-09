@@ -7,7 +7,10 @@
 
 {% block body %}
     <div class="container">
-        <div class="nearby-stops-container">
+        <p class="main-title">Nearby Stops</p>
+
+        <div class="nearby-stops-container" id="nearby-stops-container">
+            <div id="nearby-stops-map-container"></div>
             <div class="filter-container">
                 <div class="left">
                     <div class="number-filter">
@@ -28,11 +31,13 @@
                     <div class="col-md-6">
                         <div class="stop-container">
                             <div class="title-container">
-                                <p class="title">{{ stop.name }} ({{ stop.direction }})</p>
+                                <p class="title"><span class="name">{{ stop.name }}</span> ({{ stop.direction }})</p>
                                 <p class="distance">{{ stop.distanceFromUser }}</p>
                             </div>
                             <p class="locality">{% if stop.locality  %} {{ stop.locality }} {% else %} (locality not available) {% endif %}</p>
                             <p class="services">{{ stop.services }}</p>
+                            <p class="lat" hidden="">{{ stop.coordinates[1] }}</p>
+                            <p class="lng" hidden="">{{ stop.coordinates[0] }}</p>
                         </div>
                     </div>
                     {% if loop.index % 2 == 0 %}
@@ -57,7 +62,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                    <h4 class="modal-title">Change Filter</h4>
+                    <h4 class="modal-title"><strong>Change Filter</strong></h4>
                 </div>
                 <div id="filter-modal-body" class="modal-body">
                     <p>Number of stops to display:</p>
@@ -66,6 +71,7 @@
                             <option value="{{ count }}">{{ count }}</option>
                         {% endfor %}
                     </select>
+                    <br>
                     <p>Services to display:</p>
                     <select class="form-control" size="10" id="filter-modal-service-select" multiple>
                         {% for service in service_choices %}

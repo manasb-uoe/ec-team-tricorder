@@ -1,3 +1,15 @@
+.main-title {
+    font-size: 250%;
+    margin: 20px 0;
+    text-align: center;
+}
+
+#nearby-stops-map-container {
+    width: 100%;
+    height: 400px;
+    margin-bottom: 15px;
+}
+
 .nearby-stops-container {
     margin-left: auto;
     margin-right: auto;
@@ -32,12 +44,12 @@
     padding: 15px;
     background-color: #ffffff;
     margin-bottom: 20px;
-    box-shadow: 0 2px 1px rgba(0,0,0,0.08);
+    box-shadow: 0 2px 2px rgba(0,0,0,0.08);
     cursor: pointer;
 }
 
 .nearby-stops-container .stop-container:hover {
-    background-color: #e5e5e5;
+    background-color: #e1e1e1;
 }
 
 .nearby-stops-container .stop-container .title-container .title {
@@ -69,6 +81,7 @@
     border: dashed 1px gray;
     text-align: center;
 }
+
 
 
 

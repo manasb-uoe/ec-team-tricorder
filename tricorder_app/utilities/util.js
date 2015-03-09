@@ -29,9 +29,9 @@ module.exports.getDistanceBetweenPoints = function(pt1, pt2) {
 module.exports.humanizeDistance = function(d) {
     var humanized = "";
     if (d < 1000) {
-        humanized = d.toFixed(0) + " meters";
+        humanized = d.toFixed(0) + " metres";
     } else {
-        humanized = (d/1000).toFixed(1) + " kilometers";
+        humanized = (d/1000).toFixed(1) + " kilometres";
     }
 
     return humanized;

@@ -34,8 +34,9 @@ var LocationFetcher = function () {
     };
 }();
 
-var NearbyStops = function () {
+var NearbyStopsHandler = function () {
     var config = {
+        mapContainer: $("#nearby-stops-map-container"),
         changeFilterButton: $("#change-filter-button"),
         countSelected: $("#count-selected").text(),
         serviceSelected: $("#service-selected").text().split(","),
@@ -43,7 +44,8 @@ var NearbyStops = function () {
         filterModalBody: $("#filter-modal-body"),
         filterModalCountSelect: $("#filter-modal-count-select"),
         filterModalServiceSelect: $("#filter-modal-service-select"),
-        filterModalPositiveButton: $("#filter-modal-positive-button")
+        filterModalPositiveButton: $("#filter-modal-positive-button"),
+        nearbyStopsContainer: $("#nearby-stops-container")
     };
 
     function init() {
@@ -54,6 +56,9 @@ var NearbyStops = function () {
                 window.location.href = "/nearby-stops?lat=" + position.coords.latitude + "&lng=" + position.coords.longitude;
             });
         }
+
+        setupMap(params);
+
         bindUIActions();
     }
 
@@ -77,6 +82,102 @@ var NearbyStops = function () {
         }
         config.filterModal.modal();
     }
+
+    function setupMap(params) {
+        var userLatLng = new google.maps.LatLng(params["lat"], params["lng"]);
+
+        var options = {
+            zoom: 17,
+            center: userLatLng,
+            mapTypeControl: false,
+            navigationControlOptions: {
+                style: google.maps.NavigationControlStyle.SMALL
+            },
+            mapTypeId: google.maps.MapTypeId.ROADMAP
+        };
+
+        var map = new google.maps.Map(config.mapContainer[0], options);
+        addUserMarkerToMap(map, userLatLng);
+        addStopMarkersToMap(map);
+    }
+
+    function addUserMarkerToMap(map, userLatLng) {
+        var infoWindow = new google.maps.InfoWindow({
+            content: "<div class='map-info-window'><strong>You are here</strong></div>"
+        });
+
+        var marker = new google.maps.Marker({
+            position: userLatLng,
+            map: map
+        });
+        marker.setMap(map);
+
+        //show info window when marker is clicked
+        google.maps.event.addListener(marker, 'click', function() {
+            infoWindow.open(map, marker);
+        });
+
+        // initially show info window
+        infoWindow.open(map, marker);
+    }
+
+    function addStopMarkersToMap(map) {
+        // get locations of all stops
+        var stopLocations = {};
+        config.nearbyStopsContainer.find(".stop-container").each(function () {
+            var stopContainer = $(this);
+            stopLocations[stopContainer.find(".title").text()] = {
+                lat: stopContainer.children(".lat").text(),
+                lng: stopContainer.children(".lng").text()
+            };
+        });
+
+        // get marker icon to be used for all stops
+        var markerIcon = new google.maps.MarkerImage(
+            "http://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png"
+        );
+
+        // add all stop markers to map
+        var isNearest = true;   // used to open the nearest stop marker's info window
+        for (var key in stopLocations) {
+            if (stopLocations.hasOwnProperty(key)) {
+                var stopLatLng = new google.maps.LatLng(stopLocations[key]["lat"], stopLocations[key]["lng"]);
+
+                var infoWindowContent = "";
+                if (isNearest) {
+                    infoWindowContent = "<div class='map-info-window'>" + "<strong>Nearest stop: </strong>" + key + "</div>";
+                } else {
+                    infoWindowContent = "<div class='map-info-window'>" + key + "</div>";
+                }
+
+                var infoWindow = new google.maps.InfoWindow({
+                    content: infoWindowContent
+                });
+
+                var marker = new google.maps.Marker({
+                    position: stopLatLng,
+                    map: map,
+                    icon: markerIcon
+                });
+                marker.setMap(map);
+
+                //show info window when marker is clicked
+                (function(infoWindow, marker) {
+                    google.maps.event.addListener(marker, 'click', function() {
+                        infoWindow.open(map, marker);
+                    });
+                }(infoWindow, marker));
+
+                // only open the info window of the nearest stop marker
+                if (isNearest) {
+                    infoWindow.open(map, marker);
+                }
+
+                // now set isNearest to false since only the first stop in the dict is nearest
+                isNearest = false;
+            }
+        }
+     }
 
     function getLocationParamsFromUrl() {
         var params = window.location.search.substr(1).split('&');
@@ -123,6 +224,6 @@ var NearbyStops = function () {
 $(document).ready(function () {
     // only initialize the modules required for the current page
     if (window.location.href.indexOf('/nearby-stops') > -1) {
-        NearbyStops.init();
+        NearbyStopsHandler.init();
     }
 });
