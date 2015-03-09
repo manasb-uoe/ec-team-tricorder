@@ -2,3 +2,11 @@ body {
     padding-top: 50px;
     background-color: #f5f8fa;
 }
+
+.footer-divider {
+    border-color: lightgrey;
+}
+
+.footer-text {
+    padding: 10px 10px;
+}
