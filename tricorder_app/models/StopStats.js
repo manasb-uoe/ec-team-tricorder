@@ -1,7 +1,8 @@
 var mongoose = require('mongoose');
 
 var StopStatsSchema = new mongoose.Schema({
-    stop_id: {type: Number, index: true},
+    date: String,
+    stop_id: Number,
     early_5_plus: Number,
     early_4: Number,
     early_3: Number,
@@ -15,5 +16,8 @@ var StopStatsSchema = new mongoose.Schema({
     modified: {type: Boolean, index: true}
 
 });
+
+//It is necessary to define the index at schema level for a compound index
+StopStatsSchema.index({date: 1, vehicle_id: 1})
 
 mongoose.model('StopStat', StopStatsSchema);

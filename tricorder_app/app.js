@@ -108,70 +108,76 @@ app.use(function(err, req, res, next) {
     });
 });
 
-main();
+//main();
 //build();
-//buildTimetables()
+buildTimetables()
 
 
 //
 ////====== New and Improved Timetables! ====== //
 ////Flatten the data so that each departure is indexable by stop_id and servicename to improve lookup times
-////====== WARNING THIS TAKES ~20 minutes TO RUN USE WITH CAUTION ======= ////
+////====== WARNING THIS TAKES ~20 minutes to run USE WITH CAUTION ======= ////
 function buildTimetables() {
-    Stop.find({}, 'stop_id',function(err,doc) {
-        console.log('start ' + new Date().toUTCString());
-        var stops = doc;
+    Timetable.remove({}, function(err) {
 
-        async.eachSeries(stops, function(stop, callbackA) {
-            https.get("https://tfe-opendata.com/api/v1/timetables/" + stop.stop_id, function(res){
-                console.log('request');
+        if(err){return next(err);}
 
-                var body = '';
-                res.on('data', function(chunk){
+        Stop.find({}, 'stop_id',function(err,doc) {
+            console.log('start ' + new Date().toUTCString());
+            var stops = doc;
 
-                    body += chunk;
+            async.eachSeries(stops, function(stop, callbackA) {
+                https.get("https://tfe-opendata.com/api/v1/timetables/" + stop.stop_id, function(res){
+                    console.log('request');
 
-                });
+                    var body = '';
+                    res.on('data', function(chunk){
 
-                res.on('end', function() {
-                    var json = JSON.parse(body);
-                    var departures = json.departures;
-                    async.eachSeries(departures, function(curDeparture, callbackB){
+                        body += chunk;
 
-                        var timeToUnix = moment(curDeparture.time, 'HH:mm').unix();
-
-                        var result = {
-                            stop_id: json.stop_id,
-                            stop_name: json.stop_name,
-                            service_name: curDeparture.service_name,
-                            time: curDeparture.time,
-                            timestamp: timeToUnix,
-                            destination: curDeparture.destination,
-                            day: curDeparture.day,
-                            note_id: curDeparture.note_id,
-                            valid_from: curDeparture.valid_from
-                        };
-
-
-                        var timetable = new Timetable(result);
-
-                        timetable.save(function(err, post) {
-
-                            if(err){return next(err);}
-
-                            callbackB();
-                        });
-
-                    }, function(err){
-                        callbackA();
                     });
 
+                    res.on('end', function() {
+                        var json = JSON.parse(body);
+                        var departures = json.departures;
+                        async.eachSeries(departures, function(curDeparture, callbackB){
+
+                            var timeToUnix = moment(curDeparture.time, 'HH:mm').unix();
+
+                            var result = {
+                                stop_id: json.stop_id,
+                                stop_name: json.stop_name,
+                                service_name: curDeparture.service_name,
+                                time: curDeparture.time,
+                                timestamp: timeToUnix,
+                                destination: curDeparture.destination,
+                                day: curDeparture.day,
+                                note_id: curDeparture.note_id,
+                                valid_from: curDeparture.valid_from
+                            };
+
+
+                            var timetable = new Timetable(result);
+
+                            timetable.save(function(err, post) {
+
+                                if(err){return next(err);}
+
+                                callbackB();
+                            });
+
+                        }, function(err){
+                            callbackA();
+                        });
+
+                    });
                 });
+            }, function(err) {
+                console.log('timetables done ' + new Date().toUTCString());
             });
-        }, function(err) {
-            console.log('timetables done ' + new Date().toUTCString());
         });
     });
+
 }
 
 
@@ -256,76 +262,72 @@ function build() {
 
         function(callback) {
 
-            VehicleStat.remove({}, function(err){
-                if (err) {
-                    return next(err);
-                }
+            Location.find({}, 'vehicle_id', function(err, doc) {
 
-                Location.find({}, 'vehicle_id', function(err, doc) {
+                if(err){return next(err);}
 
-                    if(err){return next(err);}
+                async.eachSeries(doc, function(loc, callbackA) {
 
-                    async.eachSeries(doc, function(loc, callbackA) {
+                    var vehicleStat = {
+                        date: moment().format('YYYY MM DD'),
+                        vehicle_id: loc.vehicle_id,
+                        early_5_plus: 0,
+                        early_4: 0,
+                        early_3: 0,
+                        early_2: 0,
+                        on_time: 0,
+                        late_2: 0,
+                        late_3: 0,
+                        late_4: 0,
+                        late_5_plus: 0,
+                        total_count: 0,
+                        modified: false
+                    };
 
-                        var vehicleStat = {
-                            vehicle_id: loc.vehicle_id,
-                            early_5_plus: 0,
-                            early_4: 0,
-                            early_3: 0,
-                            early_2: 0,
-                            on_time: 0,
-                            late_2: 0,
-                            late_3: 0,
-                            late_4: 0,
-                            late_5_plus: 0,
-                            total_count: 0,
-                            modified: false
-                        };
+                    var vStat = new VehicleStat(vehicleStat);
 
-                        var vStat = new VehicleStat(vehicleStat);
+                    vStat.save(function(err, post){
 
-                        vStat.save(function(err, post){
+                        if(err){return next(err);}
 
-                            if(err){return next(err);}
-
-                            callbackA();
-
-                        });
-
-                    }, function(){
-
-                        console.log('done building vehicle stats');
-
-                        callback();
+                        callbackA();
 
                     });
+
+                }, function(){
+
+                    console.log('done building vehicle stats');
+
+                    callback();
 
                 });
 
             });
 
+
         },
         function(callback) {
             //====== Stops ======
-            Stop.remove({}, function(err){
+            Stop.remove({}, function(err) {
 
-                if(err){next(err)};
+                if(err) {return next(err);}
 
-                https.get("https://tfe-opendata.com/api/v1/stops", function(res) {
+
+                https.get("https://tfe-opendata.com/api/v1/stops", function (res) {
 
                     var body = '';
 
-                    res.on('data', function(chunk){
+                    res.on('data', function (chunk) {
                         body += chunk;
 
                     });
 
-                    res.on('end', function() {
+                    res.on('end', function () {
 
                         var json = JSON.parse(body);
                         var stops = json.stops;
 
-                        async.eachSeries(stops,function(stop, callbackA){
+                        async.eachSeries(stops, function (stop, callbackA) {
 
                             var coordinates = [];
                             coordinates.push(stop.longitude);
@@ -335,13 +337,15 @@ function build() {
                             delete stop.longitude;
 
                             var stopDoc = new Stop(stop);
-                            stopDoc.save(function(err, post) {
+                            stopDoc.save(function (err, post) {
 
-                                if(err){return next(err);}
+                                if (err) {
+                                    return next(err);
+                                }
                                 callbackA();
 
                             });
-                        }, function(err){
+                        }, function (err) {
 
                             console.log('done building stops');
                             callback();
@@ -349,69 +353,83 @@ function build() {
                         });
                     });
                 });
+
             });
 
         },
 
-        function(callback) {
-
-            //====== Services and Journeys ====== //
-            https.get("https://tfe-opendata.com/api/v1/services", function(res){
-
-                var body = '';
-
-                res.on('data', function(chunk){
-
-                    body += chunk;
-
-                });
-
-                res.on('end', function() {
-
-                    var json = JSON.parse(body);
-
-                    async.eachSeries(json.services, function(item, callbackA) {
-
-                        var service = new Service(item);
-
-                        service.save(function(err, post) {
-
-                            if(err){return next(err);}
-
-                            https.get("https://tfe-opendata.com/api/v1/journeys/" + item.name, function(res) {
-
-                                var body = '';
-
-                                res.on('data', function(chunk){
-                                    body += chunk;
-                                });
-
-                                res.on('end', function() {
-                                    var json = JSON.parse(body);
-
-                                    var journey = new Journey(json);
-
-                                    journey.save(function(err, post) {
-
-                                        if(err){return next(err);}
-
-                                        callbackA();
-
-                                    });
-                                });
-                            });
-
-                        });
-                    }, function(err){
-
-                        console.log('done building services and journeys');
-                        callback();
-
-                    });
-
-                });
-            });
-        },
+        //====== Services and Journeys ====== //
+        // Currently never used and can take a very long time to build
+        //function(callback) {
+        //
+        //    Service.remove({}, function(err){
+        //
+        //        if(err){return next(err);}
+        //
+        //        Journey.remove({}, function(err){
+        //
+        //            if(err){next(err);}
+        //
+        //            https.get("https://tfe-opendata.com/api/v1/services", function(res) {
+        //
+        //                var body = '';
+        //
+        //                res.on('data', function(chunk){
+        //
+        //                    body += chunk;
+        //
+        //                });
+        //
+        //                res.on('end', function() {
+        //
+        //                    var json = JSON.parse(body);
+        //
+        //                    async.eachSeries(json.services, function(item, callbackA) {
+        //
+        //                        var service = new Service(item);
+        //
+        //                        service.save(function(err, post) {
+        //
+        //                            if(err){return next(err);}
+        //
+        //                            https.get("https://tfe-opendata.com/api/v1/journeys/" + item.name, function(res) {
+        //
+        //                                var body = '';
+        //
+        //                                res.on('data', function(chunk){
+        //                                    body += chunk;
+        //                                });
+        //
+        //                                res.on('end', function() {
+        //                                    var json = JSON.parse(body);
+        //
+        //                                    var journey = new Journey(json);
+        //
+        //                                    journey.save(function(err, post) {
+        //
+        //                                        if(err){return next(err);}
+        //
+        //                                        console.log('servicing');
+        //                                        callbackA();
+        //
+        //                                    });
+        //                                });
+        //                            });
+        //
+        //                        });
+        //                    }, function(err){
+        //
+        //                        console.log('done building services and journeys');
+        //                        callback();
+        //
+        //                    });
+        //
+        //                });
+        //            });
+        //        });
+        //    });
+        //
+        //},
 
         function(callback) {
 
@@ -422,7 +440,7 @@ function build() {
                 async.eachSeries(stops, function(stop, callbackA) {
 
                     var stopStat = {
-
+                        date: moment().format('YYYY MM DD'),
                         stop_id: stop.stop_id,
                         early_5_plus: 0,
                         early_4: 0,
@@ -458,45 +476,49 @@ function build() {
             });
 
         },
-
+        ////====== Service Status ====== ////
         function(callback){
 
-            ////====== Service Status ====== ////
+            ServiceStatus.remove({}, function(err) {
 
-            https.get("https://tfe-opendata.com/api/v1/status", function(res){
+                if(err){return next(err);}
 
-                var body = '';
+                https.get("https://tfe-opendata.com/api/v1/status", function(res) {
 
-                res.on('data', function(chunk){
-                    body += chunk;
-                });
+                    var body = '';
 
-                res.on('end', function() {
+                    res.on('data', function(chunk){
+                        body += chunk;
+                    });
 
-                    var json = JSON.parse(body);
+                    res.on('end', function() {
 
-                    async.eachSeries(json.disruptions, function(d, callbackA) {
+                        var json = JSON.parse(body);
 
-                        var status = new ServiceStatus(d);
+                        async.eachSeries(json.disruptions, function(d, callbackA) {
 
-                        status.save(function(err, post) {
+                            var status = new ServiceStatus(d);
+
+                            status.save(function(err, post) {
+
+                                if(err){return next(err);}
+
+                                callbackA();
+                            });
+
+                        }, function(err) {
 
                             if(err){return next(err);}
 
-                            callbackA();
+                            console.log('done building service status');
+                            callback();
+
                         });
 
-                    }, function(err) {
-
-                        if(err){return next(err);}
-
-                        console.log('done building service status');
-                        callback();
-
                     });
-
                 });
             });
+
 
         }
 
@@ -514,11 +536,12 @@ function main() {
         async.waterfall(
             [
                 function (callback) {
-                    https.get("https://tfe-opendata.com/api/v1/vehicle_locations", function (res) {
-                        //Clear the old data
-                        Location.remove({}, function (err) {
+                    //Clear the old data
+                    Location.remove({}, function (err) {
 
-                            if (err) {return next(err);}
+                        if (err) {return next(err);}
+
+                        https.get("https://tfe-opendata.com/api/v1/vehicle_locations", function (res) {
 
                             var body = '';
 
@@ -691,7 +714,9 @@ function main() {
                                 }
 
                                 //Determine how late/early the bus is, update the vehicle stat corresponding to this bus
-                                VehicleStat.findOne({vehicle_id: bus.vehicle_id}, function (err, vehicleStat) {
+                                VehicleStat.findOne({vehicle_id: bus.vehicle_id, date: moment().format('YYYY MM DD')}, function (err, vehicleStat) {
+
+
 
                                     if (err) {
 
@@ -699,7 +724,36 @@ function main() {
                                         return next(err);
 
                                     }
+
+
+                                    // If a new vehicle comes online after stats are first built
                                     if(vehicleStat === null) {
+
+                                            var vehicleStat = {
+                                                date: moment().format('YYYY MM DD'),
+                                                vehicle_id: bus.vehicle_id,
+                                                early_5_plus: 0,
+                                                early_4: 0,
+                                                early_3: 0,
+                                                early_2: 0,
+                                                on_time: 0,
+                                                late_2: 0,
+                                                late_3: 0,
+                                                late_4: 0,
+                                                late_5_plus: 0,
+                                                total_count: 0,
+                                                modified: false
+                                            };
+
+                                            var vStat = new VehicleStat(vehicleStat);
+
+                                            vStat.save(function(err, post) {
+
+                                                if (err) {return next(err);}
+
+                                                callbackA();
+
+                                            });
 
                                         console.log('null stat ' + bus.vehicle_id);
                                         console.log('There is a mismatch between locations and vehiclestats');
@@ -762,7 +816,7 @@ function main() {
                                         }
 
                                         else {
-
+                                            console.log('on time');
                                             vehicleStat.on_time++;
 
                                         }
@@ -792,11 +846,79 @@ function main() {
 
                         console.log('callback');
 
-                        callback(err);
+                        callback();
 
                     });
 
                 }
+
+                //THIS WON'T WORK I NEED IT TO RUN FOR EVERY BUS
+                //,
+                //
+                //function(bus, callback) {
+                //    var bus = bus.bus;
+                //    var minDif = bus.minutesDif;
+                //    StopStat.findOne({stop_id: bus.stop_id, date: moment().format('YYYY MM DD')}, function(err, stopStat){
+                //        if (minutesDif < -5) {
+                //            //stopStat.early_5_plus++;
+                //            vehicleStat.early_5_plus++;
+                //            console.log('1');
+                //        }
+                //
+                //        else if (minutesDif >= -4 && minutesDif < -3) {
+                //            // stopStat.early_4++;
+                //            vehicleStat.early_4++;
+                //            console.log('2');
+                //        }
+                //
+                //        else if (minutesDif >= -3 && minutesDif < -2) {
+                //            //stopStat.early_3++;
+                //            vehicleStat.early_3++;
+                //            console.log('3');
+                //        }
+                //
+                //        else if (minutesDif >= -2 && minutesDif < -1) {
+                //            //stopStat.early_2++;
+                //            vehicleStat.early_2++;
+                //            console.log('4');
+                //        }
+                //
+                //        else if (minutesDif < 2 && minutesDif > 1) {
+                //            //stopStat.late_2++;
+                //            vehicleStat.late_2++;
+                //            console.log('5');
+                //        }
+                //
+                //        else if (minutesDif < 3 && minutesDif > 2) {
+                //            //stopStat.late_3++;
+                //            vehicleStat.late_3++;
+                //            console.log('6');
+                //        }
+                //
+                //        else if (minutesDif < 4 && minutesDif > 3) {
+                //            //stopStat.late_4++;
+                //            vehicleStat.late_4++;
+                //            console.log('7');
+                //        }
+                //
+                //        else if (minutesDif > 5) {
+                //            //stopStat.late_5_plus++;
+                //            vehicleStat.late_5_plus++;
+                //            console.log('8');
+                //        }
+                //
+                //        else {
+                //            console.log('on time');
+                //            vehicleStat.on_time++;
+                //
+                //        }
+                //
+                //        stopStat.modified = true;
+                //        stopStat.save(function (err, product, numberAffected) {
+                //
+                //        });
+                //    });
+                //}
             ],
 
             function (err, results) {
