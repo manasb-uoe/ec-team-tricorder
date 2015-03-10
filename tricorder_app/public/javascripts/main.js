@@ -133,14 +133,6 @@ var NearbyStopsHandler = function () {
     }
 
     function setupMap(params) {
-        var userLocation = {lat: params["lat"], lng: params["lng"]};
-        MapHandler.init(userLocation, config.mapContainer[0]);
-        MapHandler.addMarker(
-            userLocation,
-            "<div class='map-info-window'><strong>You are here</strong></div>",
-            true
-        );
-
         // get locations of all stops
         var stopLocations = {};
         config.stopContainer.each(function () {
@@ -151,20 +143,33 @@ var NearbyStopsHandler = function () {
             };
         });
 
-        // add marker for each location
-        var isNearest = true;   // used to open the nearest stop marker's info window
+        // user nearest stop as the center of the map
+        var nearestStopLocation = {lat: stopLocations[Object.keys(stopLocations)[0]]["lat"], lng: stopLocations[Object.keys(stopLocations)[0]]["lng"]};
+        MapHandler.init(nearestStopLocation, config.mapContainer[0]);
+
+        // add user marker
+        var userLocation = {lat: params["lat"], lng: params["lng"]};
+        MapHandler.addMarker(
+            userLocation,
+            "<div class='map-info-window'><strong>You are here</strong></div>",
+            true
+        );
+
+        // add nearest stop marker
+        MapHandler.addMarker(
+            nearestStopLocation,
+            "<div class='map-info-window'>" + "<strong>Nearest stop: </strong>" + Object.keys(stopLocations)[0] + "</div>",
+            true,
+            "http://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png"
+        );
+
+        // add remaining stop markers
+        var loopCounter = 0;
         for (var key in stopLocations) {
             if (stopLocations.hasOwnProperty(key)) {
-                var stopLocation ={lat: stopLocations[key]["lat"], lng: stopLocations[key]["lng"]};
+                if (loopCounter != 0) { // exclude nearest stop
+                    var stopLocation ={lat: stopLocations[key]["lat"], lng: stopLocations[key]["lng"]};
 
-                if (isNearest) {
-                    MapHandler.addMarker(
-                        stopLocation,
-                        "<div class='map-info-window'>" + "<strong>Nearest stop: </strong>" + key + "</div>",
-                        true,
-                        "http://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png"
-                    );
-                } else {
                     MapHandler.addMarker(
                         stopLocation,
                         "<div class='map-info-window'>" + key + "</div>",
@@ -172,9 +177,7 @@ var NearbyStopsHandler = function () {
                         "http://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png"
                     );
                 }
-
-                // now set isNearest to false since only the first stop in the dict is nearest
-                isNearest = false;
+                loopCounter++;
             }
         }
     }
@@ -251,6 +254,52 @@ var MapHandler = function () {
     }
 }();
 
+var StopHandler = function () {
+
+    var config = {
+        mainContainer: $(".main-container"),
+        mapContainer: $("#stop-map-container")
+    };
+
+    function init() {
+        var userLocation = getLocationParamsFromUrl();
+        if (userLocation["lat"] == null || userLocation["lng"] == null) {
+            // append user's current location to url and reload
+            LocationFetcher.getCurrentPosition(function (position) {
+                window.location.href = window.location.href + "?lat=" + position.coords.latitude + "&lng=" + position.coords.longitude;
+            });
+        }
+
+        setupMap(userLocation);
+    }
+
+    function setupMap(userLocation) {
+        // get stop location since it would be used as the center of the map
+        var stopLocation = {lat: config.mainContainer.find(".lat").text(), lng: config.mainContainer.find(".lng").text()};
+
+        MapHandler.init(stopLocation, config.mapContainer[0]);
+
+        // add user marker
+        MapHandler.addMarker(
+            userLocation,
+            "<div class='map-info-window'><strong>You are here</strong></div>",
+            true
+        );
+
+        // add stop marker
+        MapHandler.addMarker(
+            stopLocation,
+            "<div class='map-info-window'>" + config.mainContainer.find(".main-title").text() + "</div>",
+            true,
+            "http://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png"
+        );
+    }
+
+    return {
+        init: init
+    };
+}();
+
 
 // function calls go here
 $(document).ready(function () {
@@ -259,5 +308,7 @@ $(document).ready(function () {
     // only initialize the modules required for the current page
     if (window.location.href.indexOf('/nearby-stops') > -1) {
         NearbyStopsHandler.init();
+    } else if (window.location.href.indexOf("/stop/") > -1) {
+        StopHandler.init();
     }
 });

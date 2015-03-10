@@ -44,7 +44,6 @@ module.exports.nearbyStops = function (req, res) {
                     .where("services")
                     .in(requestedServices)
                     .exec(function (err, stops) {
-                        console.log(stops.length + "------");
                         if (!err) {
                             var currentUserLocation = {lat: req.query["lat"], lng: req.query["lng"]};
 
@@ -94,11 +93,22 @@ module.exports.nearbyStops = function (req, res) {
 
 /* GET stop page */
 module.exports.stop = function (req, res, next) {
-    console.log(req.params["id"]);
     Stop.find({stop_id: req.params["id"]}, function (err, stop) {
         if (!err) {
             if (stop.length != 0) {
-                res.send("EXISTS");
+                var currentUserLocation = {lat: req.query["lat"], lng: req.query["lng"]};
+                var requestedStop = stop[0];
+                requestedStop.distanceFromUser = util.humanizeDistance(util.getDistanceBetweenPoints(
+                    {lat: requestedStop.coordinates[1], lng: requestedStop.coordinates[0]},
+                    currentUserLocation
+                ));
+
+                res.render("stop.html", {
+                    title: requestedStop.name,
+                    stop: requestedStop,
+                    current_url: globals.urls.stop,
+                    urls: globals.urls
+                })
             } else {
                 util.raise404(next);
             }

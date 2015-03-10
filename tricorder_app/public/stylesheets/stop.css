@@ -1,0 +1,22 @@
+.main-container .main-title {
+    font-size: 200%;
+    margin-top: 20px;
+    margin-bottom: 0;
+    text-align: center;
+}
+
+.main-container .distance-from-user {
+    color: #337ab7;
+    font-size: 150%;
+    text-align: center;
+}
+
+
+.main-container #stop-map-container {
+    width: 100%;
+    height: 400px;
+    margin-bottom: 15px;
+}
+
+
+

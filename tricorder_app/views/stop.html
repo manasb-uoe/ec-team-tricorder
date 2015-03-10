@@ -1,0 +1,16 @@
+{% extends "master.html" %}
+
+{% block head %}
+    <title>{{ title }}</title>
+    <link href="/stylesheets/stop.css" rel="stylesheet" type="text/css">
+{% endblock %}
+
+{% block body %}
+    <div class="container main-container">
+        <p class="main-title">{{ stop.name }} ({{ stop.direction }})</p>
+        <p class="distance-from-user">{{ stop.distanceFromUser }} away</p>
+        <div id="stop-map-container"></div>
+        <p class="lat" hidden="">{{ stop.coordinates[1] }}</p>
+        <p class="lng" hidden="">{{ stop.coordinates[0] }}</p>
+    </div>
+{% endblock %}
