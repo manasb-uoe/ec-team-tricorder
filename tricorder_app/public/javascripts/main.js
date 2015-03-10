@@ -2,6 +2,23 @@
  * Created by Manas on 07-03-2015.
  */
 
+function getLocationParamsFromUrl() {
+    var params = window.location.search.substr(1).split('&');
+    var lat = null;
+    var lng = null;
+    for (var i=0; i < params.length; i++) {
+        if (params[i].indexOf('lat') > -1) {
+            lat = params[i].substr(4);
+        }
+        if (params[i].indexOf('lng') > -1) {
+            lng = params[i].substr(4);
+        }
+    }
+    return {
+        lat: lat,
+        lng: lng
+    }
+}
 
 var LocationFetcher = function () {
     function getCurrenPosition(successCallback) {
@@ -69,7 +86,7 @@ var NearbyStopsHandler = function () {
         filterModalCountSelect: $("#filter-modal-count-select"),
         filterModalServiceSelect: $("#filter-modal-service-select"),
         filterModalPositiveButton: $("#filter-modal-positive-button"),
-        nearbyStopsContainer: $("#nearby-stops-container")
+        stopContainer: $(".stop-container")
     };
 
     function init() {
@@ -97,6 +114,14 @@ var NearbyStopsHandler = function () {
             params["service"] = config.filterModalServiceSelect.val();
             window.location.href = generateUrl(params);
         });
+
+        config.stopContainer.click(function (event) {
+            event.preventDefault();
+            var self = $(this);
+            LocationFetcher.getCurrentPosition(function (position) {
+                window.location.href = self.attr("href") + "?lat=" + position.coords.latitude + "&lng=" + position.coords.longitude;
+            });
+        });
     }
 
     function showFilterModal() {
@@ -108,47 +133,17 @@ var NearbyStopsHandler = function () {
     }
 
     function setupMap(params) {
-        var userLatLng = new google.maps.LatLng(params["lat"], params["lng"]);
+        var userLocation = {lat: params["lat"], lng: params["lng"]};
+        MapHandler.init(userLocation, config.mapContainer[0]);
+        MapHandler.addMarker(
+            userLocation,
+            "<div class='map-info-window'><strong>You are here</strong></div>",
+            true
+        );
 
-        var options = {
-            zoom: 17,
-            center: userLatLng,
-            mapTypeControl: false,
-            navigationControlOptions: {
-                style: google.maps.NavigationControlStyle.SMALL
-            },
-            mapTypeId: google.maps.MapTypeId.ROADMAP
-        };
-
-        var map = new google.maps.Map(config.mapContainer[0], options);
-        addUserMarkerToMap(map, userLatLng);
-        addStopMarkersToMap(map);
-    }
-
-    function addUserMarkerToMap(map, userLatLng) {
-        var infoWindow = new google.maps.InfoWindow({
-            content: "<div class='map-info-window'><strong>You are here</strong></div>"
-        });
-
-        var marker = new google.maps.Marker({
-            position: userLatLng,
-            map: map
-        });
-        marker.setMap(map);
-
-        //show info window when marker is clicked
-        google.maps.event.addListener(marker, 'click', function() {
-            infoWindow.open(map, marker);
-        });
-
-        // initially show info window
-        infoWindow.open(map, marker);
-    }
-
-    function addStopMarkersToMap(map) {
         // get locations of all stops
         var stopLocations = {};
-        config.nearbyStopsContainer.find(".stop-container").each(function () {
+        config.stopContainer.each(function () {
             var stopContainer = $(this);
             stopLocations[stopContainer.find(".title").text()] = {
                 lat: stopContainer.children(".lat").text(),
@@ -156,68 +151,31 @@ var NearbyStopsHandler = function () {
             };
         });
 
-        // get marker icon to be used for all stops
-        var markerIcon = new google.maps.MarkerImage(
-            "http://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png"
-        );
-
-        // add all stop markers to map
+        // add marker for each location
         var isNearest = true;   // used to open the nearest stop marker's info window
         for (var key in stopLocations) {
             if (stopLocations.hasOwnProperty(key)) {
-                var stopLatLng = new google.maps.LatLng(stopLocations[key]["lat"], stopLocations[key]["lng"]);
+                var stopLocation ={lat: stopLocations[key]["lat"], lng: stopLocations[key]["lng"]};
 
-                var infoWindowContent = "";
                 if (isNearest) {
-                    infoWindowContent = "<div class='map-info-window'>" + "<strong>Nearest stop: </strong>" + key + "</div>";
+                    MapHandler.addMarker(
+                        stopLocation,
+                        "<div class='map-info-window'>" + "<strong>Nearest stop: </strong>" + key + "</div>",
+                        true,
+                        "http://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png"
+                    );
                 } else {
-                    infoWindowContent = "<div class='map-info-window'>" + key + "</div>";
-                }
-
-                var infoWindow = new google.maps.InfoWindow({
-                    content: infoWindowContent
-                });
-
-                var marker = new google.maps.Marker({
-                    position: stopLatLng,
-                    map: map,
-                    icon: markerIcon
-                });
-                marker.setMap(map);
-
-                //show info window when marker is clicked
-                (function(infoWindow, marker) {
-                    google.maps.event.addListener(marker, 'click', function() {
-                        infoWindow.open(map, marker);
-                    });
-                }(infoWindow, marker));
-
-                // only open the info window of the nearest stop marker
-                if (isNearest) {
-                    infoWindow.open(map, marker);
+                    MapHandler.addMarker(
+                        stopLocation,
+                        "<div class='map-info-window'>" + key + "</div>",
+                        false,
+                        "http://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png"
+                    );
                 }
 
                 // now set isNearest to false since only the first stop in the dict is nearest
                 isNearest = false;
             }
-        }
-     }
-
-    function getLocationParamsFromUrl() {
-        var params = window.location.search.substr(1).split('&');
-        var lat = null;
-        var lng = null;
-        for (var i=0; i < params.length; i++) {
-            if (params[i].indexOf('lat') > -1) {
-                lat = params[i].substr(4);
-            }
-            if (params[i].indexOf('lng') > -1) {
-                lng = params[i].substr(4);
-            }
-        }
-        return {
-            lat: lat,
-            lng: lng
         }
     }
 
@@ -241,6 +199,56 @@ var NearbyStopsHandler = function () {
     return {
         init: init
     };
+}();
+
+var MapHandler = function () {
+    var config = {
+        map: null
+    };
+
+    function init(centerLocations, mapContainer) {
+        var options = {
+            zoom: 17,
+            center: new google.maps.LatLng(centerLocations["lat"], centerLocations["lng"]),
+            mapTypeControl: false,
+            navigationControlOptions: {
+                style: google.maps.NavigationControlStyle.SMALL
+            },
+            mapTypeId: google.maps.MapTypeId.ROADMAP
+        };
+
+        config.map = new google.maps.Map(mapContainer, options);
+    }
+
+    function addMarker(location, infoWindowContent, shouldOpenInfoWindow, markerIconUrl) {
+        markerIconUrl = markerIconUrl == undefined ? "http://maps.google.com/mapfiles/ms/icons/red-dot.png" : markerIconUrl;
+
+        var infoWindow = new google.maps.InfoWindow({
+            content: infoWindowContent
+        });
+
+        var marker = new google.maps.Marker({
+            position: new google.maps.LatLng(location["lat"], location["lng"]),
+            map: config.map,
+            icon: new google.maps.MarkerImage(markerIconUrl)
+        });
+        marker.setMap(config.map);
+
+        //show info window when marker is clicked
+        google.maps.event.addListener(marker, 'click', function() {
+            infoWindow.open(config.map, marker);
+        });
+
+        if (shouldOpenInfoWindow) {
+            // initially show info window
+            infoWindow.open(config.map, marker);
+        }
+    }
+
+    return {
+        init: init,
+        addMarker: addMarker
+    }
 }();
 
 
