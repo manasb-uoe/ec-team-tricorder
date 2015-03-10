@@ -34,8 +34,32 @@ var LocationFetcher = function () {
     };
 }();
 
+var TabNavigationHandler = function () {
+    var config = {
+        nearbyStopsTab: $("#nearby-stops-tab")
+    };
+
+    function init() {
+        bindUIActions();
+    }
+
+    function bindUIActions() {
+        config.nearbyStopsTab.click(function (event) {
+            event.preventDefault();
+            LocationFetcher.getCurrentPosition(function (position) {
+                window.location.href = config.nearbyStopsTab.attr("href") + "?lat=" + position.coords.latitude + "&lng=" + position.coords.longitude;
+            });
+        });
+    }
+
+    return {
+        init: init
+    };
+}();
+
 var NearbyStopsHandler = function () {
     var config = {
+        nearbyStopsTab: $("#nearby-stops-tab"),
         mapContainer: $("#nearby-stops-map-container"),
         changeFilterButton: $("#change-filter-button"),
         countSelected: $("#count-selected").text(),
@@ -53,7 +77,7 @@ var NearbyStopsHandler = function () {
         if (params["lat"] == null || params["lng"] == null) {
             // append user's current location to url and reload
             LocationFetcher.getCurrentPosition(function (position) {
-                window.location.href = "/nearby-stops?lat=" + position.coords.latitude + "&lng=" + position.coords.longitude;
+                window.location.href = config.nearbyStopsTab.attr("href") + "?lat=" + position.coords.latitude + "&lng=" + position.coords.longitude;
             });
         }
 
@@ -222,6 +246,8 @@ var NearbyStopsHandler = function () {
 
 // function calls go here
 $(document).ready(function () {
+    TabNavigationHandler.init();
+
     // only initialize the modules required for the current page
     if (window.location.href.indexOf('/nearby-stops') > -1) {
         NearbyStopsHandler.init();
