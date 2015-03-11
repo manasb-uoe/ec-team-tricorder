@@ -9,5 +9,8 @@ node_modules
 # widnows script for starting mongodb and connecting to it
 start_mongodb.bat
 
+# windows script for starting app
+start_app.bat
+
 # mongodb
 data
