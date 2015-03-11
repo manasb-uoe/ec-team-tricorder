@@ -5,6 +5,9 @@
 var https = require('https');
 var mongoose = require('mongoose');
 var async = require('async');
+var moment = require('moment');
+
+// models
 var Stop = require('../models/stop').Stop;
 var Service = require("../models/service").Service;
 var Timetable = require("../models/timetable").Timetable;
@@ -113,13 +116,32 @@ function populateTimetables(callback) {
 
                             res.on('end', function() {
                                 var json = JSON.parse(body);
-                                var timetable = new Timetable(json);
-                                timetable.save(function(err) {
-                                    if(err){
-                                        console.log(err.message);
+
+                                async.each(
+                                    json["departures"],
+                                    function (departure, callback) {
+                                        var timetableDoc = {
+                                            stop_id: json["stop_id"],
+                                            stop_name: json["stop_name"],
+                                            service_name: departure["service_name"],
+                                            time: departure["time"],
+                                            timestamp: moment(departure["time"], "HH:mm").unix(),
+                                            destination: departure["destination"],
+                                            day: departure["day"]
+                                        };
+
+                                        var timetable = new Timetable(timetableDoc);
+                                        timetable.save(function(err) {
+                                            if(err) {
+                                                console.log(err.message);
+                                            }
+                                            callback();
+                                        });
+                                    },
+                                    function (err) {
+                                        callback(err, null);
                                     }
-                                    callback();
-                                });
+                                );
                             });
                         });
                     },
@@ -241,11 +263,14 @@ mongoose.connection.once('open', function() {
         if (err) {
             console.log(err.message);
         }
+
+        console.timeEnd("total execution time");
         console.log("END OF DB POPULATION SCRIPT");
         process.exit(0);
     };
 
     if (arg == "all") {
+        console.time("total execution time");
         async.series(
             [
                 populateStops,
@@ -258,6 +283,7 @@ mongoose.connection.once('open', function() {
         );
     }
     else if (arg == "live") {
+        console.time("total execution time");
         populateLiveLocations(finalCallback);
     }
     else {
