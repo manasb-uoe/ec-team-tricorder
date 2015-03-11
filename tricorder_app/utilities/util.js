@@ -2,6 +2,8 @@
  * Created by Manas on 07-03-2015.
  */
 
+var moment = require('moment');
+
 module.exports.raise404 = function(next) {
     var err = new Error();
     err.status = 404;
@@ -37,3 +39,14 @@ module.exports.humanizeDistance = function(d) {
     return humanized;
 };
 
+module.exports.getDay = function () {
+    var day = moment().format("dddd");
+    var weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+    if (weekdays.indexOf(day) > -1) {
+        return 0;
+    } else if (day == "Saturday") {
+        return 5;
+    } else {
+        return 6;
+    }
+};

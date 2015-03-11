@@ -12,5 +12,38 @@
         <div id="stop-map-container"></div>
         <p class="lat" hidden="">{{ stop.coordinates[1] }}</p>
         <p class="lng" hidden="">{{ stop.coordinates[0] }}</p>
+
+        <div class="upcoming-services-container">
+            <p class="title">Upcoming Services</p>
+
+            <ul class="nav nav-tabs tabs">
+                {% for service in services %}
+                    <li role="presentation" class="tab">
+                        <a href="#{{ service.name }}"><span class="service-name">{{ service.name }}</span>  to {{ service.destination }}
+                            {% if service.timetables[0] %}
+                                <br> <span class="text-success">due {{ service.timetables[0].humanizedTime }}</span>
+                            {% else %}
+                                <br> <span class="text-danger">service inactive</span>
+                            {% endif %}
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+            <div class="tab-content-container">
+                {% for service in services %}
+                    <div class="tab-content {{ service.name }}" hidden="">
+                        {% if service.timetables.length > 0 %}
+                            {% for timetable in service.timetables %}
+                                <p>{{ timetable.service_name }} - {{ timetable.humanizedTime }}</p>
+                            {% endfor %}
+                        {% else %}
+                            <div class="nothing-to-see-here-container">
+                                <p>Nothing To See Here...</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
     </div>
 {% endblock %}

@@ -281,7 +281,9 @@ var StopHandler = function () {
 
     var config = {
         mainContainer: $(".main-container"),
-        mapContainer: $("#stop-map-container")
+        mapContainer: $("#stop-map-container"),
+        upcomingServiceTab: $(".tab"),
+        tabContentContainer: $(".tab-content-container")
     };
 
     function init() {
@@ -292,6 +294,21 @@ var StopHandler = function () {
                 window.location.href = window.location.href + "?lat=" + position.coords.latitude + "&lng=" + position.coords.longitude;
             });
         }
+
+        // if no hash found, add hash for the first tab
+        if (window.location.hash == '') {
+            var hash = config.upcomingServiceTab.first().find("a").attr("href");
+            window.location.href = window.location.href + hash;
+        }
+
+        // since hashchange event is not fired when the page is loaded with the hash,
+        // navigateToActiveTab must be called once
+        navigateToActiveTab();
+
+        // navigate to active tab every time the hash changes
+        $(window).on('hashchange', function () {
+            navigateToActiveTab();
+        });
 
         setupMap(userLocation);
     }
@@ -319,6 +336,24 @@ var StopHandler = function () {
 
         // add route between user and stop
         MapHandler.addRoute(userLocation, stopLocation);
+    }
+
+    function navigateToActiveTab() {
+        var hash = window.location.hash;
+
+        // make selected tab active
+        var activeLink = $('a[href="' + hash +'"]');
+        var activeTab = activeLink.parent();
+        activeTab.addClass("active");
+
+        // make all the other tabs inactive
+        activeTab.siblings().removeClass("active");
+
+        // only show the content of the clicked tab
+        var activeContentDivClassName = activeTab.find(".service-name").text();
+        var activeContentDiv = config.tabContentContainer.find("." + activeContentDivClassName);
+        activeContentDiv.show();
+        activeContentDiv.siblings().hide();
     }
 
     return {

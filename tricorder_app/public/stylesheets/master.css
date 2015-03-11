@@ -10,3 +10,9 @@ body {
 .footer-text {
     padding: 10px 10px;
 }
+
+.nothing-to-see-here-container {
+    padding: 50px;
+    border: dashed 1px gray;
+    text-align: center;
+}

@@ -1,8 +1,12 @@
 var globals = require('../utilities/globals');
 var util = require('../utilities/util');
 var Stop = require('../models/stop').Stop;
-var Service = require('../models/service').Service;
 var async = require('async');
+var moment = require('moment');
+
+// models
+var Service = require('../models/service').Service;
+var Timetable = require("../models/timetable").Timetable;
 
 /* GET home page. */
 module.exports.home = function(req, res) {
@@ -22,23 +26,22 @@ module.exports.nearbyStops = function (req, res) {
     async.series(
         [
             function (callback) {
-                    Service
-                        .find()
-                        .select("name")
-                        .exec(function (err, services) {
-                            if (!err) {
-                                for (var i=0; i<services.length; i++) {
-                                    allServices.push(services[i]["name"]);
-                                }
-                                if (requestedServices.length == 0 || requestedServices.indexOf("All") > -1) {
-                                    requestedServices = allServices;
-                                }
+                Service
+                    .find()
+                    .select("name")
+                    .exec(function (err, services) {
+                        if (!err) {
+                            for (var i=0; i<services.length; i++) {
+                                allServices.push(services[i]["name"]);
                             }
-                            callback(null);
-                        });
+                            if (requestedServices.length == 0 || requestedServices.indexOf("All") > -1) {
+                                requestedServices = allServices;
+                            }
+                        }
+                        callback(null);
+                    });
             },
             function (callback) {
-                console.log(requestedServices);
                 Stop
                     .find()
                     .where("services")
@@ -93,26 +96,81 @@ module.exports.nearbyStops = function (req, res) {
 
 /* GET stop page */
 module.exports.stop = function (req, res, next) {
-    Stop.find({stop_id: req.params["id"]}, function (err, stop) {
-        if (!err) {
-            if (stop.length != 0) {
-                var currentUserLocation = {lat: req.query["lat"], lng: req.query["lng"]};
-                var requestedStop = stop[0];
-                requestedStop.distanceFromUser = util.humanizeDistance(util.getDistanceBetweenPoints(
-                    {lat: requestedStop.coordinates[1], lng: requestedStop.coordinates[0]},
-                    currentUserLocation
-                ));
+    Stop
+        .find({stop_id: req.params["id"]})
+        .exec(function (err, stop) {
+            if (!err) {
+                if (stop.length != 0) {
+                    var currentUserLocation = {lat: req.query["lat"], lng: req.query["lng"]};
+                    var requestedStop = stop[0];
+                    requestedStop.distanceFromUser = util.humanizeDistance(util.getDistanceBetweenPoints(
+                        {lat: requestedStop.coordinates[1], lng: requestedStop.coordinates[0]},
+                        currentUserLocation
+                    ));
 
-                res.render("stop.html", {
-                    title: requestedStop.name,
-                    stop: requestedStop,
-                    current_url: globals.urls.stop,
-                    urls: globals.urls
-                })
-            } else {
-                util.raise404(next);
+                    // get timetables for each of the services for the requested stop
+                    var requestedStopServices = [];
+                    async.each(
+                        requestedStop.services,
+                        function (serviceName, callback) {
+                            var requestedStopService = {
+                                name: serviceName,
+                                destination: null,
+                                timetables: []
+                            };
+
+                            Timetable
+                                .find({stop_id: requestedStop.stop_id, service_name: serviceName, day: util.getDay()})
+                                .sort({timestamp: "ascending"})
+                                .exec(function (err, timetables) {
+                                    if (!err) {
+                                        for (var i=0; i<timetables.length; i++) {
+                                            var timetable = timetables[i];
+                                            requestedStopService.destination = timetable.destination;
+
+                                            // only get upcoming timetables
+                                            var due = moment(timetable.time, "HH:mm");
+                                            var now = moment();
+                                            if (due.unix() >= now.unix()) {
+                                                timetable.humanizedTime = due.fromNow();
+                                                requestedStopService.timetables.push(timetable);
+                                            }
+                                        }
+
+                                        requestedStopServices.push(requestedStopService);
+                                        callback();
+                                    }
+                                });
+                        },
+                        function (err) {
+                            // sort the requested stop services in ascending order of expected time of arrival
+                            requestedStopServices.sort(function (a, b) {
+                                if (a.timetables.length > 0 && b.timetables.length > 0) {
+                                    return a.timetables[0].timestamp - b.timetables[0].timestamp;
+                                } else if (a.timetables.length > 0) {
+                                    return -1;
+                                } else if (b.timetables.length > 0) {
+                                    return 1
+                                } else {
+                                    return 0;
+                                }
+                            });
+
+                            if (!err) {
+                                res.render("stop.html", {
+                                    title: requestedStop.name,
+                                    stop: requestedStop,
+                                    services: requestedStopServices,
+                                    current_url: globals.urls.stop,
+                                    urls: globals.urls
+                                });
+                            }
+                        }
+                    );
+                } else {
+                    util.raise404(next);
+                }
             }
-        }
-    });
+        });
 };
 

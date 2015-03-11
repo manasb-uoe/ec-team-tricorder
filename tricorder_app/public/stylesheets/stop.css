@@ -19,4 +19,38 @@
 }
 
 
+.main-container .upcoming-services-container {
+    background-color: #ffffff;
+    padding: 15px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.main-container .upcoming-services-container .title {
+    font-size: 150%;
+    margin-bottom: 20px;
+}
+
+.main-container .upcoming-services-container .divider {
+    border-color: lightgrey;
+}
+
+.main-container .upcoming-services-container .tabs {
+    overflow-x: auto;
+    overflow-y: hidden;
+    display: -webkit-box;
+    display: -moz-box;
+}
+
+.main-container .upcoming-services-container .tabs .tab {
+    float: none;
+    text-align: center;
+}
+
+.main-container .upcoming-services-container .tabs .tab .service-name {
+    font-weight: bold;
+}
+
+.main-container .upcoming-services-container .tab-content-container {
+    padding: 15px;
+}
 
