@@ -145,7 +145,7 @@ var NearbyStopsHandler = function () {
 
         // user nearest stop as the center of the map
         var nearestStopLocation = {lat: stopLocations[Object.keys(stopLocations)[0]]["lat"], lng: stopLocations[Object.keys(stopLocations)[0]]["lng"]};
-        MapHandler.init(nearestStopLocation, config.mapContainer[0]);
+        MapHandler.init(nearestStopLocation, 17, config.mapContainer[0]);
 
         // add user marker
         var userLocation = {lat: params["lat"], lng: params["lng"]};
@@ -206,21 +206,27 @@ var NearbyStopsHandler = function () {
 
 var MapHandler = function () {
     var config = {
-        map: null
+        map: null,
+        directionsRenderer: null,
+        directionsService: null
     };
 
-    function init(centerLocations, mapContainer) {
+    function init(centerLocations, zoomLevel, mapContainer) {
+        // setup map
         var options = {
-            zoom: 17,
+            zoom: zoomLevel,
             center: new google.maps.LatLng(centerLocations["lat"], centerLocations["lng"]),
-            mapTypeControl: false,
-            navigationControlOptions: {
-                style: google.maps.NavigationControlStyle.SMALL
-            },
-            mapTypeId: google.maps.MapTypeId.ROADMAP
+            mapTypeControl: false
         };
-
         config.map = new google.maps.Map(mapContainer, options);
+
+        // setup directions renderer which will draw routes on map
+        config.directionsRenderer = new google.maps.DirectionsRenderer();
+        config.directionsRenderer.setOptions({suppressMarkers: true, preserveViewport: true});
+        config.directionsRenderer.setMap(config.map);
+
+        // setup directions service which will retrieve the required route
+        config.directionsService = new google.maps.DirectionsService();
     }
 
     function addMarker(location, infoWindowContent, shouldOpenInfoWindow, markerIconUrl) {
@@ -248,9 +254,26 @@ var MapHandler = function () {
         }
     }
 
+    function addRoute(origin, destination) {
+        var request = {
+            origin: new google.maps.LatLng(origin["lat"], origin["lng"]),
+            destination: new google.maps.LatLng(destination["lat"], destination["lng"]),
+            travelMode: google.maps.TravelMode.WALKING
+        };
+
+        config.directionsService.route(request, function (res, status) {
+            if (status == google.maps.DirectionsStatus.OK) {
+                config.directionsRenderer.setDirections(res);
+            } else {
+                console.log("Error occurred while adding route: " + status);
+            }
+        });
+    }
+
     return {
         init: init,
-        addMarker: addMarker
+        addMarker: addMarker,
+        addRoute: addRoute
     }
 }();
 
@@ -277,7 +300,7 @@ var StopHandler = function () {
         // get stop location since it would be used as the center of the map
         var stopLocation = {lat: config.mainContainer.find(".lat").text(), lng: config.mainContainer.find(".lng").text()};
 
-        MapHandler.init(stopLocation, config.mapContainer[0]);
+        MapHandler.init(stopLocation, 17, config.mapContainer[0]);
 
         // add user marker
         MapHandler.addMarker(
@@ -293,6 +316,9 @@ var StopHandler = function () {
             true,
             "http://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png"
         );
+
+        // add route between user and stop
+        MapHandler.addRoute(userLocation, stopLocation);
     }
 
     return {
