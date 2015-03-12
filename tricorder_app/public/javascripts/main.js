@@ -160,7 +160,8 @@ var NearbyStopsHandler = function () {
             nearestStopLocation,
             "<div class='map-info-window'>" + "<strong>Nearest stop: </strong>" + Object.keys(stopLocations)[0] + "</div>",
             true,
-            "http://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png"
+            "http://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png",
+            userLocation
         );
 
         // add remaining stop markers
@@ -174,7 +175,8 @@ var NearbyStopsHandler = function () {
                         stopLocation,
                         "<div class='map-info-window'>" + key + "</div>",
                         false,
-                        "http://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png"
+                        "http://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png",
+                        userLocation
                     );
                 }
                 loopCounter++;
@@ -229,7 +231,7 @@ var MapHandler = function () {
         config.directionsService = new google.maps.DirectionsService();
     }
 
-    function addMarker(location, infoWindowContent, shouldOpenInfoWindow, markerIconUrl) {
+    function addMarker(location, infoWindowContent, shouldOpenInfoWindow, markerIconUrl, locationForHandlingDblClick) {
         markerIconUrl = markerIconUrl == undefined ? "http://maps.google.com/mapfiles/ms/icons/red-dot.png" : markerIconUrl;
 
         var infoWindow = new google.maps.InfoWindow({
@@ -251,6 +253,15 @@ var MapHandler = function () {
         if (shouldOpenInfoWindow) {
             // initially show info window
             infoWindow.open(config.map, marker);
+        }
+
+        // handle double click
+        if (locationForHandlingDblClick != undefined) {
+            google.maps.event.addListener(marker, 'dblclick', function () {
+                // remove all existing routes before adding new route
+                config.directionsRenderer.setDirections({routes: []});
+                addRoute(locationForHandlingDblClick, location);
+            });
         }
     }
 
