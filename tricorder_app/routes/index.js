@@ -128,10 +128,10 @@ module.exports.stop = function (req, res, next) {
                                             var timetable = timetables[i];
                                             requestedStopService.destination = timetable.destination;
 
-                                            // only get upcoming timetables
+                                            // only get upcoming timetables within next 60 minutes
                                             var due = moment(timetable.time, "HH:mm");
                                             var now = moment();
-                                            if (due.unix() >= now.unix()) {
+                                            if (due >= now && due <= (now.add(60, "minutes"))) {
                                                 timetable.humanizedTime = due.fromNow();
                                                 requestedStopService.timetables.push(timetable);
                                             }
