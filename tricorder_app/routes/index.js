@@ -7,6 +7,7 @@ var moment = require('moment');
 // models
 var Service = require('../models/service').Service;
 var Timetable = require("../models/timetable").Timetable;
+var LiveLocation = require("../models/live_location").LiveLocation;
 
 /* GET home page. */
 module.exports.home = function(req, res) {
@@ -112,35 +113,71 @@ module.exports.stop = function (req, res, next) {
                     var requestedStopServices = [];
                     async.each(
                         requestedStop.services,
-                        function (serviceName, callback) {
+                        function (serviceName, callbackA) {
                             var requestedStopService = {
                                 name: serviceName,
                                 destination: null,
-                                timetables: []
+                                timetables: [],
+                                buses: []
                             };
 
-                            Timetable
-                                .find({stop_id: requestedStop.stop_id, service_name: serviceName, day: util.getDay()})
-                                .sort({timestamp: "ascending"})
-                                .exec(function (err, timetables) {
-                                    if (!err) {
-                                        for (var i=0; i<timetables.length; i++) {
-                                            var timetable = timetables[i];
-                                            requestedStopService.destination = timetable.destination;
+                            async.series(
+                                [
+                                    function (callbackB) {
+                                        Timetable
+                                            .find({stop_id: requestedStop.stop_id, service_name: serviceName, day: util.getDay()})
+                                            .sort({timestamp: "ascending"})
+                                            .exec(function (err, timetables) {
+                                                if (!err) {
+                                                    for (var i=0; i<timetables.length; i++) {
+                                                        var timetable = timetables[i];
+                                                        requestedStopService.destination = timetable.destination;
 
-                                            // only get upcoming timetables within next 60 minutes
-                                            var due = moment(timetable.time, "HH:mm");
-                                            var now = moment();
-                                            if (due >= now && due <= (now.add(60, "minutes"))) {
-                                                timetable.humanizedTime = due.fromNow();
-                                                requestedStopService.timetables.push(timetable);
-                                            }
+                                                        // only get upcoming timetables within next 60 minutes
+                                                        var due = moment(timetable.time, "HH:mm");
+                                                        var now = moment();
+                                                        if (due >= now && due <= (now.add(60, "minutes"))) {
+                                                            timetable.humanizedTime = due.fromNow();
+                                                            requestedStopService.timetables.push(timetable);
+                                                        }
+                                                    }
+
+                                                    requestedStopServices.push(requestedStopService);
+                                                    callbackB(err, null);
+                                                }
+                                            });
+                                    },
+                                    function (callbackB) {
+                                        LiveLocation
+                                            .find({service_name: serviceName})
+                                            .exec(function (err, buses) {
+                                                // find distance from each bus to user
+                                                for (var i=0; i<buses.length; i++) {
+                                                    buses[i].distanceFromUser = util.getDistanceBetweenPoints(currentUserLocation, {lat: buses[i].coordinates[1], lng: buses[i].coordinates[0]});
+                                                }
+
+                                                // sort buses in ascending order of distance from user
+                                                buses.sort(function (a, b) {
+                                                    return a.distanceFromUser - b.distanceFromUser;
+                                                });
+
+                                                // humanize all distances
+                                                for (var i=0; i<buses.length; i++) {
+                                                    buses[i].distanceFromUser = util.humanizeDistance(buses[i].distanceFromUser);
+                                                    requestedStopService.buses.push(buses[i]);
+                                                }
+
+                                                callbackB(err, null);
+                                            });
+                                    },
+                                    function(err) {
+                                        if (err) {
+                                            console.log(err.message);
                                         }
-
-                                        requestedStopServices.push(requestedStopService);
-                                        callback();
+                                        callbackA();
                                     }
-                                });
+                                ]
+                            );
                         },
                         function (err) {
                             // sort the requested stop services in ascending order of expected time of arrival

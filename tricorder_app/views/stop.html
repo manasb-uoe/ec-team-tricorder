@@ -33,8 +33,13 @@
                 {% for service in services %}
                     <div class="tab-content {{ service.name }}" hidden="">
                         {% if service.timetables.length > 0 %}
+                            <strong>------Times-----</strong>
                             {% for timetable in service.timetables %}
                                 <p>{{ timetable.service_name }} - {{ timetable.humanizedTime }}</p>
+                            {% endfor %}
+                            <strong>------Buses-----</strong>
+                            {% for bus in service.buses %}
+                                <p>{{ bus.service_name }} - {{ bus.vehicle_id }} - {{ bus.distanceFromUser }}</p>
                             {% endfor %}
                         {% else %}
                             <div class="nothing-to-see-here-container">
