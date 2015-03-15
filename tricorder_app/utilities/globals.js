@@ -7,5 +7,3 @@ module.exports.urls = {
     nearby_stops: '/nearby-stops',
     stop: '/stop'
 };
-
-module.exports.databaseUrl = "mongodb://localhost/tricorder_app_db";

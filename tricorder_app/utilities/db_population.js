@@ -6,7 +6,7 @@ var https = require('https');
 var mongoose = require('mongoose');
 var async = require('async');
 var moment = require('moment');
-var globals = require('../utilities/globals');
+var dbConfig = require("./db");
 
 // models
 var Stop = require('../models/stop').Stop;
@@ -250,7 +250,7 @@ function populateLiveLocations(callbackA) {
 
 
 // function calls go here
-mongoose.connect(globals.databaseUrl);
+mongoose.connect(dbConfig.url);
 mongoose.connection.once('open', function() {
     var arg = process.argv[2];
     var finalCallback = function (err) {

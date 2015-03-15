@@ -8,12 +8,13 @@ var swig = require('swig');
 var mongoose = require('mongoose');
 
 var globals = require('./utilities/globals');
+var dbConfig = require("./utilities/db");
 var routesIndex = require('./routes/index');
 
 var app = express();
 
 // database setup
-mongoose.connect(globals.databaseUrl);
+mongoose.connect(dbConfig.url);
 
 // view engine setup
 app.engine('html', swig.renderFile);
