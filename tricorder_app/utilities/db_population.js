@@ -33,6 +33,7 @@ function populateStops(callback) {
                     async.each(
                         json.stops,
                         function (stopJson, callback) {
+                            // use mongodb coordinates so that 'near' queries can be made
                             var coordinates = [];
                             coordinates.push(stopJson.longitude);
                             coordinates.push(stopJson.latitude);
@@ -194,7 +195,7 @@ function populateServiceStatuses(callback) {
     });
 }
 
-function populateLiveLocations(callback) {
+function populateLiveLocations(callbackA) {
     console.log("Populating Live Locations...");
 
     LiveLocation.remove(function (err) {
@@ -206,12 +207,12 @@ function populateLiveLocations(callback) {
                 });
 
                 res.on('end', function() {
-
                     var json = JSON.parse(body);
 
-                    async.each(
+                    async.eachSeries(
                         json.vehicles,
-                        function (vehicleJson, callback) {
+                        function (vehicleJson, callbackB) {
+                            // use mongodb coordinates so that 'near' queries can be made
                             var coordinates = [];
                             coordinates.push(vehicleJson.longitude);
                             coordinates.push(vehicleJson.latitude);
@@ -219,33 +220,29 @@ function populateLiveLocations(callback) {
                             delete vehicleJson.latitude;
                             delete vehicleJson.longitude;
 
-                            //Convert unix timestamp to "HH:MM" so that it can be compared with departure times in Journeys or Timetables
-                            //12 Hour format
-                            var date = new Date(vehicleJson.last_gps_fix * 1000);
-                            var hour = date.getHours();
-                            if(hour > 12)
-                                hour = hour % 12;
-                            var hourString = String(hour);
-                            var minutes = date.getMinutes();
-                            var minutesString = String(minutes);
-                            if(minutes < 10)
-                                minutesString = "0" + minutesString;
-                            var time = hourString + ":" + minutesString;
-                            vehicleJson.time = time;
-
-                            var liveLocation = new LiveLocation(vehicleJson);
-                            liveLocation.save(function(err) {
-                                if(err) {
-                                    console.log(err.message);
-                                }
-                                callback();
-                            });
+                            // only save if vehicle_id doesn't already exist in collection
+                            LiveLocation
+                                .find({vehicle_id: vehicleJson.vehicle_id})
+                                .exec(function (err, liveLocations) {
+                                    if (!err) {
+                                        if (liveLocations.length == 0) {
+                                            var liveLocation = new LiveLocation(vehicleJson);
+                                            liveLocation.save(function(err) {
+                                                if (!err) {
+                                                    callbackB();
+                                                }
+                                            });
+                                        } else {
+                                            callbackB();
+                                        }
+                                    }
+                                });
                         },
                         function (err) {
                             if (!err) {
                                 console.log("DONE\n");
+                                callbackA(err, null);
                             }
-                            callback(err, null);
                         }
                     )
                 });
