@@ -13,7 +13,7 @@ var routesIndex = require('./routes/index');
 var app = express();
 
 // database setup
-mongoose.connect('mongodb://localhost/tricorder_app_db');
+mongoose.connect(globals.databaseUrl);
 
 // view engine setup
 app.engine('html', swig.renderFile);
