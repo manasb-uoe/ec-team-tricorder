@@ -16,7 +16,7 @@ var LiveLocation = require("../models/live_location").LiveLocation;
 
 var API_BASE_URL = "https://tfe-opendata.com/api/v1";
 
-function populateStops(callback) {
+function populateStops(callbackA) {
     console.log("Populating Stops...");
 
     Stop.remove(function (err) {
@@ -32,7 +32,7 @@ function populateStops(callback) {
                     var json = JSON.parse(body);
                     async.each(
                         json.stops,
-                        function (stopJson, callback) {
+                        function (stopJson, callbackB) {
                             // use mongodb coordinates so that 'near' queries can be made
                             var coordinates = [];
                             coordinates.push(stopJson.longitude);
@@ -43,17 +43,16 @@ function populateStops(callback) {
 
                             var stop = new Stop(stopJson);
                             stop.save(function(err) {
-                                if (err) {
-                                    console.log(e.message);
+                                if (!err) {
+                                    callbackB();
                                 }
-                                callback();
                             });
                         },
                         function (err) {
                             if (!err) {
                                 console.log("DONE\n");
+                                callbackA(err, null);
                             }
-                            callback(err, null);
                         }
                     );
                 });
@@ -63,7 +62,7 @@ function populateStops(callback) {
 
 }
 
-function populateServices(callback) {
+function populateServices(callbackA) {
     console.log("Populating Services...");
 
     Service.remove(function (err) {
@@ -78,20 +77,19 @@ function populateServices(callback) {
                     var json = JSON.parse(body);
                     async.each(
                         json.services,
-                        function (serviceJson, callback) {
+                        function (serviceJson, callbackB) {
                             var service = new Service(serviceJson);
                             service.save(function(err) {
-                                if(err){
-                                    console.log(e.message);
+                                if(!err){
+                                    callbackB();
                                 }
-                                callback();
                             });
                         },
                         function (err) {
                             if (!err) {
                                 console.log("DONE\n");
+                                callbackA(err, null);
                             }
-                            callback(err, null);
                         }
                     );
                 });
@@ -100,7 +98,7 @@ function populateServices(callback) {
     });
 }
 
-function populateTimetables(callback) {
+function populateTimetables(callbackA) {
     console.log("Populating Timetables...");
 
     Timetable.remove(function (err) {
@@ -108,7 +106,7 @@ function populateTimetables(callback) {
             Stop.find({}, 'stop_id', function(err, stops) {
                 async.each(
                     stops,
-                    function (stop, callback) {
+                    function (stop, callbackB) {
                         https.get(API_BASE_URL + "/timetables/" + stop.stop_id, function(res) {
                             var body = '';
                             res.on('data', function(chunk){
@@ -120,7 +118,7 @@ function populateTimetables(callback) {
 
                                 async.each(
                                     json["departures"],
-                                    function (departure, callback) {
+                                    function (departure, callbackC) {
                                         var timetableDoc = {
                                             stop_id: json["stop_id"],
                                             stop_name: json["stop_name"],
@@ -133,14 +131,13 @@ function populateTimetables(callback) {
 
                                         var timetable = new Timetable(timetableDoc);
                                         timetable.save(function(err) {
-                                            if(err) {
-                                                console.log(err.message);
+                                            if(!err) {
+                                                callbackC();
                                             }
-                                            callback();
                                         });
                                     },
                                     function (err) {
-                                        callback(err, null);
+                                        callbackB(err, null);
                                     }
                                 );
                             });
@@ -149,8 +146,8 @@ function populateTimetables(callback) {
                     function (err) {
                         if (!err) {
                             console.log("DONE\n");
+                            callbackA(err, null);
                         }
-                        callback(err, null);
                     }
                 );
             });
@@ -158,7 +155,7 @@ function populateTimetables(callback) {
     });
 }
 
-function populateServiceStatuses(callback) {
+function populateServiceStatuses(callbackA) {
     console.log("Populating Service Statuses...");
 
     ServiceStatus.remove(function (err) {
@@ -173,20 +170,19 @@ function populateServiceStatuses(callback) {
                     var json = JSON.parse(body);
                     async.each(
                         json.disruptions,
-                        function (disruptionJson, callback) {
+                        function (disruptionJson, callbackB) {
                             var status = new ServiceStatus(disruptionJson);
-                            status.save(function(err, post) {
-                                if(err){
-                                    console.log(err.message);
+                            status.save(function(err) {
+                                if(!err){
+                                    callbackB();
                                 }
-                                callback();
                             });
                         },
                         function (err) {
                             if (!err) {
                                 console.log("DONE\n");
+                                callbackA(err, null);
                             }
-                            callback(err, null);
                         }
                     )
                 });
