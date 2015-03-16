@@ -1,11 +1,22 @@
-.main-container .main-title {
+.main-container .title-container {
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.main-container .title-container .main-title {
     font-size: 200%;
     margin-top: 20px;
     margin-bottom: 0;
-    text-align: center;
 }
 
-.main-container .distance-from-user {
+.main-container .title-container .favourite-button {
+    padding-left: 20px;
+    padding-right: 20px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+.main-container .title-container .distance-from-user {
     color: #337ab7;
     font-size: 150%;
     text-align: center;
@@ -53,4 +64,6 @@
 .main-container .upcoming-services-container .tab-content-container {
     padding: 15px;
 }
+
+
 

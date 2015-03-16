@@ -7,8 +7,13 @@
 
 {% block body %}
     <div class="container main-container">
-        <p class="main-title">{{ stop.name }} ({{ stop.direction }})</p>
-        <p class="distance-from-user">{{ stop.distanceFromUser }} away</p>
+        <div class="title-container">
+            <p class="main-title">{{ stop.name }} ({{ stop.direction }})</p>
+            <button type="button" class="btn btn-default favourite-button">
+                <span class="glyphicon glyphicon-star" aria-hidden="true"></span> Add to Favourites
+            </button>
+            <p class="distance-from-user">{{ stop.distanceFromUser }} away from you</p>
+        </div>
         <div id="stop-map-container"></div>
         <p class="lat" hidden="">{{ stop.coordinates[1] }}</p>
         <p class="lng" hidden="">{{ stop.coordinates[0] }}</p>
