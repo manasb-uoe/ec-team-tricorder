@@ -14,10 +14,4 @@ var StopSchema = new mongoose.Schema({
     services: {type: Array, "default": []}//???
 });
 
-// PostSchema.methods.upvote = function(cb){
-//     console.log('up title ' + this.title);
-//     this.upvotes += 1;
-//     this.save(cb);
-// };
-
 mongoose.model('Stop', StopSchema);
