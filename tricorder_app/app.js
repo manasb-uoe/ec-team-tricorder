@@ -108,7 +108,11 @@ app.use(function(err, req, res, next) {
     });
 });
 
+
 main();
+
+//main();
+
 //build();
 //buildTimetables()
 
