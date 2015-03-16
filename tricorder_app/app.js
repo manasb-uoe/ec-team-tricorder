@@ -108,9 +108,11 @@ app.use(function(err, req, res, next) {
     });
 });
 
+console.log('port ' + app.get('port'));
+
 //main();
 //build();
-buildTimetables()
+//buildTimetables()
 
 
 //
