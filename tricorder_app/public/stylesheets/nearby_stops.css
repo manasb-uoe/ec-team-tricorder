@@ -1,7 +1,13 @@
 .main-title {
-    font-size: 250%;
-    margin: 20px 0;
+    font-size: 200%;
+    margin-top: 20px;
+    margin-bottom: 0;
     text-align: center;
+}
+
+.hint {
+    text-align: center;
+    margin: 0;
 }
 
 #nearby-stops-map-container {
