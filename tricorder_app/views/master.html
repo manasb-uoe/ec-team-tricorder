@@ -35,7 +35,7 @@
                 <li><a href="#"><span class="glyphicon glyphicon-star"></span> Favourites</a></li>
             </ul>
             <form class="nav navbar-nav navbar-right">
-                <li><a href="#"><span class="glyphicon glyphicon-user"></span> Sign in</a></li>
+                <li {% if current_url == urls.sign_in or current_url == urls.sign_up %} class="active" {% endif %}><a href="{{ urls.sign_in }}"><span class="glyphicon glyphicon-user"></span> Sign in | Sign up</a></li>
             </form>
         </div><!--/.nav-collapse -->
     </div>

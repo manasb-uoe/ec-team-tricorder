@@ -4,6 +4,8 @@
 
 module.exports.urls = {
     home: "/",
-    nearby_stops: '/nearby-stops',
-    stop: '/stop'
+    nearby_stops: "/nearby-stops",
+    stop: "/stop",
+    sign_in: "/sign-in",
+    sign_up: "/sign-up"
 };

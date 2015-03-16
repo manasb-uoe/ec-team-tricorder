@@ -1,0 +1,44 @@
+body {
+    margin-top: 50px;
+    background-color: #f5f8fa;
+}
+
+.main-container {
+    text-align: center;
+}
+
+.main-container .title {
+    font-size: 120%;
+}
+
+.main-container .sign-in-form-container {
+    background-color: #f1f1f1;
+    padding: 40px 15px 40px 15px;
+    box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.3);
+    margin-bottom: 20px;
+}
+
+.main-container .sign-in-form-container .email-input {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.main-container .sign-in-form-container .password-input {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+}
+
+.main-container .sign-in-form-container .submit-button {
+    margin-top: 15px;
+}
+
+.main-container .sign-in-form-container .user-profile-image {
+    width: 100px;
+    height: 100px;
+    border-radius: 150px;
+    margin-bottom: 20px;
+}
+
+.main-container .create-account-link {
+    font-size: 120%;
+}

@@ -1,0 +1,25 @@
+{% extends "master.html" %}
+
+{% block head %}
+    <title>{{ title }}</title>
+    <link rel="stylesheet" type="text/css" href="/stylesheets/sign_in.css">
+{% endblock %}
+
+{% block body %}
+    <div class="container main-container">
+        <div class="col-md-4"></div>
+        <div class="col-md-4">
+            <p class="title">Please sign in to our Tricorder app</p>
+            <div class="sign-in-form-container">
+                <div class="form">
+                    <img class="user-profile-image" src="/images/default/user_profile.png">
+                    <input class="form-control email-input" name="email" type="email" placeholder="Email">
+                    <input class="form-control password-input" name="password" type="password" placeholder="Password">
+                    <input class="form-control btn btn-primary submit-button" type="submit" value="Sign in">
+                </div>
+            </div>
+            <a class="create-account-link" href="{{ urls.sign_up }}">Create an account</a>
+        </div>
+        <div class="col-md-4"></div>
+    </div>
+{% endblock %}

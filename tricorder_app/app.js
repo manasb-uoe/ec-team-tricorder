@@ -33,6 +33,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.get(globals.urls.home, routesIndex.home);
 app.get(globals.urls.nearby_stops, routesIndex.nearbyStops);
 app.get(globals.urls.stop + "/:id", routesIndex.stop);
+app.get(globals.urls.sign_in, routesIndex.sign_in);
+app.get(globals.urls.sign_up, routesIndex.sign_up);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

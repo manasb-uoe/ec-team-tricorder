@@ -211,3 +211,23 @@ module.exports.stop = function (req, res, next) {
         });
 };
 
+/* GET sign in page */
+module.exports.sign_in = function (req, res) {
+    res.render('sign_in.html', {
+            title: "Sign in",
+            current_url: globals.urls.sign_in,
+            urls: globals.urls
+        }
+    );
+};
+
+/* GET sign up page */
+module.exports.sign_up = function (req, res) {
+    res.render('sign_up.html', {
+            title: "Sign up",
+            current_url: globals.urls.sign_up,
+            urls: globals.urls
+        }
+    );
+};
+
