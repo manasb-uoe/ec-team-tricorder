@@ -5,7 +5,7 @@ var TimetableSchema = new mongoose.Schema({
     stop_name: String,
     service_name: String,
     time: String,
-    timestamp: Date,
+    timestamp: {type: Date, index: true},
     destination: String,
     day: Number
 });

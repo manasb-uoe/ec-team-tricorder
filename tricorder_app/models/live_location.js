@@ -4,8 +4,6 @@ var LiveLocationSchema = new mongoose.Schema({
     vehicle_id: {type: String, index: true},
     last_gps_fix: {type: Date, index: true},
     coordinates: {type: [Number], index: '2d'},
-    speed: Number,
-    heading: Number,
     service_name: {type: String, index: true},
     destination: {type: String, index: true}
 });
