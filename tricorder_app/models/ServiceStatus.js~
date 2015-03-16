@@ -1,7 +1,0 @@
-var mongoose = require('mongoose');
-
-var ServiceStatusSchema = new mongoose.Schema({
-    disruptions: {type: Array, "default": []}
-});
-
-mongoose.model('Journey', JourneySchema);
