@@ -3,42 +3,34 @@ body {
     background-color: #f5f8fa;
 }
 
-.main-container {
-    text-align: center;
-}
-
-.main-container .title {
-    font-size: 120%;
-}
 
 .main-container .sign-in-form-container {
-    background-color: #f1f1f1;
-    padding: 40px 15px 40px 15px;
-    box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.3);
+    background-color: #ffffff;
+    padding: 25px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.2);
     margin-bottom: 20px;
+    overflow: hidden;
 }
 
-.main-container .sign-in-form-container .email-input {
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
+.main-container .sign-in-form-container .title {
+    font-size: 150%;
 }
 
-.main-container .sign-in-form-container .password-input {
-    border-top-left-radius: 0;
-    border-top-right-radius: 0;
+.main-container .sign-in-form-container .form-divider {
+    border-top: 1px solid #eee;
+}
+
+.main-container .sign-in-form-container .form-error {
+    padding: 5px;
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+.main-container .sign-in-form-container .username-input {
+    margin-bottom: 15px;
 }
 
 .main-container .sign-in-form-container .submit-button {
     margin-top: 15px;
-}
-
-.main-container .sign-in-form-container .user-profile-image {
-    width: 100px;
-    height: 100px;
-    border-radius: 150px;
-    margin-bottom: 20px;
-}
-
-.main-container .create-account-link {
-    font-size: 120%;
+    width: auto;
 }
