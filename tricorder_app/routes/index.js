@@ -1,4 +1,3 @@
-var globals = require('../utilities/globals');
 var util = require('../utilities/util');
 var Stop = require('../models/stop').Stop;
 var async = require('async');
@@ -15,8 +14,8 @@ var User = require("../models/user").User;
 module.exports.home = function(req, res) {
     res.render('home.html', {
             title: "Home",
-            current_url: globals.urls.home,
-            urls: globals.urls
+            current_url: util.urls.home,
+            urls: util.urls
         }
     );
 };
@@ -80,8 +79,8 @@ module.exports.nearbyStops = function (req, res) {
                             // render page using sorted results
                             res.render('nearby_stops.html', {
                                     title: "Nearby Stops",
-                                    current_url: globals.urls.nearby_stops,
-                                    urls: globals.urls,
+                                    current_url: util.urls.nearby_stops,
+                                    urls: util.urls,
                                     stops: requestedStops,
                                     count_choices: [10, 50, 100, "All"],
                                     count_selected: count == stops.length ? "All" : count,
@@ -200,8 +199,8 @@ module.exports.stop = function (req, res, next) {
                                     title: requestedStop.name,
                                     stop: requestedStop,
                                     services: requestedStopServices,
-                                    current_url: globals.urls.stop,
-                                    urls: globals.urls
+                                    current_url: util.urls.stop,
+                                    urls: util.urls
                                 });
                             }
                         }
@@ -217,8 +216,8 @@ module.exports.stop = function (req, res, next) {
 module.exports.sign_in = function (req, res) {
     res.render('sign_in.html', {
             title: "Sign in",
-            current_url: globals.urls.sign_in,
-            urls: globals.urls
+            current_url: util.urls.sign_in,
+            urls: util.urls
         }
     );
 };
@@ -231,8 +230,8 @@ module.exports.sign_in_post = function (req, res) {
     var renderTemplateWithError = function (err) {
         res.render('sign_in.html', {
                 title: "Sign In",
-                current_url: globals.urls.sign_in,
-                urls: globals.urls,
+                current_url: util.urls.sign_in,
+                urls: util.urls,
                 username: username,
                 error: err
             }
@@ -244,7 +243,7 @@ module.exports.sign_in_post = function (req, res) {
             util.authenticateUser(username, password, function (authenticatedUser) {
                 if (authenticatedUser) {
                     req.session.user = authenticatedUser;
-                    res.redirect(globals.urls.home);
+                    res.redirect(util.urls.home);
                 } else {
                     renderTemplateWithError("Invalid username or password");
                 }
@@ -259,8 +258,8 @@ module.exports.sign_in_post = function (req, res) {
 module.exports.sign_up = function (req, res) {
     res.render('sign_up.html', {
             title: "Sign Up",
-            current_url: globals.urls.sign_up,
-            urls: globals.urls
+            current_url: util.urls.sign_up,
+            urls: util.urls
         }
     );
 };
@@ -273,8 +272,8 @@ module.exports.sign_up_post = function (req, res) {
     var renderTemplateWithError = function (err) {
         res.render('sign_up.html', {
                 title: "Sign up",
-                current_url: globals.urls.sign_up,
-                urls: globals.urls,
+                current_url: util.urls.sign_up,
+                urls: util.urls,
                 username: username,
                 error: err
             }
@@ -299,7 +298,7 @@ module.exports.sign_up_post = function (req, res) {
                                 util.authenticateUser(username, password, function (authenticatedUser) {
                                     req.session.regenerate(function () {
                                         req.session.user = authenticatedUser;
-                                        res.redirect(globals.urls.home);
+                                        res.redirect(util.urls.home);
                                     });
                                 });
                             }

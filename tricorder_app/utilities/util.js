@@ -4,10 +4,17 @@
 
 var moment = require('moment');
 var bcrypt = require('bcrypt-nodejs');
-var globals = require('./globals');
 
 // models
 var User = require('../models/user').User;
+
+module.exports.urls = {
+    home: "/",
+    nearby_stops: "/nearby-stops",
+    stop: "/stop",
+    sign_in: "/sign-in",
+    sign_up: "/sign-up"
+};
 
 module.exports.raise404 = function(next) {
     var err = new Error();

@@ -8,7 +8,6 @@ var bodyParser = require('body-parser');
 var swig = require('swig');
 var mongoose = require('mongoose');
 
-var globals = require('./utilities/globals');
 var util = require('./utilities/util');
 var dbConfig = require("./utilities/db");
 var routesIndex = require('./routes/index');
@@ -33,13 +32,13 @@ app.use(session({secret: 'such_secret_key', saveUninitialized: true, resave: tru
 app.use(express.static(path.join(__dirname, 'public')));
 
 // routes go here
-app.get(globals.urls.home, routesIndex.home);
-app.get(globals.urls.nearby_stops, routesIndex.nearbyStops);
-app.get(globals.urls.stop + "/:id", routesIndex.stop);
-app.get(globals.urls.sign_in, routesIndex.sign_in);
-app.post(globals.urls.sign_in, routesIndex.sign_in_post);
-app.get(globals.urls.sign_up, routesIndex.sign_up);
-app.post(globals.urls.sign_up, routesIndex.sign_up_post);
+app.get(util.urls.home, routesIndex.home);
+app.get(util.urls.nearby_stops, routesIndex.nearbyStops);
+app.get(util.urls.stop + "/:id", routesIndex.stop);
+app.get(util.urls.sign_in, routesIndex.sign_in);
+app.post(util.urls.sign_in, routesIndex.sign_in_post);
+app.get(util.urls.sign_up, routesIndex.sign_up);
+app.post(util.urls.sign_up, routesIndex.sign_up_post);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
