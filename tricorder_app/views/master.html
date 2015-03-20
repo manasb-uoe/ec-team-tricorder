@@ -34,9 +34,18 @@
                 <li {% if current_url == urls.nearby_stops || current_url == urls.stop %} class="active" {% endif %}><a id="nearby-stops-tab" href="{{ urls.nearby_stops }}"><span class="glyphicon glyphicon-map-marker"></span> Nearby Stops</a></li>
                 <li><a href="#"><span class="glyphicon glyphicon-star"></span> Favourites</a></li>
             </ul>
-            <form class="nav navbar-nav navbar-right">
-                <li {% if current_url == urls.sign_in or current_url == urls.sign_up %} class="active" {% endif %}><a href="{{ urls.sign_in }}"><span class="glyphicon glyphicon-user"></span> Sign in | Sign up</a></li>
-            </form>
+            <ul class="nav navbar-nav navbar-right">
+                {% if user %}
+                    <li class="dropdown">
+                        <a href="#" data-toggle="dropdown" class="dropdown-toggle">Signed in as: {{ user.username }} <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                            <li><a href="{{ urls.sign_out }}">Sign Out</a></li>
+                        </ul>
+                    </li>
+                {% else %}
+                    <li {% if current_url == urls.sign_in or current_url == urls.sign_up %} class="active" {% endif %}><a href="{{ urls.sign_in }}"><span class="glyphicon glyphicon-user"></span> Sign in | Sign up</a></li>
+                {% endif %}
+            </ul>
         </div><!--/.nav-collapse -->
     </div>
 </nav>

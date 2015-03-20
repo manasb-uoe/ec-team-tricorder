@@ -13,7 +13,8 @@ module.exports.urls = {
     nearby_stops: "/nearby-stops",
     stop: "/stop",
     sign_in: "/sign-in",
-    sign_up: "/sign-up"
+    sign_up: "/sign-up",
+    sign_out: "/sign_out"
 };
 
 module.exports.raise404 = function(next) {

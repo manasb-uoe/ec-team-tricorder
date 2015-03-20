@@ -328,3 +328,16 @@ module.exports.sign_up_post = function (req, res) {
     });
 };
 
+/* GET sign out current user  */
+module.exports.sign_out = function (req, res) {
+    if (req.session.user) {
+        req.session.destroy(function (err) {
+            if (!err) {
+                res.redirect(util.urls.home);
+            }
+        })
+    } else {
+        res.redirect(util.urls.home);
+    }
+};
+
