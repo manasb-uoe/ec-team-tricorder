@@ -3,11 +3,13 @@ var util = require('../utilities/util');
 var Stop = require('../models/stop').Stop;
 var async = require('async');
 var moment = require('moment');
+var bcrypt = require('bcrypt-nodejs');
 
 // models
 var Service = require('../models/service').Service;
 var Timetable = require("../models/timetable").Timetable;
 var LiveLocation = require("../models/live_location").LiveLocation;
+var User = require("../models/user").User;
 
 /* GET home page. */
 module.exports.home = function(req, res) {
@@ -221,13 +223,94 @@ module.exports.sign_in = function (req, res) {
     );
 };
 
+/* POST sign in page */
+module.exports.sign_in_post = function (req, res) {
+    var username = req.body["username"];
+    var password = req.body["password"];
+
+    var renderTemplateWithError = function (err) {
+        res.render('sign_in.html', {
+                title: "Sign In",
+                current_url: globals.urls.sign_in,
+                urls: globals.urls,
+                username: username,
+                error: err
+            }
+        );
+    };
+
+    util.validateSignUpOrSignInForm(username, password, function (err) {
+        if (!err) {
+            util.authenticateUser(username, password, function (authenticatedUser) {
+                if (authenticatedUser) {
+                    req.session.user = authenticatedUser;
+                    res.redirect(globals.urls.home);
+                } else {
+                    renderTemplateWithError("Invalid username or password");
+                }
+            });
+        } else {
+            renderTemplateWithError(err.message);
+        }
+    })
+};
+
 /* GET sign up page */
 module.exports.sign_up = function (req, res) {
     res.render('sign_up.html', {
-            title: "Sign up",
+            title: "Sign Up",
             current_url: globals.urls.sign_up,
             urls: globals.urls
         }
     );
+};
+
+/* POST sign up page */
+module.exports.sign_up_post = function (req, res) {
+    var username = req.body["username"];
+    var password = req.body["password"];
+
+    var renderTemplateWithError = function (err) {
+        res.render('sign_up.html', {
+                title: "Sign up",
+                current_url: globals.urls.sign_up,
+                urls: globals.urls,
+                username: username,
+                error: err
+            }
+        );
+    };
+
+    util.validateSignUpOrSignInForm(username, password, function (err) {
+        if (!err) {
+            // check if user with requested username already exists
+            User
+                .findOne({username: username})
+                .exec(function (err, user) {
+                    if (!user) {
+                        // generate salt and use it to hash the password
+                        var salt = bcrypt.genSaltSync(10);
+                        var hash = bcrypt.hashSync(password, salt);
+
+                        // create new user with the requested username and password (hash)
+                        var newUser = new User({username: username, hash: hash});
+                        newUser.save(function (err) {
+                            if (!err) {
+                                util.authenticateUser(username, password, function (authenticatedUser) {
+                                    req.session.regenerate(function () {
+                                        req.session.user = authenticatedUser;
+                                        res.redirect(globals.urls.home);
+                                    });
+                                });
+                            }
+                        });
+                    } else {
+                        renderTemplateWithError("That username seems to be taken");
+                    }
+                });
+        } else {
+            renderTemplateWithError(err.message);
+        }
+    });
 };
 

@@ -14,7 +14,7 @@
                 <hr class="form-divider">
                 <form action="{{ urls.sign_up }}" method="post">
                     {% if error %} <p class="alert-danger form-error"><strong>Error:</strong> {{ error }}</p> {% endif %}
-                    <input class="form-control username-input" name="username" type="text" placeholder="Username" required="" title="No spaces allowed">
+                    <input class="form-control username-input" name="username" type="text" placeholder="Username" required="" title="No spaces allowed" value="{{ username }}">
                     <input class="form-control password-input" name="password" type="password" placeholder="Password" required="" pattern=".{6,}" title="6 characters minimum">
                     <input class="form-control btn btn-primary submit-button" type="submit" value="Sign Up">
                 </form>

@@ -14,8 +14,8 @@
                 <hr class="form-divider">
                 <form action="{{ urls.sign_in }}" method="post">
                     {% if error %} <p class="alert-danger form-error"><strong>Error:</strong> {{ error }}</p> {% endif %}
-                    <input class="form-control username-input" name="username" type="text" placeholder="Username" required="">
-                    <input class="form-control password-input" name="password" type="password" placeholder="Password" required="t">
+                    <input class="form-control username-input" name="username" type="text" placeholder="Username" required="" value="{{ username }}">
+                    <input class="form-control password-input" name="password" type="password" placeholder="Password" required="">
                     <input class="form-control btn btn-primary submit-button" type="submit" value="Sign In">
                 </form>
                 <hr class="form-divider">

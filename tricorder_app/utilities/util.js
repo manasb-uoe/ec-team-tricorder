@@ -3,6 +3,11 @@
  */
 
 var moment = require('moment');
+var bcrypt = require('bcrypt-nodejs');
+var globals = require('./globals');
+
+// models
+var User = require('../models/user').User;
 
 module.exports.raise404 = function(next) {
     var err = new Error();
@@ -48,5 +53,53 @@ module.exports.getDay = function () {
         return 5;
     } else {
         return 6;
+    }
+};
+
+module.exports.authenticateUser = function (username, password, callback) {
+    User
+        .findOne({username: username})
+        .exec(function (err, user) {
+            if (!err) {
+                if (user) {
+                    bcrypt.compare(password, user.hash, function (err, res) {
+                        if (res) {
+                            callback(user);
+                        } else {
+                            callback();
+                        }
+                    });
+                } else {
+                    callback();
+                }
+            } else {
+                callback();
+            }
+        });
+};
+
+module.exports.validateSignUpOrSignInForm = function (username, password, callback) {
+    if (!username) {
+        callback(new Error("Username is required"));
+    } else if (!password) {
+        callback(new Error("Password is required"));
+    } else if (username.length < 6) {
+        callback(new Error("Username must be at least 6 characters long"));
+    } else if (password.length < 6) {
+        callback(new Error("Password must be at least 6 characters long"));
+    } else if (username.indexOf(" ") > -1) {
+        callback(new Error("Username cannot contain spaces"));
+    } else if (password.indexOf(" ") > -1) {
+        callback(new Error("Password cannot contain spaces"));
+    } else {
+        callback();
+    }
+};
+
+module.exports.restrictUnauthenticatedUser = function (req, res, next) {
+    if (req.session.user) {
+        next();
+    } else {
+        res.redirect(globals.urls.sign_in);
     }
 };

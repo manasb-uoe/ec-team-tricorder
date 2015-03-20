@@ -1,4 +1,5 @@
 var express = require('express');
+var session = require('express-session');
 var path = require('path');
 var favicon = require('serve-favicon');
 var logger = require('morgan');
@@ -8,6 +9,7 @@ var swig = require('swig');
 var mongoose = require('mongoose');
 
 var globals = require('./utilities/globals');
+var util = require('./utilities/util');
 var dbConfig = require("./utilities/db");
 var routesIndex = require('./routes/index');
 
@@ -27,6 +29,7 @@ app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
+app.use(session({secret: 'such_secret_key', saveUninitialized: true, resave: true}));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // routes go here
@@ -34,7 +37,9 @@ app.get(globals.urls.home, routesIndex.home);
 app.get(globals.urls.nearby_stops, routesIndex.nearbyStops);
 app.get(globals.urls.stop + "/:id", routesIndex.stop);
 app.get(globals.urls.sign_in, routesIndex.sign_in);
+app.post(globals.urls.sign_in, routesIndex.sign_in_post);
 app.get(globals.urls.sign_up, routesIndex.sign_up);
+app.post(globals.urls.sign_up, routesIndex.sign_up_post);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
