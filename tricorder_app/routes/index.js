@@ -15,7 +15,8 @@ module.exports.home = function(req, res) {
     res.render('home.html', {
             title: "Home",
             current_url: util.urls.home,
-            urls: util.urls
+            urls: util.urls,
+            user: req.session.user
         }
     );
 };
@@ -85,7 +86,8 @@ module.exports.nearbyStops = function (req, res) {
                                     count_choices: [10, 50, 100, "All"],
                                     count_selected: count == stops.length ? "All" : count,
                                     service_choices: allServices,
-                                    service_selected: requestedServices.length == allServices.length ? ["All"] : requestedServices
+                                    service_selected: requestedServices.length == allServices.length ? ["All"] : requestedServices,
+                                    user: req.session.user
                                 }
                             );
                         }
@@ -200,7 +202,8 @@ module.exports.stop = function (req, res, next) {
                                     stop: requestedStop,
                                     services: requestedStopServices,
                                     current_url: util.urls.stop,
-                                    urls: util.urls
+                                    urls: util.urls,
+                                    user: req.session.user
                                 });
                             }
                         }
@@ -214,12 +217,17 @@ module.exports.stop = function (req, res, next) {
 
 /* GET sign in page */
 module.exports.sign_in = function (req, res) {
-    res.render('sign_in.html', {
-            title: "Sign in",
-            current_url: util.urls.sign_in,
-            urls: util.urls
-        }
-    );
+    if (!req.session.user) {
+        res.render('sign_in.html', {
+                title: "Sign in",
+                current_url: util.urls.sign_in,
+                urls: util.urls,
+                user: req.session.user
+            }
+        );
+    } else {
+        res.redirect(util.urls.home);
+    }
 };
 
 /* POST sign in page */
@@ -233,7 +241,8 @@ module.exports.sign_in_post = function (req, res) {
                 current_url: util.urls.sign_in,
                 urls: util.urls,
                 username: username,
-                error: err
+                error: err,
+                user: req.session.user
             }
         );
     };
@@ -256,12 +265,17 @@ module.exports.sign_in_post = function (req, res) {
 
 /* GET sign up page */
 module.exports.sign_up = function (req, res) {
-    res.render('sign_up.html', {
-            title: "Sign Up",
-            current_url: util.urls.sign_up,
-            urls: util.urls
-        }
-    );
+    if (!req.session.user) {
+        res.render('sign_up.html', {
+                title: "Sign Up",
+                current_url: util.urls.sign_up,
+                urls: util.urls,
+                user: req.session.user
+            }
+        );
+    } else {
+        res.redirect(util.urls.home);
+    }
 };
 
 /* POST sign up page */
@@ -275,7 +289,8 @@ module.exports.sign_up_post = function (req, res) {
                 current_url: util.urls.sign_up,
                 urls: util.urls,
                 username: username,
-                error: err
+                error: err,
+                user: req.session.user
             }
         );
     };
