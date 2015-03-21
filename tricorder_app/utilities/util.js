@@ -15,7 +15,7 @@ module.exports.urls = {
     stop: "/stop",
     sign_in: "/sign-in",
     sign_up: "/sign-up",
-    sign_out: "/sign_out",
+    sign_out: "/sign-out",
     add_stop_to_favourites: "/add-stop-to-favourites",
     remove_stop_from_favourites: "/remove-stop-from-favourites",
     favourites: "/favourites"

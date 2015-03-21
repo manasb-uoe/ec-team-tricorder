@@ -362,7 +362,7 @@ module.exports.sign_out = function (req, res) {
     if (req.session.user) {
         req.session.destroy(function (err) {
             if (!err) {
-                res.redirect(util.urls.home);
+                res.redirect(util.urls.sign_in);
             }
         })
     } else {
