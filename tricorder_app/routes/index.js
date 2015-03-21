@@ -76,7 +76,7 @@ module.exports.nearbyStops = function (req, res) {
                             }
                             var requestedStops = stops.slice(0, count);
                             for (var i=0; i<requestedStops.length; i++) {
-                                requestedStops[i].distanceFromUser = util.humanizeDistance(requestedStops[i].distanceFromUser);
+                                requestedStops[i].distanceFromUserHumanized = util.humanizeDistance(requestedStops[i].distanceFromUser);
                             }
 
                             // render page using sorted results

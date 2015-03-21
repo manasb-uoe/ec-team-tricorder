@@ -27,16 +27,20 @@
                 <hr>
             </div>
             {% if stops.length > 0 %}
+                <div class="legend-container">
+                    <p class="title">Proximity Legend</p>
+                    <p><span class="alert-success legend">< 5 minute walk</span> <span class="alert-warning legend">< 10 minute walk</span> <span class="alert-danger legend">> 10 minute walk</span></p>
+                </div>
                 <div class="row">
                 {% for stop in stops %}
                     <div class="col-md-6">
                         <a class="stop-container" href="{{ urls.stop }}/{{ stop.stop_id }}">
                             <div class="title-container">
                                 <p class="title"><span class="name">{{ stop.name }}</span> ({{ stop.direction }})</p>
-                                <p class="distance">{{ stop.distanceFromUser }}</p>
+                                <p class="distance {% if stop.distanceFromUser < 400 %} alert-success {% elseif  stop.distanceFromUser < 800 %} alert-warning {% else %} alert-danger {% endif %}">{{ stop.distanceFromUserHumanized }}</p>
                             </div>
                             <p class="locality">{% if stop.locality  %} {{ stop.locality }} {% else %} (locality not available) {% endif %}</p>
-                            <p class="services">{{ stop.services }}</p>
+                            <p class="services">Services: {{ stop.services }}</p>
                             <p class="lat" hidden="">{{ stop.coordinates[1] }}</p>
                             <p class="lng" hidden="">{{ stop.coordinates[0] }}</p>
                         </a>
