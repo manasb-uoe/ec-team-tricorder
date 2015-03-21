@@ -4,6 +4,7 @@
 
 var moment = require('moment');
 var bcrypt = require('bcrypt-nodejs');
+var util = require("./util");
 
 // models
 var User = require('../models/user').User;
@@ -16,7 +17,8 @@ module.exports.urls = {
     sign_up: "/sign-up",
     sign_out: "/sign_out",
     add_stop_to_favourites: "/add-stop-to-favourites",
-    remove_stop_from_favourites: "/remove-stop-from-favourites"
+    remove_stop_from_favourites: "/remove-stop-from-favourites",
+    favourites: "/favourites"
 };
 
 module.exports.raise404 = function(next) {
@@ -110,6 +112,6 @@ module.exports.restrictUnauthenticatedUser = function (req, res, next) {
     if (req.session.user) {
         next();
     } else {
-        res.redirect(globals.urls.sign_in);
+        res.redirect(util.urls.sign_in);
     }
 };
