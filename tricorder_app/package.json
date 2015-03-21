@@ -17,6 +17,7 @@
     "mongoose": "*",
     "async": "*",
     "moment": "*",
-    "bcrypt-nodejs": "*"
+    "bcrypt-nodejs": "*",
+    "connect-mongo": "*"
   }
 }

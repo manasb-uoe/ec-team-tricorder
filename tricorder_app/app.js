@@ -7,6 +7,7 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var swig = require('swig');
 var mongoose = require('mongoose');
+var MongoStore = require('connect-mongo')(session);
 
 var util = require('./utilities/util');
 var dbConfig = require("./utilities/db");
@@ -28,7 +29,12 @@ app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(session({secret: 'such_secret_key', saveUninitialized: true, resave: true}));
+app.use(session({
+    secret: 'such_secret_key',
+    saveUninitialized: true,
+    resave: true,
+    store: new MongoStore({mongooseConnection: mongoose.connection})
+}));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // routes go here
