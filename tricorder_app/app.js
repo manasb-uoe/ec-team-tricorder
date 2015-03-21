@@ -48,6 +48,7 @@ app.post(util.urls.sign_up, routesIndex.sign_up_post);
 app.get(util.urls.sign_out, routesIndex.sign_out);
 app.post(util.urls.add_stop_to_favourites, routesIndex.add_stop_to_favourites);
 app.post(util.urls.remove_stop_from_favourites, routesIndex.remove_stop_from_favourites);
+app.get(util.urls.favourites, util.restrictUnauthenticatedUser, routesIndex.favourites);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

@@ -448,6 +448,50 @@ var StopHandler = function () {
     };
 }();
 
+var FavouritesHandler = function () {
+    var config = {
+        favourite: $(".favourite"),
+        removeFavouriteButton: $(".remove-favourite-button")
+    };
+
+    function init() {
+        bindUIActions();
+    }
+
+    function bindUIActions() {
+        config.favourite.click(function (event) {
+            event.preventDefault();
+            var self = $(this);
+            LocationFetcher.getCurrentPosition(function (position) {
+                window.location.href = self.attr("data-href") + "?lat=" + position.coords.latitude + "&lng=" + position.coords.longitude;
+            });
+        });
+
+        config.removeFavouriteButton.click(function (event) {
+            event.stopPropagation();
+            var parent = $(this).parents(".favourite");
+            sendAjaxPost(
+                parent.attr("data-remove-href"),
+                {stop_id: parent.attr("data-stop-id")},
+                function (response) {
+                    if (!response.error) {
+                        window.location.reload();
+                    } else {
+                        alert("Error: " + response.error);
+                    }
+                }
+            );
+        });
+
+        // enable tooltips
+        $('[data-toggle="tooltip"]').tooltip();
+    }
+
+    return {
+        init: init
+    };
+}();
+
 
 // function calls go here
 $(document).ready(function () {
@@ -458,5 +502,7 @@ $(document).ready(function () {
         NearbyStopsHandler.init();
     } else if (window.location.href.indexOf("/stop/") > -1) {
         StopHandler.init();
+    } else if (window.location.href.indexOf("/favourites") > -1) {
+        FavouritesHandler.init();
     }
 });

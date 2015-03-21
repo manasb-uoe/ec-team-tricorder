@@ -423,3 +423,40 @@ module.exports.remove_stop_from_favourites = function(req, res) {
     }
 };
 
+/* GET favourites page */
+module.exports.favourites = function (req, res, next) {
+    FavouriteStop
+        .find({user_object_id: mongoose.Types.ObjectId(req.session.user._id)})
+        .exec(function (err, favouriteStops) {
+            if (err) { return next(err); }
+
+            // for each favourite stop instance, get the corresponding stop
+            var favourites = [];
+            async.each(
+                favouriteStops,
+                function (favouriteStop, callback) {
+                    Stop
+                        .findOne({stop_id: favouriteStop.stop_id})
+                        .exec(function (err, stop) {
+                            if (err) { return next(err); }
+
+                            stop.alt_name = favouriteStop.alt_name;
+                            favourites.push(stop);
+                            callback();
+                        });
+                },
+                function (err) {
+                    if (err) { return next(err); }
+
+                    res.render("favourites.html", {
+                        title: "Favourites",
+                        current_url: util.urls.favourites,
+                        urls: util.urls,
+                        user: req.session.user,
+                        favourites: favourites
+                    });
+                }
+            )
+        });
+};
+

@@ -32,7 +32,7 @@
             <ul class="nav navbar-nav">
                 <li {% if current_url == urls.home %} class="active" {% endif %}><a id="home-tab" href="{{ urls.home }}"><span class="glyphicon glyphicon-home"></span> Home</a></li>
                 <li {% if current_url == urls.nearby_stops || current_url == urls.stop %} class="active" {% endif %}><a id="nearby-stops-tab" href="{{ urls.nearby_stops }}"><span class="glyphicon glyphicon-map-marker"></span> Nearby Stops</a></li>
-                <li><a href="#"><span class="glyphicon glyphicon-star"></span> Favourites</a></li>
+                <li {% if current_url == urls.favourites %} class="active" {% endif %}><a href="{{ urls.favourites }}"><span class="glyphicon glyphicon-star"></span> Favourites</a></li>
             </ul>
             <ul class="nav navbar-nav navbar-right">
                 {% if user %}

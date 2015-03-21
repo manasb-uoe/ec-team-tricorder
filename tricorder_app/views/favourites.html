@@ -1,0 +1,40 @@
+{% extends "master.html" %}
+
+{% block head %}
+    <link href="/stylesheets/favourites.css" rel="stylesheet" type="text/css">
+{% endblock %}
+
+{% block body %}
+    <div class="container main-container">
+    <div class="title-container">
+        <p class="main-title">{{ title }}</p>
+        <p class="hint">All your favourite stops appear here</p>
+    </div>
+    <div class="favourites-container">
+        {% if favourites.length > 0 %}
+        <div class="row">
+            {% for favourite in favourites %}
+            <div class="col-md-4">
+                <div class="favourite" data-href="{{ urls.stop }}/{{ favourite.stop_id }}" data-remove-href="{{ urls.remove_stop_from_favourites }}" data-stop-id="{{ favourite.stop_id }}">
+                    <div class="left">
+                        <p class="name">{% if favourite.alt_name %} {{ favourite.alt_name }} {% else %} {{ favourite.name }} {% endif %}</p>
+                        <p class="locality">{% if favourite.locality %} {{ favourite.locality }} {% else %} (locality not available) {% endif %}</p>
+                    </div>
+                    <div class="right">
+                        <button type="button" class="btn btn-default btn-sm remove-favourite-button" data-toggle="tooltip" data-placement="top" title="Remove '{{ favourite.name }}' from favourites">
+                            <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% if loop.index % 3 == 0 %}
+        </div>
+        <div class="row">
+            {% endif %}
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="nothing-to-see-here-container">There doesn't seem to be anything here...</div>
+        {% endif %}
+    </div>
+{% endblock %}

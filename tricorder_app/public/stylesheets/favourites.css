@@ -1,0 +1,58 @@
+.main-container .title-container {
+    margin-bottom: 20px;
+}
+
+.main-container .title-container .main-title {
+    font-size: 200%;
+    margin-top: 20px;
+    margin-bottom: 0;
+    text-align: center;
+}
+
+.main-container .title-container .hint {
+    text-align: center;
+}
+
+
+.main-container .favourites-container .favourite {
+    background-color: #ffffff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    cursor: pointer;
+    margin-bottom: 15px;
+    padding: 15px 20px 15px 15px;
+    border: 1px solid #eee;
+    border-left-width: 5px;
+    border-left-color: #1b809e;
+    border-radius: 3px;
+    text-decoration: none;
+    display: block;
+}
+
+.main-container .favourites-container .favourite .left {
+    display: inline-block;
+}
+
+.main-container .favourites-container .favourite .right {
+    display: inline-block;
+    float: right;
+}
+
+.main-container .favourites-container .favourite:hover {
+    background-color: #f5f5f5;
+}
+
+.main-container .favourites-container .favourite .name {
+    font-weight: bold;
+    font-size: 100%;
+    color: #1b809e;
+    margin: 0;
+    display: block;
+}
+
+.main-container .favourites-container .favourite .locality {
+    font-size: 90%;
+    color: #000000;
+    /*text-align: center;*/
+    margin: 0;
+}
+
