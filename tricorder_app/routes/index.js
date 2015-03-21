@@ -400,3 +400,26 @@ module.exports.add_stop_to_favourites = function (req, res) {
         res.send(JSON.stringify({error: "Need to be authenticated to perform this action"}));
     }
 };
+
+/* POST remove favourite stop */
+module.exports.remove_stop_from_favourites = function(req, res) {
+    res.contentType('json');
+
+    if (req.session.user) {
+        var stop_id = req.body["stop_id"];
+
+        // remove favourite stop
+        FavouriteStop
+            .remove({user_object_id: mongoose.Types.ObjectId(req.session.user._id), stop_id: stop_id})
+            .exec(function (err) {
+                if (!err) {
+                    res.send(JSON.stringify({error: undefined}));
+                } else {
+                    res.send(JSON.stringify({error: err.message}));
+                }
+            });
+    } else {
+        res.send(JSON.stringify({error: "Need to be authenticated to perform this action"}));
+    }
+};
+

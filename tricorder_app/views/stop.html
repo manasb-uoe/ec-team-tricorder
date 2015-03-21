@@ -9,14 +9,22 @@
     <div class="container main-container">
         <div class="title-container">
             <p class="main-title">{{ stop.name }} ({{ stop.direction }})</p>
-            {% if isStopFavourite %}
-                <button type="button" class="btn btn-danger favourite-button">
-                    <span class="glyphicon glyphicon-star" aria-hidden="true"></span> <span class="favourite-button-text">Remove from Favourites</span>
-                </button>
+            {% if user %}
+                {% if isStopFavourite %}
+                    <button type="button" class="btn btn-danger favourite-button">
+                        <span class="glyphicon glyphicon-star" aria-hidden="true"></span> <span class="favourite-button-text">Remove from Favourites</span>
+                    </button>
+                {% else %}
+                    <button type="button" class="btn btn-primary favourite-button">
+                        <span class="glyphicon glyphicon-star" aria-hidden="true"></span> <span class="favourite-button-text">Add to Favourites</span>
+                    </button>
+                {% endif %}
             {% else %}
-                <button type="button" class="btn btn-primary favourite-button">
-                    <span class="glyphicon glyphicon-star" aria-hidden="true"></span> <span class="favourite-button-text">Add to Favourites</span>
-                </button>
+                <div style="display: inline-block;" data-toggle="tooltip" data-placement="right" title="Sign in to perform this action">
+                    <button type="button" class="btn btn-primary favourite-button disabled">
+                        <span class="glyphicon glyphicon-star" aria-hidden="true"></span> <span class="favourite-button-text">Add to Favourites</span>
+                    </button>
+                </div>
             {% endif %}
             <p class="distance-from-user">{{ stop.distanceFromUser }} away from you</p>
         </div>

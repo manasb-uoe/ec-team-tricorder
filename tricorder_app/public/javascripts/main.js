@@ -343,25 +343,31 @@ var StopHandler = function () {
     }
 
     function bindUIActions() {
-        config.favouriteButton.click(function () {
-            if (config.favouriteButton.attr("class").indexOf("btn-primary") > -1) {
-                showFavouriteModal();
-            } else {
-                //sendAjaxPost(
-                //    config.favouriteForm.attr("data-remove-action"),
-                //    {stop_id: config.favouriteModalStopIdInput.val()},
-                //    function (response) {
-                //        if (!response.error) {
-                //            config.favouriteButton.removeClass("btn-primary");
-                //            config.favouriteButton.addClass("btn-default");
-                //            config.favouriteButton.prop("value", "Add to Favourites");
-                //        }
-                //    }
-                //);
-                alert("removing: " + config.favouriteForm.attr("data-remove-action"));
-            }
-        });
-
+        // if favourite button is disabled, enable its tooltip
+        if (config.favouriteButton.attr("class").indexOf("disabled") > -1) {
+            $('[data-toggle="tooltip"]').tooltip();
+        } else {
+            config.favouriteButton.click(function () {
+                // show favourite modal if stop not in favourites already (blue button)
+                if (config.favouriteButton.attr("class").indexOf("btn-primary") > -1) {
+                    showFavouriteModal();
+                } else { // else send ajax post request to remove stop from favourites (red button)
+                    sendAjaxPost(
+                        config.favouriteForm.attr("data-remove-action"),
+                        {stop_id: config.favouriteModalStopIdInput.val()},
+                        function (response) {
+                            if (!response.error) {
+                                config.favouriteButton.removeClass("btn-danger");
+                                config.favouriteButton.addClass("btn-primary");
+                                config.favouriteButton.find(".favourite-button-text").text("Add to Favourites");
+                            } else {
+                                alert("Error: " + response.error);
+                            }
+                        }
+                    );
+                }
+            });
+        }
     }
 
     function showFavouriteModal() {
