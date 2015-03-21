@@ -20,6 +20,16 @@ function getLocationParamsFromUrl() {
     }
 }
 
+function sendAjaxPost(url, data, successCallback) {
+    $.ajax({
+        url: url,
+        type: "POST",
+        dataType: "json",
+        data: data,
+        success: successCallback
+    });
+}
+
 var LocationFetcher = function () {
     function getCurrenPosition(successCallback) {
         if (navigator.geolocation) {
@@ -129,7 +139,7 @@ var NearbyStopsHandler = function () {
         for (var i=0; i<config.serviceSelected.length; i++) {
             config.filterModalServiceSelect.find("option[value='" + config.serviceSelected[i] + "']").attr("selected", true);
         }
-        config.filterModal.modal();
+        config.filterModal.modal("show");
     }
 
     function setupMap(params) {
@@ -294,7 +304,13 @@ var StopHandler = function () {
         mainContainer: $(".main-container"),
         mapContainer: $("#stop-map-container"),
         upcomingServiceTab: $(".tab"),
-        tabContentContainer: $(".tab-content-container")
+        tabContentContainer: $(".tab-content-container"),
+        favouriteButton: $(".favourite-button"),
+        favouriteModal: $("#favourite-modal"),
+        favouriteForm: $("#favourite-form"),
+        favouriteModalAltNameInput: $("#favourite-modal-alt-name-input"),
+        favouriteModalStopIdInput : $("#favourite-modal-stop-id-input"),
+        favouriteModalErrorContainer: $("#favourite-modal-error-container")
     };
 
     function init() {
@@ -322,6 +338,60 @@ var StopHandler = function () {
         });
 
         setupMap(userLocation);
+
+        bindUIActions();
+    }
+
+    function bindUIActions() {
+        config.favouriteButton.click(function () {
+            if (config.favouriteButton.attr("class").indexOf("btn-primary") > -1) {
+                showFavouriteModal();
+            } else {
+                //sendAjaxPost(
+                //    config.favouriteForm.attr("data-remove-action"),
+                //    {stop_id: config.favouriteModalStopIdInput.val()},
+                //    function (response) {
+                //        if (!response.error) {
+                //            config.favouriteButton.removeClass("btn-primary");
+                //            config.favouriteButton.addClass("btn-default");
+                //            config.favouriteButton.prop("value", "Add to Favourites");
+                //        }
+                //    }
+                //);
+                alert("removing: " + config.favouriteForm.attr("data-remove-action"));
+            }
+        });
+
+    }
+
+    function showFavouriteModal() {
+        // hide error container initially
+        config.favouriteModalErrorContainer.hide();
+
+        config.favouriteForm.submit(function (event) {
+            // prevent default form submission
+            event.preventDefault();
+
+            // submit form data using ajax
+            sendAjaxPost(
+                config.favouriteForm.attr("data-add-action"),
+                {alt_name: config.favouriteModalAltNameInput.val(), stop_id: config.favouriteModalStopIdInput.val()},
+                function (response) {
+                    if (response.error) {
+                        config.favouriteModalErrorContainer.empty();
+                        config.favouriteModalErrorContainer.append("<strong>Error!</strong> " + response.error);
+                        config.favouriteModalErrorContainer.show();
+                    } else {
+                        config.favouriteModal.modal("hide");
+                        config.favouriteButton.removeClass("btn-primary");
+                        config.favouriteButton.addClass("btn-danger");
+                        config.favouriteButton.find(".favourite-button-text").text("Remove from Favourites");
+                    }
+                }
+            );
+        });
+
+        config.favouriteModal.modal("show");
     }
 
     function setupMap(userLocation) {

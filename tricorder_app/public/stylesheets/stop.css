@@ -65,5 +65,12 @@
     padding: 15px;
 }
 
+#favourite-modal #favourite-modal-error-container {
+    padding: 5px;
+    text-align: center;
+    margin-bottom: 10px;
+    display: none;
+}
+
 
 

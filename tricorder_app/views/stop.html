@@ -9,9 +9,15 @@
     <div class="container main-container">
         <div class="title-container">
             <p class="main-title">{{ stop.name }} ({{ stop.direction }})</p>
-            <button type="button" class="btn btn-default favourite-button">
-                <span class="glyphicon glyphicon-star" aria-hidden="true"></span> Add to Favourites
-            </button>
+            {% if isStopFavourite %}
+                <button type="button" class="btn btn-danger favourite-button">
+                    <span class="glyphicon glyphicon-star" aria-hidden="true"></span> <span class="favourite-button-text">Remove from Favourites</span>
+                </button>
+            {% else %}
+                <button type="button" class="btn btn-primary favourite-button">
+                    <span class="glyphicon glyphicon-star" aria-hidden="true"></span> <span class="favourite-button-text">Add to Favourites</span>
+                </button>
+            {% endif %}
             <p class="distance-from-user">{{ stop.distanceFromUser }} away from you</p>
         </div>
         <div id="stop-map-container"></div>
@@ -56,4 +62,29 @@
             </div>
         </div>
     </div>
+
+    <!-- Favourite modal -->
+    <div id="favourite-modal" class="modal fade">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title"><strong>Add To Favourites</strong></h4>
+                </div>
+                <div id="favourite-modal-body" class="modal-body">
+                    <div class="alert-danger" id="favourite-modal-error-container"></div>
+                    <p>Stop Name: <strong>{{ stop.name }}</strong></p>
+                    <form id="favourite-form" data-add-action="{{ urls.add_stop_to_favourites }}" data-remove-action="{{ urls.remove_stop_from_favourites }}" method="post">
+                        <p>Choose an easy to remember name: (Optional)</p>
+                        <input id="favourite-modal-alt-name-input" class="form-control">
+                        <input id="favourite-modal-stop-id-input" hidden="" value="{{ stop.stop_id }}">
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button id="favourite-modal-negative-button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button id="favourite-modal-positive-button" type="submit" form="favourite-form" class="btn btn-primary">Add</button>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
 {% endblock %}

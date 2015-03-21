@@ -3,12 +3,14 @@ var Stop = require('../models/stop').Stop;
 var async = require('async');
 var moment = require('moment');
 var bcrypt = require('bcrypt-nodejs');
+var mongoose = require('mongoose');
 
 // models
 var Service = require('../models/service').Service;
 var Timetable = require("../models/timetable").Timetable;
 var LiveLocation = require("../models/live_location").LiveLocation;
 var User = require("../models/user").User;
+var FavouriteStop = require("../models/favourite_stops").FavouriteStop;
 
 /* GET home page. */
 module.exports.home = function(req, res) {
@@ -183,28 +185,55 @@ module.exports.stop = function (req, res, next) {
                             );
                         },
                         function (err) {
-                            // sort the requested stop services in ascending order of expected time of arrival
-                            requestedStopServices.sort(function (a, b) {
-                                if (a.timetables.length > 0 && b.timetables.length > 0) {
-                                    return a.timetables[0].timestamp - b.timetables[0].timestamp;
-                                } else if (a.timetables.length > 0) {
-                                    return -1;
-                                } else if (b.timetables.length > 0) {
-                                    return 1
-                                } else {
-                                    return 0;
-                                }
-                            });
-
                             if (!err) {
-                                res.render("stop.html", {
-                                    title: requestedStop.name,
-                                    stop: requestedStop,
-                                    services: requestedStopServices,
-                                    current_url: util.urls.stop,
-                                    urls: util.urls,
-                                    user: req.session.user
+                                // sort the requested stop services in ascending order of expected time of arrival
+                                requestedStopServices.sort(function (a, b) {
+                                    if (a.timetables.length > 0 && b.timetables.length > 0) {
+                                        return a.timetables[0].timestamp - b.timetables[0].timestamp;
+                                    } else if (a.timetables.length > 0) {
+                                        return -1;
+                                    } else if (b.timetables.length > 0) {
+                                        return 1
+                                    } else {
+                                        return 0;
+                                    }
                                 });
+
+                                async.waterfall(
+                                    [
+                                        function (callback) {
+                                            // if user is authenticated, check if requested stop is their favourite or not
+                                            if (req.session.user) {
+                                                FavouriteStop
+                                                    .findOne({user_object_id: mongoose.Types.ObjectId(req.session.user._id), stop_id: requestedStop.stop_id})
+                                                    .exec(function (err, favouriteStop) {
+                                                        if (!err) {
+                                                            if (favouriteStop) {
+                                                                callback(null, true);
+                                                            } else {
+                                                                callback(null, false);
+                                                            }
+                                                        }
+                                                    });
+                                            } else {
+                                                callback(null, false);
+                                            }
+                                        }
+                                    ],
+                                    function (err, isStopFavourite) {
+                                        if (!err) {
+                                            res.render("stop.html", {
+                                                title: requestedStop.name,
+                                                stop: requestedStop,
+                                                services: requestedStopServices,
+                                                current_url: util.urls.stop,
+                                                urls: util.urls,
+                                                user: req.session.user,
+                                                isStopFavourite: isStopFavourite
+                                            });
+                                        }
+                                    }
+                                );
                             }
                         }
                     );
@@ -341,3 +370,33 @@ module.exports.sign_out = function (req, res) {
     }
 };
 
+/* POST add favourite stop */
+module.exports.add_stop_to_favourites = function (req, res) {
+    res.contentType('json');
+
+    if (req.session.user) {
+        var stop_id = req.body["stop_id"];
+        var alt_name = req.body["alt_name"];
+
+        // create new favourite stop if one does not already exist
+        FavouriteStop
+            .findOne({user_object_id: mongoose.Types.ObjectId(req.session.user._id), stop_id: stop_id})
+            .exec(function (err, favouriteStop) {
+                console.log(req.session.user);
+                if (!favouriteStop) {
+                    var newFavouriteStop = new FavouriteStop({user_object_id: mongoose.Types.ObjectId(req.session.user._id), stop_id: stop_id, alt_name: alt_name});
+                    newFavouriteStop.save(function (err) {
+                        if (!err) {
+                            res.send(JSON.stringify({error: undefined}));
+                        } else {
+                            res.send(JSON.stringify({error: err.message}));
+                        }
+                    });
+                } else {
+                    res.send(JSON.stringify({error: "This stop is already in your favourites."}));
+                }
+            });
+    } else {
+        res.send(JSON.stringify({error: "Need to be authenticated to perform this action"}));
+    }
+};
