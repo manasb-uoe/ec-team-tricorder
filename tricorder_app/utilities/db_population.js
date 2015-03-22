@@ -719,13 +719,15 @@ mongoose.connection.once('open', function() {
             ],
             finalCallback
         );
+    } else if (arg == "live") {
+        console.time("total execution time");
+        populateLiveLocations(finalCallback);
     }
     else if (arg == "update_stats") {
         console.time("total execution time");
         updateStats();
-    }
-    else {
-        console.log("Invalid arguments. Only 'all' and 'live' are allowed.");
+    } else {
+        console.log("Invalid arguments. Only 'all', 'live' and 'update_stats' are allowed.");
         process.exit(1);
     }
 });
