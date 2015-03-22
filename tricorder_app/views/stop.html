@@ -53,7 +53,7 @@
                     <div class="tab-content {{ service.name }}" hidden="">
                         {% if service.timetables.length > 0 %}
                             <div class="panel panel-default">
-                                <div class="panel-heading"><strong>Times</strong><a class="panel-heading-right view-complete-timetable" href="{{ urls.get_service_timetable_for_stop }}" data-service-name="{{ service.name }}" data-stop-id="{{ stop.stop_id }}" data-stop-name="{{ stop.name }}">View complete timetable</a></div>
+                                <div class="panel-heading"><strong>Arrival Times</strong><a class="panel-heading-right view-complete-timetable" href="{{ urls.get_service_timetable_for_stop }}" data-service-name="{{ service.name }}" data-stop-id="{{ stop.stop_id }}" data-stop-name="{{ stop.name }}">View complete timetable</a></div>
                                 <div class="panel-body">
                                     {% for timetable in service.timetables %}
                                         <p><span class="time">{{ timetable.time }}</span> ({{ timetable.humanizedTime }})</p>
@@ -63,28 +63,22 @@
                             <div class="panel panel-default">
                                 <div class="panel-heading"><strong>Buses</strong> (Last updated {{ service.buses[0].lastSeen }}) <a class="panel-heading-right">View live locations on map</a> </div>
                                 <div class="panel-body">
-                                    <div class="table-responsive">
-                                        <table class="table table-hover table-condensed">
-                                            <thead>
-                                            <tr>
-                                                <th>Vehicle ID</th>
-                                                <th>Destination</th>
-                                                <th>Distance From You</th>
-                                            </tr>
-                                            </thead>
-                                            <tbody>
-                                            {% for bus in service.buses %}
-                                                <tr>
-                                                    <th class="vehicle-id">{{ bus.vehicle_id }}</th>
-                                                    <td>{{ bus.destination }}</td>
-                                                    <td>{{ bus.distanceFromUser }}</td>
-                                                </tr>
+                                    <div class="row">
+                                        {% for bus in service.buses %}
+                                        <div class="col-lg-3 col-sm-6">
+                                            <div class="bus-container">
+                                                <p class="title">Bus #{{ bus.vehicle_id }} to {{ bus.destination }}</p>
+                                                <p class="distance-from-user">{{ bus.distanceFromUser }}</p>
+                                            </div>
+                                        </div>
+                                        {% if loop.index % 4 == 0 %}
+                                        </div>
+                                        <div class="row">
+                                            {% endif %}
                                             {% endfor %}
-                                            </tbody>
-                                        </table>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
                         {% else %}
                             <div class="nothing-to-see-here-container">
                                 <p>Nothing To See Here...</p>
