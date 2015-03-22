@@ -312,7 +312,11 @@ var StopHandler = function () {
         favouriteForm: $("#favourite-form"),
         favouriteModalAltNameInput: $("#favourite-modal-alt-name-input"),
         favouriteModalStopIdInput : $("#favourite-modal-stop-id-input"),
-        favouriteModalErrorContainer: $("#favourite-modal-error-container")
+        favouriteModalErrorContainer: $("#favourite-modal-error-container"),
+        viewCompleteTimetableLink: $(".view-complete-timetable"),
+        timetableModal: $("#timetable-modal"),
+        timetableModalBody: $("#timetable-modal-body"),
+        timetableModalTitle: $("#timetable-modal-title")
     };
 
     function init() {
@@ -370,6 +374,16 @@ var StopHandler = function () {
                 }
             });
         }
+
+        config.viewCompleteTimetableLink.click(function (event) {
+            event.preventDefault();
+
+            var serviceName = $(this).attr("data-service-name");
+            var stopId = $(this).attr("data-stop-id");
+            var stopName = $(this).attr("data-stop-name");
+            var url = $(this).attr("href") + "?service=" + serviceName  + "&stop=" + stopId;
+            showTimetableModal(url, serviceName, stopName);
+        });
     }
 
     function showFavouriteModal() {
@@ -443,6 +457,33 @@ var StopHandler = function () {
         var activeContentDiv = config.tabContentContainer.find("." + activeContentDivClassName);
         activeContentDiv.show();
         activeContentDiv.siblings().hide();
+    }
+
+    function showTimetableModal(url, serviceName, stopName) {
+        // load timetables html into modal body
+        $.ajax({
+            url: url,
+            type: "GET",
+            dataType: "html",
+            success: function (html) {
+                config.timetableModal.modal("show");
+                config.timetableModalTitle.html("<strong>Arrival times for Service " + serviceName + " at " + stopName + "</strong>");
+                config.timetableModalBody.html(html);
+            }
+        });
+
+        // handle tab navigation
+        config.timetableModalBody.on("click", ".day-tab", function () {
+            // only mark selected tab as active
+            $(this).addClass("active");
+            $(this).siblings().removeClass("active");
+
+            // only show the content of the clicked tab
+            var activeTabContentClass = "." + $(this).text().toLowerCase() + "-tab-content";
+            var activeTabContent = $(activeTabContentClass);
+            activeTabContent.show();
+            activeTabContent.siblings().hide();
+        });
     }
 
     return {

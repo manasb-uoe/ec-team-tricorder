@@ -460,3 +460,26 @@ module.exports.favourites = function (req, res, next) {
         });
 };
 
+module.exports.get_service_timetable_for_stop = function (req, res, next) {
+    var serviceName = req.query["service"];
+    var stop_id = req.query["stop"];
+    var requestedTimetables = {0: [], 5: [], 6: []};
+
+    Timetable
+        .find({stop_id: stop_id, service_name: serviceName})
+        .sort({timestamp: "ascending"})
+        .exec(function (err, timetables) {
+            if (err) { return next(err); }
+
+            for (var i=0; i<timetables.length; i++) {
+                requestedTimetables[timetables[i].day].push(timetables[i].time);
+            }
+
+            res.render("service_timetable_for_stop.html", {
+                timetablesWeekdays: requestedTimetables[0],
+                timetablesSaturday: requestedTimetables[5],
+                timetablesSunday: requestedTimetables[6]
+            });
+        });
+};
+

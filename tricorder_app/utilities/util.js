@@ -18,7 +18,8 @@ module.exports.urls = {
     sign_out: "/sign-out",
     add_stop_to_favourites: "/add-stop-to-favourites",
     remove_stop_from_favourites: "/remove-stop-from-favourites",
-    favourites: "/favourites"
+    favourites: "/favourites",
+    get_service_timetable_for_stop: "/get-service-timetable-for-stop"
 };
 
 module.exports.raise404 = function(next) {

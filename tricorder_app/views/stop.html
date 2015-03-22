@@ -53,7 +53,7 @@
                     <div class="tab-content {{ service.name }}" hidden="">
                         {% if service.timetables.length > 0 %}
                             <div class="panel panel-default">
-                                <div class="panel-heading"><strong>Times</strong><a class="panel-heading-right">View complete schedule</a></div>
+                                <div class="panel-heading"><strong>Times</strong><a class="panel-heading-right view-complete-timetable" href="{{ urls.get_service_timetable_for_stop }}" data-service-name="{{ service.name }}" data-stop-id="{{ stop.stop_id }}" data-stop-name="{{ stop.name }}">View complete timetable</a></div>
                                 <div class="panel-body">
                                     {% for timetable in service.timetables %}
                                         <p><span class="time">{{ timetable.time }}</span> ({{ timetable.humanizedTime }})</p>
@@ -116,6 +116,24 @@
                 <div class="modal-footer">
                     <button id="favourite-modal-negative-button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                     <button id="favourite-modal-positive-button" type="submit" form="favourite-form" class="btn btn-primary">Add</button>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+
+    <!-- Timetable modal -->
+    <div id="timetable-modal" class="modal fade">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="timetable-modal-title"></h4>
+                </div>
+                <div id="timetable-modal-body" class="modal-body">
+                    {# html will be loaded here #}
+                </div>
+                <div class="modal-footer">
+                    <button id="timetable-modal-negative-button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                 </div>
             </div><!-- /.modal-content -->
         </div><!-- /.modal-dialog -->
