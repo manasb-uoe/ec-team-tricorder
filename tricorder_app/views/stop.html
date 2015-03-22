@@ -52,14 +52,39 @@
                 {% for service in services %}
                     <div class="tab-content {{ service.name }}" hidden="">
                         {% if service.timetables.length > 0 %}
-                            <strong>------Times-----</strong>
-                            {% for timetable in service.timetables %}
-                                <p>{{ timetable.service_name }} - {{ timetable.humanizedTime }}</p>
-                            {% endfor %}
-                            <strong>------Buses-----</strong>
-                            {% for bus in service.buses %}
-                                <p>{{ bus.service_name }} - {{ bus.vehicle_id }} - {{ bus.distanceFromUser }}</p>
-                            {% endfor %}
+                            <div class="panel panel-default">
+                                <div class="panel-heading"><strong>Times</strong><a class="panel-heading-right">View complete schedule</a></div>
+                                <div class="panel-body">
+                                    {% for timetable in service.timetables %}
+                                        <p><span class="time">{{ timetable.time }}</span> ({{ timetable.humanizedTime }})</p>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="panel panel-default">
+                                <div class="panel-heading"><strong>Buses</strong> (Last updated {{ service.buses[0].lastSeen }}) <a class="panel-heading-right">View live locations on map</a> </div>
+                                <div class="panel-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover table-condensed">
+                                            <thead>
+                                            <tr>
+                                                <th>Vehicle ID</th>
+                                                <th>Destination</th>
+                                                <th>Distance From You</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            {% for bus in service.buses %}
+                                                <tr>
+                                                    <th class="vehicle-id">{{ bus.vehicle_id }}</th>
+                                                    <td>{{ bus.destination }}</td>
+                                                    <td>{{ bus.distanceFromUser }}</td>
+                                                </tr>
+                                            {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
                         {% else %}
                             <div class="nothing-to-see-here-container">
                                 <p>Nothing To See Here...</p>

@@ -166,9 +166,10 @@ module.exports.stop = function (req, res, next) {
                                                     return a.distanceFromUser - b.distanceFromUser;
                                                 });
 
-                                                // humanize all distances
+                                                // humanize all distances and add humanized last seen times as well
                                                 for (var i=0; i<buses.length; i++) {
                                                     buses[i].distanceFromUser = util.humanizeDistance(buses[i].distanceFromUser);
+                                                    buses[i].lastSeen = moment.unix(buses[i].last_gps_fix.getTime()).fromNow();
                                                     requestedStopService.buses.push(buses[i]);
                                                 }
 
@@ -382,7 +383,6 @@ module.exports.add_stop_to_favourites = function (req, res) {
         FavouriteStop
             .findOne({user_object_id: mongoose.Types.ObjectId(req.session.user._id), stop_id: stop_id})
             .exec(function (err, favouriteStop) {
-                console.log(req.session.user);
                 if (!favouriteStop) {
                     var newFavouriteStop = new FavouriteStop({user_object_id: mongoose.Types.ObjectId(req.session.user._id), stop_id: stop_id, alt_name: alt_name});
                     newFavouriteStop.save(function (err) {

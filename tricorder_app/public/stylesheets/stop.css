@@ -65,12 +65,29 @@
     padding: 15px;
 }
 
+.main-container .upcoming-services-container .tab-content-container .time {
+    color: #337ab7;
+    font-weight: bold;
+}
+
+.main-container .upcoming-services-container .tab-content-container .panel-heading-right {
+    float: right;
+    cursor: pointer;
+}
+
+.main-container .upcoming-services-container .tab-content-container .vehicle-id {
+    color: #337ab7;
+    font-weight: bold;
+}
+
 #favourite-modal #favourite-modal-error-container {
     padding: 5px;
     text-align: center;
     margin-bottom: 10px;
     display: none;
 }
+
+
 
 
 
