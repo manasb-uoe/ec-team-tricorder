@@ -153,43 +153,45 @@ var NearbyStopsHandler = function () {
             };
         });
 
-        // user nearest stop as the center of the map
-        var nearestStopLocation = {lat: stopLocations[Object.keys(stopLocations)[0]]["lat"], lng: stopLocations[Object.keys(stopLocations)[0]]["lng"]};
-        MapHandler.init(nearestStopLocation, 17, config.mapContainer[0]);
+        if (Object.keys(stopLocations).length > 0) {
+            // user nearest stop as the center of the map
+            var nearestStopLocation = {lat: stopLocations[Object.keys(stopLocations)[0]]["lat"], lng: stopLocations[Object.keys(stopLocations)[0]]["lng"]};
+            MapHandler.init(nearestStopLocation, 17, config.mapContainer[0]);
 
-        // add user marker
-        var userLocation = {lat: params["lat"], lng: params["lng"]};
-        MapHandler.addMarker(
-            userLocation,
-            "<div class='map-info-window'><strong>You are here</strong></div>",
-            true
-        );
+            // add user marker
+            var userLocation = {lat: params["lat"], lng: params["lng"]};
+            MapHandler.addMarker(
+                userLocation,
+                "<div class='map-info-window'><strong>You are here</strong></div>",
+                true
+            );
 
-        // add nearest stop marker
-        MapHandler.addMarker(
-            nearestStopLocation,
-            "<div class='map-info-window'>" + "<strong>Nearest stop: </strong>" + Object.keys(stopLocations)[0] + "</div>",
-            true,
-            "http://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png",
-            userLocation
-        );
+            // add nearest stop marker
+            MapHandler.addMarker(
+                nearestStopLocation,
+                "<div class='map-info-window'>" + "<strong>Nearest stop: </strong>" + Object.keys(stopLocations)[0] + "</div>",
+                true,
+                "http://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png",
+                userLocation
+            );
 
-        // add remaining stop markers
-        var loopCounter = 0;
-        for (var key in stopLocations) {
-            if (stopLocations.hasOwnProperty(key)) {
-                if (loopCounter != 0) { // exclude nearest stop
-                    var stopLocation ={lat: stopLocations[key]["lat"], lng: stopLocations[key]["lng"]};
+            // add remaining stop markers
+            var loopCounter = 0;
+            for (var key in stopLocations) {
+                if (stopLocations.hasOwnProperty(key)) {
+                    if (loopCounter != 0) { // exclude nearest stop
+                        var stopLocation ={lat: stopLocations[key]["lat"], lng: stopLocations[key]["lng"]};
 
-                    MapHandler.addMarker(
-                        stopLocation,
-                        "<div class='map-info-window'>" + key + "</div>",
-                        false,
-                        "http://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png",
-                        userLocation
-                    );
+                        MapHandler.addMarker(
+                            stopLocation,
+                            "<div class='map-info-window'>" + key + "</div>",
+                            false,
+                            "http://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png",
+                            userLocation
+                        );
+                    }
+                    loopCounter++;
                 }
-                loopCounter++;
             }
         }
     }

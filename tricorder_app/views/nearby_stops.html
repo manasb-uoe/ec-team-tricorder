@@ -11,7 +11,7 @@
         <p class="hint">Double click on any stop marker to generate walking route</p>
 
         <div class="nearby-stops-container" id="nearby-stops-container">
-            <div id="nearby-stops-map-container"></div>
+            <div id="nearby-stops-map-container" {% if stops.length == 0 %} hidden="" {% endif %}></div>
             <div class="filter-container">
                 <div class="left">
                     <div class="number-filter">
