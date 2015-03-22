@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+</head>
+<body>
+<div class="timetable-container">
+    <ul class="nav nav-pills nav-justified">
+        <li role="presentation" class="day-tab active"><a>Weekdays</a></li>
+        <li role="presentation" class="day-tab"><a>Saturday</a></li>
+        <li role="presentation" class="day-tab"><a>Sunday</a></li>
+    </ul>
+
+    <div class="tabs-content-container">
+        <div class="weekdays-tab-content">
+            {% for time in timetablesWeekdays %}
+                <p class="time"> {{ time }} </p>
+            {% endfor %}
+        </div>
+        <div class="saturday-tab-content" hidden="">
+            {% for time in timetablesSaturday %}
+                <p class="time"> {{ time }} </p>
+            {% endfor %}
+        </div>
+        <div class="sunday-tab-content" hidden="">
+            {% for time in timetablesSunday %}
+                <p class="time"> {{ time }} </p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+</body>
+</html>
