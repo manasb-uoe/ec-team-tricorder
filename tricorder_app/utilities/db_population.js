@@ -108,15 +108,16 @@ function populateTimetables(callbackA) {
         if (!err) {
             Stop.find({}, 'stop_id', function(err, stops) {
 
-                var n = 10;
+                var n = 30;
 
                 var len = stops.length,stopsArrays = [], i = 0;
                 while (i < len) {
                     var size = Math.ceil((len - i) / n--);
                     stopsArrays.push(stops.slice(i, i += size));
                 }
-
+		var i = 0;
                 async.eachSeries(stopsArrays, function(stops, callbackC) {
+		    console.log('series ' + i++);
                     async.each(
                         stops,
                         function (stop, callbackB) {
