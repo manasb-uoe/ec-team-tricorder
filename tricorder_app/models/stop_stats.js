@@ -18,6 +18,6 @@ var StopStatsSchema = new mongoose.Schema({
 });
 
 //It is necessary to define the index at schema level for a compound index
-StopStatsSchema.index({date: 1, vehicle_id: 1});
+StopStatsSchema.index({date: 1, vehicle_id: 1}, {unique: true});
 
 module.exports.StopStat = mongoose.model('StopStat', StopStatsSchema);

@@ -18,6 +18,6 @@ var VehicleStatsSchema = new mongoose.Schema({
 });
 
 //It is necessary to define the index at schema level for a compound index
-VehicleStatsSchema.index({date: 1, vehicle_id: 1});
+VehicleStatsSchema.index({date: 1, vehicle_id: 1}, {unique: true});
 
 module.exports.VehicleStat = mongoose.model('VehicleStat', VehicleStatsSchema);

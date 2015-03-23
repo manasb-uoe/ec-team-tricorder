@@ -1,7 +1,7 @@
 var mongoose = require('mongoose');
 
 var StopSchema = new mongoose.Schema({
-    stop_id: {type: Number, index: true},
+    stop_id: {type: Number, index: {unique:true}},
     name: String,
     identifier: String,
     locality: String,
