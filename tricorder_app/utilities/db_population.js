@@ -265,7 +265,7 @@ function populateStats(callbackA) {
     async.series([
         function(callback) {
 
-            LiveLocation.find({}, 'vehicle_id', function(err, doc) {
+            LiveLocation.find({}, 'vehicle_id last_gps_fix', function(err, doc) {
 
                 if(err){return next(err);}
 
@@ -273,6 +273,7 @@ function populateStats(callbackA) {
 
                     var vehicleStat = {
                         date: moment().format('YYYY MM DD'),
+                        timestamp: loc.last_gps_fix * 1000,
                         vehicle_id: loc.vehicle_id,
                         early_10_plus: 0,
                         early_10: 0,
@@ -294,8 +295,7 @@ function populateStats(callbackA) {
                         late_9: 0,
                         late_10: 0,
                         late_10_plus: 0,
-                        total_count: 0,
-                        modified: false
+                        total_count: 0
                     };
 
                     var vStat = new VehicleStat(vehicleStat);
@@ -330,6 +330,7 @@ function populateStats(callbackA) {
 
                     var stopStat = {
                         date: moment().format('YYYY MM DD'),
+                        timestamp: new Date().getTime()/1000,
                         stop_id: stop.stop_id,
                         early_10_plus: 0,
                         early_10: 0,
@@ -351,9 +352,7 @@ function populateStats(callbackA) {
                         late_9: 0,
                         late_10: 0,
                         late_10_plus: 0,
-                        total_count: 0,
-                        modified: false
-
+                        total_count: 0
                     };
 
                     var sStat = new StopStat(stopStat);
@@ -575,6 +574,7 @@ function updateStats() {
 
                                             vehicleStatNew = new VehicleStat({
                                                 date: moment().format('YYYY MM DD'),
+                                                timestamp: bus.last_gps_fix * 1000,
                                                 vehicle_id: bus.vehicle_id,
                                                 early_10_plus: 0,
                                                 early_10: 0,
@@ -597,8 +597,7 @@ function updateStats() {
                                                 late_9: 0,
                                                 late_10: 0,
                                                 late_10_plus: 0,
-                                                total_count: 0,
-                                                modified: false
+                                                total_count: 0
                                             });
 
                                             //var vStat = new VehicleStat(vehicleStat);
@@ -621,6 +620,7 @@ function updateStats() {
 
                                             stopStat = new StopStat({
                                                 date: moment().format('YYYY MM DD'),
+                                                timestamp: new Date.getTime(),
                                                 vehicle_id: bus.vehicle_id,
                                                 early_10_plus: 0,
                                                 early_10: 0,
@@ -643,8 +643,7 @@ function updateStats() {
                                                 late_9: 0,
                                                 late_10: 0,
                                                 late_10_plus: 0,
-                                                total_count: 0,
-                                                modified: false
+                                                total_count: 0
                                             });
 
                                         }

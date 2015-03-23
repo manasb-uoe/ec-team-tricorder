@@ -2,7 +2,8 @@ var mongoose = require('mongoose');
 
 var VehicleStatsSchema = new mongoose.Schema({
     date: String,
-    vehicle_id : String,
+    timestamp: {type: Date, index: true},
+    vehicle_id : {type: String, index: true},
     early_10_plus: Number,
     early_10: Number,
     early_9: Number,
@@ -24,12 +25,13 @@ var VehicleStatsSchema = new mongoose.Schema({
     late_9: Number,
     late_10: Number,
     late_10_plus: Number,
-    total_count: Number,
-    modified: {type: Boolean, index: true}
+    total_count: Number
 
 });
 
 //It is necessary to define the index at schema level for a compound index
 VehicleStatsSchema.index({date: 1, vehicle_id: 1}, {unique: true});
+VehicleStatsSchema.index({timestamp: 1, vehicle_id: 1}, {unique: true});
+
 
 module.exports.VehicleStat = mongoose.model('VehicleStat', VehicleStatsSchema);

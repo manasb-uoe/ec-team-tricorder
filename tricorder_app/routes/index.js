@@ -8,6 +8,10 @@ var moment = require('moment');
 var Service = require('../models/service').Service;
 var Timetable = require("../models/timetable").Timetable;
 var LiveLocation = require("../models/live_location").LiveLocation;
+var VehicleStat = require("../models/vehicle_stats").VehicleStat;
+var StopStat = require("../models/stop_stats").StopStat;
+
+
 
 /* GET home page. */
 module.exports.home = function(req, res) {
@@ -211,3 +215,34 @@ module.exports.stop = function (req, res, next) {
         });
 };
 
+
+/* GET stats for a particular stop during a particular time period */
+module.exports.apiStop = function(req, res, next) {
+    var period = req.query["period"],
+        id = req.query["id"];
+
+    res.render("api/stop.html", {
+        data: util.aggStops(id, period)
+    });
+};
+
+/* GET stats for a particular vehicle during a particular time period */
+module.exports.apiVehicle = function(req, res, next) {
+
+    var period = req.query["period"],
+        id = req.query["id"];
+
+    switch(period) {
+        case 'day':
+            break;
+        case 'week':
+            break;
+        case 'month':
+            break;
+        case 'year':
+            break;
+        case 'all':
+            break;
+    }
+
+};

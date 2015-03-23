@@ -5,5 +5,8 @@
 module.exports.urls = {
     home: "/",
     nearby_stops: '/nearby-stops',
-    stop: '/stop'
+    stop: '/stop',
+    api_stop: '/api/stop/:id/:period',
+    api_vehicle: '/api/vehicle/:id/:period'
+
 };
