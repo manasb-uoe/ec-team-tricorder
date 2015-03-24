@@ -172,7 +172,7 @@ var NearbyStopsHandler = function () {
                 nearestStopLocation,
                 "<div class='map-info-window'>" + "<strong>Nearest stop: </strong>" + Object.keys(stopLocations)[0] + "</div>",
                 true,
-                "blue",
+                "yellow",
                 "stop",
                 function () {
                     googleMap.clearRoutes();
@@ -192,7 +192,7 @@ var NearbyStopsHandler = function () {
                                 stopLocation,
                                 "<div class='map-info-window'>" + key + "</div>",
                                 false,
-                                "blue",
+                                "yellow",
                                 "stop",
                                 function () {
                                     googleMap.clearRoutes();
@@ -376,7 +376,7 @@ var StopHandler = function () {
             stopLocation,
             "<div class='map-info-window'>" + config.mainContainer.find(".main-title").text() + "</div>",
             true,
-            "blue",
+            "yellow",
             "stop"
         );
 
@@ -457,7 +457,7 @@ var StopHandler = function () {
                     busLocation,
                     "<div class='map-info-window'>" + key + "</div>",
                     false,
-                    "yellow",
+                    "bus",
                     "bus"
                 )
             }
@@ -525,7 +525,8 @@ function GoogleMapsApiWrapper(centerLocation, zoomLevel, mapContainer) {
             blue: "http://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png",
             green: "http://maps.google.com/intl/en_us/mapfiles/ms/micons/green-dot.png",
             red: "http://maps.google.com/intl/en_us/mapfiles/ms/micons/red-dot.png",
-            orange: "http://maps.google.com/intl/en_us/mapfiles/ms/micons/orange-dot.png"
+            orange: "http://maps.google.com/intl/en_us/mapfiles/ms/micons/orange-dot.png",
+            bus: "https://maps.gstatic.com/mapfiles/ms2/micons/bus.png"
         },
         travelModes: {
             walking: google.maps.TravelMode.WALKING,
@@ -615,7 +616,7 @@ function GoogleMapsApiWrapper(centerLocation, zoomLevel, mapContainer) {
 
     this.clearMarkers = function () {
         for (var i=0; i<config.markers.length; i++) {
-            config.markers[i].setMap(null);
+            config.markers[i].remove();
         }
     };
 
