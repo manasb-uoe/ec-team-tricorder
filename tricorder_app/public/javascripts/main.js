@@ -156,23 +156,26 @@ var NearbyStopsHandler = function () {
         if (Object.keys(stopLocations).length > 0) {
             // user nearest stop as the center of the map
             var nearestStopLocation = {lat: stopLocations[Object.keys(stopLocations)[0]]["lat"], lng: stopLocations[Object.keys(stopLocations)[0]]["lng"]};
-            MapHandler.init(nearestStopLocation, 17, config.mapContainer[0]);
+            var googleMap = new GoogleMapsApiWrapper(nearestStopLocation, 17, config.mapContainer[0]);
 
             // add user marker
             var userLocation = {lat: params["lat"], lng: params["lng"]};
-            MapHandler.addMarker(
+            googleMap.addMarker(
                 userLocation,
                 "<div class='map-info-window'><strong>You are here</strong></div>",
-                true
+                true,
+                "red"
             );
 
-            // add nearest stop marker
-            MapHandler.addMarker(
+            googleMap.addMarker(
                 nearestStopLocation,
                 "<div class='map-info-window'>" + "<strong>Nearest stop: </strong>" + Object.keys(stopLocations)[0] + "</div>",
                 true,
-                "http://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png",
-                userLocation
+                "blue",
+                function () {
+                    googleMap.clearRoutes();
+                    googleMap.addRoute(userLocation, nearestStopLocation, "walking");
+                }
             );
 
             // add remaining stop markers
@@ -180,15 +183,20 @@ var NearbyStopsHandler = function () {
             for (var key in stopLocations) {
                 if (stopLocations.hasOwnProperty(key)) {
                     if (loopCounter != 0) { // exclude nearest stop
-                        var stopLocation ={lat: stopLocations[key]["lat"], lng: stopLocations[key]["lng"]};
+                        var stopLocation = {lat: stopLocations[key]["lat"], lng: stopLocations[key]["lng"]};
 
-                        MapHandler.addMarker(
-                            stopLocation,
-                            "<div class='map-info-window'>" + key + "</div>",
-                            false,
-                            "http://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png",
-                            userLocation
-                        );
+                        (function (stopLocation) {
+                            googleMap.addMarker(
+                                stopLocation,
+                                "<div class='map-info-window'>" + key + "</div>",
+                                false,
+                                "blue",
+                                function () {
+                                    googleMap.clearRoutes();
+                                    googleMap.addRoute(userLocation, stopLocation, "walking");
+                                }
+                            );
+                        })(stopLocation);
                     }
                     loopCounter++;
                 }
@@ -218,88 +226,6 @@ var NearbyStopsHandler = function () {
     };
 }();
 
-var MapHandler = function () {
-    var config = {
-        map: null,
-        directionsRenderer: null,
-        directionsService: null
-    };
-
-    function init(centerLocations, zoomLevel, mapContainer) {
-        // setup map
-        var options = {
-            zoom: zoomLevel,
-            center: new google.maps.LatLng(centerLocations["lat"], centerLocations["lng"]),
-            mapTypeControl: false
-        };
-        config.map = new google.maps.Map(mapContainer, options);
-
-        // setup directions renderer which will draw routes on map
-        config.directionsRenderer = new google.maps.DirectionsRenderer();
-        config.directionsRenderer.setOptions({suppressMarkers: true, preserveViewport: true});
-        config.directionsRenderer.setMap(config.map);
-
-        // setup directions service which will retrieve the required route
-        config.directionsService = new google.maps.DirectionsService();
-    }
-
-    function addMarker(location, infoWindowContent, shouldOpenInfoWindow, markerIconUrl, locationForHandlingDblClick) {
-        markerIconUrl = markerIconUrl == undefined ? "http://maps.google.com/mapfiles/ms/icons/red-dot.png" : markerIconUrl;
-
-        var infoWindow = new google.maps.InfoWindow({
-            content: infoWindowContent
-        });
-
-        var marker = new google.maps.Marker({
-            position: new google.maps.LatLng(location["lat"], location["lng"]),
-            map: config.map,
-            icon: new google.maps.MarkerImage(markerIconUrl)
-        });
-        marker.setMap(config.map);
-
-        //show info window when marker is clicked
-        google.maps.event.addListener(marker, 'click', function() {
-            infoWindow.open(config.map, marker);
-        });
-
-        if (shouldOpenInfoWindow) {
-            // initially show info window
-            infoWindow.open(config.map, marker);
-        }
-
-        // handle double click
-        if (locationForHandlingDblClick != undefined) {
-            google.maps.event.addListener(marker, 'dblclick', function () {
-                // remove all existing routes before adding new route
-                config.directionsRenderer.setDirections({routes: []});
-                addRoute(locationForHandlingDblClick, location);
-            });
-        }
-    }
-
-    function addRoute(origin, destination) {
-        var request = {
-            origin: new google.maps.LatLng(origin["lat"], origin["lng"]),
-            destination: new google.maps.LatLng(destination["lat"], destination["lng"]),
-            travelMode: google.maps.TravelMode.WALKING
-        };
-
-        config.directionsService.route(request, function (res, status) {
-            if (status == google.maps.DirectionsStatus.OK) {
-                config.directionsRenderer.setDirections(res);
-            } else {
-                console.log("Error occurred while adding route: " + status);
-            }
-        });
-    }
-
-    return {
-        init: init,
-        addMarker: addMarker,
-        addRoute: addRoute
-    }
-}();
-
 var StopHandler = function () {
 
     var config = {
@@ -316,7 +242,8 @@ var StopHandler = function () {
         viewCompleteTimetableLink: $(".view-complete-timetable"),
         timetableModal: $("#timetable-modal"),
         timetableModalBody: $("#timetable-modal-body"),
-        timetableModalTitle: $("#timetable-modal-title")
+        timetableModalTitle: $("#timetable-modal-title"),
+        googleMap: null
     };
 
     function init() {
@@ -334,6 +261,8 @@ var StopHandler = function () {
             window.location.href = window.location.href + hash;
         }
 
+        setupMap(userLocation);
+
         // since hashchange event is not fired when the page is loaded with the hash,
         // navigateToActiveTab must be called once
         navigateToActiveTab();
@@ -342,8 +271,6 @@ var StopHandler = function () {
         $(window).on('hashchange', function () {
             navigateToActiveTab();
         });
-
-        setupMap(userLocation);
 
         bindUIActions();
     }
@@ -420,25 +347,26 @@ var StopHandler = function () {
         // get stop location since it would be used as the center of the map
         var stopLocation = {lat: config.mainContainer.find(".lat").text(), lng: config.mainContainer.find(".lng").text()};
 
-        MapHandler.init(stopLocation, 17, config.mapContainer[0]);
+        config.googleMap = new GoogleMapsApiWrapper(stopLocation, 17, config.mapContainer[0]);
 
         // add user marker
-        MapHandler.addMarker(
+        config.googleMap.addMarker(
             userLocation,
             "<div class='map-info-window'><strong>You are here</strong></div>",
-            true
+            true,
+            "red"
         );
 
         // add stop marker
-        MapHandler.addMarker(
+        config.googleMap.addMarker(
             stopLocation,
             "<div class='map-info-window'>" + config.mainContainer.find(".main-title").text() + "</div>",
             true,
-            "http://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png"
+            "blue"
         );
 
         // add route between user and stop
-        MapHandler.addRoute(userLocation, stopLocation);
+        config.googleMap.addRoute(userLocation, stopLocation, "walking");
     }
 
     function navigateToActiveTab() {
@@ -535,6 +463,103 @@ var FavouritesHandler = function () {
     };
 }();
 
+function GoogleMapsApiWrapper(centerLocation, zoomLevel, mapContainer) {
+    var config = {
+        map: null,
+        directionsRenderer: null,
+        directionsService: null,
+        markers: [],
+        markerIcons: {
+            purple: "http://maps.google.com/intl/en_us/mapfiles/ms/micons/purple-dot.png",
+            yellow: "http://maps.google.com/intl/en_us/mapfiles/ms/micons/yellow-dot.png",
+            blue: "http://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png",
+            green: "http://maps.google.com/intl/en_us/mapfiles/ms/micons/green-dot.png",
+            red: "http://maps.google.com/intl/en_us/mapfiles/ms/micons/red-dot.png",
+            orange: "http://maps.google.com/intl/en_us/mapfiles/ms/micons/orange-dot.png"
+        },
+        travelModes: {
+            walking: google.maps.TravelMode.WALKING,
+            driving: google.maps.TravelMode.DRIVING,
+            bicycling: google.maps.TravelMode.BICYCLING
+        }
+    };
+
+    // self invoking initialization method
+    var init = function () {
+        // setup map
+        var options = {
+            zoom: zoomLevel,
+            center: new google.maps.LatLng(centerLocation["lat"], centerLocation["lng"]),
+            mapTypeControl: false
+        };
+        config.map = new google.maps.Map(mapContainer, options);
+
+        // setup directions renderer which will draw routes on map
+        config.directionsRenderer = new google.maps.DirectionsRenderer();
+        config.directionsRenderer.setOptions({suppressMarkers: true, preserveViewport: true});
+        config.directionsRenderer.setMap(config.map);
+
+        // setup directions service which will retrieve the required route
+        config.directionsService = new google.maps.DirectionsService();
+    }();
+
+    this.addMarker = function (location, infoWindowContent, shouldOpenInfoWindowInitially, markerIcon, doubleClickCallback) {
+        var infoWindow = new google.maps.InfoWindow({
+            content: infoWindowContent
+        });
+
+        var marker = new google.maps.Marker({
+            position: new google.maps.LatLng(location["lat"], location["lng"]),
+            map: config.map,
+            icon: new google.maps.MarkerImage(config.markerIcons[markerIcon] || config.markerIcons.red)
+        });
+        marker.setMap(config.map);
+
+        // keep marker reference for later use
+        config.markers.push(marker);
+
+        //show info window when marker is clicked
+        google.maps.event.addListener(marker, 'click', function() {
+            infoWindow.open(config.map, marker);
+        });
+
+        if (shouldOpenInfoWindowInitially) {
+            // initially show info window
+            infoWindow.open(config.map, marker);
+        }
+
+        // handle double click using the callback provided
+        if (doubleClickCallback != undefined) {
+            google.maps.event.addListener(marker, 'dblclick', doubleClickCallback);
+        }
+    };
+
+    this.addRoute = function (origin, destination, travelMode) {
+        var request = {
+            origin: new google.maps.LatLng(origin["lat"], origin["lng"]),
+            destination: new google.maps.LatLng(destination["lat"], destination["lng"]),
+            travelMode: config.travelModes[travelMode] || config.travelModes.walking
+        };
+
+        config.directionsService.route(request, function (res, status) {
+            if (status == google.maps.DirectionsStatus.OK) {
+                config.directionsRenderer.setDirections(res);
+            } else {
+                console.log("Error occurred while adding route: " + status);
+            }
+        });
+    };
+
+    this.clearRoutes = function () {
+        config.directionsRenderer.setDirections({routes: []});
+    };
+
+    this.clearMarkers = function () {
+        for (var i=0; i<config.markers.length; i++) {
+            config.markers[i].setMap(null);
+        }
+    };
+}
 
 // function calls go here
 $(document).ready(function () {
