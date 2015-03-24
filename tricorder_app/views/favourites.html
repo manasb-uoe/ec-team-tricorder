@@ -14,7 +14,7 @@
         {% if favourites.length > 0 %}
         <div class="row">
             {% for favourite in favourites %}
-            <div class="col-md-4">
+            <div class="col-lg-4 col-md-4 col-sm-6">
                 <div class="favourite" data-href="{{ urls.stop }}/{{ favourite.stop_id }}" data-remove-href="{{ urls.remove_stop_from_favourites }}" data-stop-id="{{ favourite.stop_id }}">
                     <div class="left">
                         <p class="name">{% if favourite.alt_name %} {{ favourite.alt_name }} {% else %} {{ favourite.name }} {% endif %}</p>
