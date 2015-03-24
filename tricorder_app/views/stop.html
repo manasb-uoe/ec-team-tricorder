@@ -28,9 +28,14 @@
             {% endif %}
             <p class="distance-from-user">{{ stop.distanceFromUser }} away from you</p>
         </div>
-        <div id="stop-map-container"></div>
+        <div class="stop-map-wrapper">
+            <div id="stop-map-container"></div>
+            <div class="exit-full-screen-map" hidden="">Exit Full Screen</div>
+        </div>
+        <div class="wrapper"><a href="#" class="enter-full-screen-map">View full screen map</a></div>
         <p class="lat" hidden="">{{ stop.coordinates[1] }}</p>
         <p class="lng" hidden="">{{ stop.coordinates[0] }}</p>
+        <hr class="divider">
 
         <div class="upcoming-services-container">
             <p class="title">Upcoming Services</p>

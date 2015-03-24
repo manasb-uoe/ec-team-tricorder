@@ -247,7 +247,11 @@ var StopHandler = function () {
         timetableModalBody: $("#timetable-modal-body"),
         timetableModalTitle: $("#timetable-modal-title"),
         googleMap: null,
-        viewLiveLocationsOnMapLink: $(".view-live-locations-on-map")
+        googleMapWidth: null,
+        googleMapHeight: null,
+        viewLiveLocationsOnMapLink: $(".view-live-locations-on-map"),
+        enterFullScreenMap: $(".enter-full-screen-map"),
+        exitFullScreenMap: $(".exit-full-screen-map")
     };
 
     function init() {
@@ -324,6 +328,34 @@ var StopHandler = function () {
             // scroll to top of page
             $("html, body").animate({ scrollTop: 0 }, "300");
         });
+
+        config.enterFullScreenMap.click(function (event) {
+            event.preventDefault();
+
+            config.mapContainer.css({
+                "position": "fixed",
+                "top": "50px",
+                "left": "0",
+                "height": "100%",
+                "z-index": "1000"
+            });
+            config.googleMap.triggerResize();
+
+            config.exitFullScreenMap.show();
+        });
+
+        config.exitFullScreenMap.click(function () {
+            config.mapContainer.css({
+                "position": "relative",
+                "top": "0",
+                "left": "0",
+                "height": config.googleMapHeight,
+                "z-index": config.googleMapWidth
+            });
+            config.googleMap.triggerResize();
+
+            $(this).hide();
+        });
     }
 
     function showFavouriteModal() {
@@ -361,6 +393,10 @@ var StopHandler = function () {
         var stopLocation = {lat: config.mainContainer.find(".lat").text(), lng: config.mainContainer.find(".lng").text()};
 
         config.googleMap = new GoogleMapsApiWrapper(stopLocation, 17, config.mapContainer[0]);
+
+        // get initial dimensions so that we can switch back to them later
+        config.googleMapWidth = config.mapContainer.css('width');
+        config.googleMapHeight = config.mapContainer.css('height');
 
         // add user marker
         config.googleMap.addMarker(
@@ -622,7 +658,11 @@ function GoogleMapsApiWrapper(centerLocation, zoomLevel, mapContainer) {
 
     this.getMarkers = function () {
         return config.markers;
-    }
+    };
+
+    this.triggerResize = function () {
+        google.maps.event.trigger(config.map, 'resize');
+    };
 }
 
 // function calls go here
