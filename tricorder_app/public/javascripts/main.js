@@ -164,7 +164,8 @@ var NearbyStopsHandler = function () {
                 userLocation,
                 "<div class='map-info-window'><strong>You are here</strong></div>",
                 true,
-                "red"
+                "red",
+                "user"
             );
 
             googleMap.addMarker(
@@ -172,6 +173,7 @@ var NearbyStopsHandler = function () {
                 "<div class='map-info-window'>" + "<strong>Nearest stop: </strong>" + Object.keys(stopLocations)[0] + "</div>",
                 true,
                 "blue",
+                "stop",
                 function () {
                     googleMap.clearRoutes();
                     googleMap.addRoute(userLocation, nearestStopLocation, "walking");
@@ -191,6 +193,7 @@ var NearbyStopsHandler = function () {
                                 "<div class='map-info-window'>" + key + "</div>",
                                 false,
                                 "blue",
+                                "stop",
                                 function () {
                                     googleMap.clearRoutes();
                                     googleMap.addRoute(userLocation, stopLocation, "walking");
@@ -239,11 +242,12 @@ var StopHandler = function () {
         favouriteModalAltNameInput: $("#favourite-modal-alt-name-input"),
         favouriteModalStopIdInput : $("#favourite-modal-stop-id-input"),
         favouriteModalErrorContainer: $("#favourite-modal-error-container"),
-        viewCompleteTimetableLink: $(".view-complete-timetable"),
+        viewAllArrivalTimesLink: $(".view-all-arrival-times"),
         timetableModal: $("#timetable-modal"),
         timetableModalBody: $("#timetable-modal-body"),
         timetableModalTitle: $("#timetable-modal-title"),
-        googleMap: null
+        googleMap: null,
+        viewLiveLocationsOnMapLink: $(".view-live-locations-on-map")
     };
 
     function init() {
@@ -264,12 +268,16 @@ var StopHandler = function () {
         setupMap(userLocation);
 
         // since hashchange event is not fired when the page is loaded with the hash,
-        // navigateToActiveTab must be called once
+        // navigateToActiveTab must be called once, and bus markers would also need to be
+        // reset once
         navigateToActiveTab();
+        resetBusLocationsOnMap();
+
 
         // navigate to active tab every time the hash changes
         $(window).on('hashchange', function () {
             navigateToActiveTab();
+            resetBusLocationsOnMap();
         });
 
         bindUIActions();
@@ -302,7 +310,7 @@ var StopHandler = function () {
             });
         }
 
-        config.viewCompleteTimetableLink.click(function (event) {
+        config.viewAllArrivalTimesLink.click(function (event) {
             event.preventDefault();
 
             var serviceName = $(this).attr("data-service-name");
@@ -310,6 +318,11 @@ var StopHandler = function () {
             var stopName = $(this).attr("data-stop-name");
             var url = $(this).attr("href") + "?service=" + serviceName  + "&stop=" + stopId;
             showTimetableModal(url, serviceName, stopName);
+        });
+
+        config.viewLiveLocationsOnMapLink.click(function () {
+            // scroll to top of page
+            $("html, body").animate({ scrollTop: 0 }, "300");
         });
     }
 
@@ -354,7 +367,8 @@ var StopHandler = function () {
             userLocation,
             "<div class='map-info-window'><strong>You are here</strong></div>",
             true,
-            "red"
+            "red",
+            "user"
         );
 
         // add stop marker
@@ -362,7 +376,8 @@ var StopHandler = function () {
             stopLocation,
             "<div class='map-info-window'>" + config.mainContainer.find(".main-title").text() + "</div>",
             true,
-            "blue"
+            "blue",
+            "stop"
         );
 
         // add route between user and stop
@@ -412,6 +427,41 @@ var StopHandler = function () {
             activeTabContent.show();
             activeTabContent.siblings().hide();
         });
+    }
+
+    function resetBusLocationsOnMap() {
+        // remove all previous mus markers
+        var markers = config.googleMap.getMarkers();
+        for (var i=0; i<markers.length; i++) {
+            if (markers[i].id == "bus") {
+                markers[i].remove();
+            }
+        }
+
+        // get all bus locations
+        var busLocations = {};
+        $(".bus-container:visible").each(function () {
+            var busContainer = $(this);
+            busLocations[busContainer.children(".title").text()] = {
+                lat: busContainer.attr("data-lat"),
+                lng: busContainer.attr("data-lng")
+            };
+        });
+
+        // add bus markers to map
+        for (var key in busLocations) {
+            if (busLocations.hasOwnProperty(key)) {
+                var busLocation = {lat: busLocations[key]["lat"], lng: busLocations[key]["lng"]};
+
+                config.googleMap.addMarker(
+                    busLocation,
+                    "<div class='map-info-window'>" + key + "</div>",
+                    false,
+                    "yellow",
+                    "bus"
+                )
+            }
+        }
     }
 
     return {
@@ -503,7 +553,7 @@ function GoogleMapsApiWrapper(centerLocation, zoomLevel, mapContainer) {
         config.directionsService = new google.maps.DirectionsService();
     }();
 
-    this.addMarker = function (location, infoWindowContent, shouldOpenInfoWindowInitially, markerIcon, doubleClickCallback) {
+    this.addMarker = function (location, infoWindowContent, shouldOpenInfoWindowInitially, markerIcon, markerId, doubleClickCallback) {
         var infoWindow = new google.maps.InfoWindow({
             content: infoWindowContent
         });
@@ -515,8 +565,13 @@ function GoogleMapsApiWrapper(centerLocation, zoomLevel, mapContainer) {
         });
         marker.setMap(config.map);
 
-        // keep marker reference for later use
-        config.markers.push(marker);
+        // add id property to each marker so that it can easily be recognized later
+        marker.id = markerId;
+
+        // add remove method to marker
+        marker.remove = function () {
+            marker.setMap(null);
+        };
 
         //show info window when marker is clicked
         google.maps.event.addListener(marker, 'click', function() {
@@ -532,6 +587,10 @@ function GoogleMapsApiWrapper(centerLocation, zoomLevel, mapContainer) {
         if (doubleClickCallback != undefined) {
             google.maps.event.addListener(marker, 'dblclick', doubleClickCallback);
         }
+
+        // keep marker reference for later use
+        config.markers.push(marker);
+
     };
 
     this.addRoute = function (origin, destination, travelMode) {
@@ -559,6 +618,10 @@ function GoogleMapsApiWrapper(centerLocation, zoomLevel, mapContainer) {
             config.markers[i].setMap(null);
         }
     };
+
+    this.getMarkers = function () {
+        return config.markers;
+    }
 }
 
 // function calls go here

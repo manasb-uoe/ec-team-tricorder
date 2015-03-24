@@ -51,9 +51,9 @@
             <div class="tab-content-container">
                 {% for service in services %}
                     <div class="tab-content {{ service.name }}" hidden="">
-                        {% if service.timetables.length > 0 %}
+                        {% if service.timetables.length > 0 and service.buses.length > 0 %}
                             <div class="panel panel-default">
-                                <div class="panel-heading"><strong>Arrival Times</strong><a class="panel-heading-right view-complete-timetable" href="{{ urls.get_service_timetable_for_stop }}" data-service-name="{{ service.name }}" data-stop-id="{{ stop.stop_id }}" data-stop-name="{{ stop.name }}">View complete timetable</a></div>
+                                <div class="panel-heading"><strong>Arrival Times</strong><a class="panel-heading-right view-all-arrival-times" href="{{ urls.get_service_timetable_for_stop }}" data-service-name="{{ service.name }}" data-stop-id="{{ stop.stop_id }}" data-stop-name="{{ stop.name }}">View all arrival times</a></div>
                                 <div class="panel-body">
                                     {% for timetable in service.timetables %}
                                         <p><span class="time">{{ timetable.time }}</span> ({{ timetable.humanizedTime }})</p>
@@ -61,14 +61,14 @@
                                 </div>
                             </div>
                             <div class="panel panel-default">
-                                <div class="panel-heading"><strong>Buses</strong> (Last updated {{ service.buses[0].lastSeen }}) <a class="panel-heading-right">View live locations on map</a> </div>
+                                <div class="panel-heading"><strong>Buses</strong> (Last updated {{ service.buses[0].lastSeen }}) <a class="panel-heading-right view-live-locations-on-map">View live locations on map</a> </div>
                                 <div class="panel-body">
                                     <div class="row">
                                         {% for bus in service.buses %}
                                         <div class="col-lg-3 col-sm-6">
-                                            <div class="bus-container">
+                                            <div class="bus-container" data-lat="{{ bus.coordinates[1] }}" data-lng="{{ bus.coordinates[0] }}">
                                                 <p class="title">Bus #{{ bus.vehicle_id }} to {{ bus.destination }}</p>
-                                                <p class="distance-from-user">{{ bus.distanceFromUser }}</p>
+                                                <p class="distance-from-user">{{ bus.distanceFromUser }} away</p>
                                             </div>
                                         </div>
                                         {% if loop.index % 4 == 0 %}
@@ -132,4 +132,3 @@
             </div><!-- /.modal-content -->
         </div><!-- /.modal-dialog -->
     </div><!-- /.modal -->
-{% endblock %}
