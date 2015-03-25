@@ -96,7 +96,12 @@ var NearbyStopsHandler = function () {
         filterModalCountSelect: $("#filter-modal-count-select"),
         filterModalServiceSelect: $("#filter-modal-service-select"),
         filterModalPositiveButton: $("#filter-modal-positive-button"),
-        stopContainer: $(".stop-container")
+        stopContainer: $(".stop-container"),
+        googleMap: null,
+        googleMapWidth: null,
+        googleMapHeight: null,
+        enterFullScreenMap: $(".enter-full-screen-map"),
+        exitFullScreenMap: $(".exit-full-screen-map")
     };
 
     function init() {
@@ -132,6 +137,34 @@ var NearbyStopsHandler = function () {
                 window.location.href = self.attr("href") + "?lat=" + position.coords.latitude + "&lng=" + position.coords.longitude;
             });
         });
+
+        config.enterFullScreenMap.click(function (event) {
+            event.preventDefault();
+
+            config.mapContainer.css({
+                "position": "fixed",
+                "top": "50px",
+                "left": "0",
+                "height": "100%",
+                "z-index": "1000"
+            });
+            config.googleMap.triggerResize();
+
+            config.exitFullScreenMap.show();
+        });
+
+        config.exitFullScreenMap.click(function () {
+            config.mapContainer.css({
+                "position": "relative",
+                "top": "0",
+                "left": "0",
+                "height": config.googleMapHeight,
+                "z-index": config.googleMapWidth
+            });
+            config.googleMap.triggerResize();
+
+            $(this).hide();
+        });
     }
 
     function showFilterModal() {
@@ -156,11 +189,15 @@ var NearbyStopsHandler = function () {
         if (Object.keys(stopLocations).length > 0) {
             // user nearest stop as the center of the map
             var nearestStopLocation = {lat: stopLocations[Object.keys(stopLocations)[0]]["lat"], lng: stopLocations[Object.keys(stopLocations)[0]]["lng"]};
-            var googleMap = new GoogleMapsApiWrapper(nearestStopLocation, 17, config.mapContainer[0]);
+            config.googleMap = new GoogleMapsApiWrapper(nearestStopLocation, 17, config.mapContainer[0]);
+
+            // get initial dimensions so that we can switch back to them later
+            config.googleMapWidth = config.mapContainer.css('width');
+            config.googleMapHeight = config.mapContainer.css('height');
 
             // add user marker
             var userLocation = {lat: params["lat"], lng: params["lng"]};
-            googleMap.addMarker(
+            config.googleMap.addMarker(
                 userLocation,
                 "<div class='map-info-window'><strong>You are here</strong></div>",
                 true,
@@ -168,15 +205,15 @@ var NearbyStopsHandler = function () {
                 "user"
             );
 
-            googleMap.addMarker(
+            config.googleMap.addMarker(
                 nearestStopLocation,
                 "<div class='map-info-window'>" + "<strong>Nearest stop: </strong>" + Object.keys(stopLocations)[0] + "</div>",
                 true,
                 "yellow",
                 "stop",
                 function () {
-                    googleMap.clearRoutes();
-                    googleMap.addRoute(userLocation, nearestStopLocation, "walking");
+                    config.googleMap.clearRoutes();
+                    config.googleMap.addRoute(userLocation, nearestStopLocation, "walking");
                 }
             );
 
@@ -188,15 +225,15 @@ var NearbyStopsHandler = function () {
                         var stopLocation = {lat: stopLocations[key]["lat"], lng: stopLocations[key]["lng"]};
 
                         (function (stopLocation) {
-                            googleMap.addMarker(
+                            config.googleMap.addMarker(
                                 stopLocation,
                                 "<div class='map-info-window'>" + key + "</div>",
                                 false,
                                 "yellow",
                                 "stop",
                                 function () {
-                                    googleMap.clearRoutes();
-                                    googleMap.addRoute(userLocation, stopLocation, "walking");
+                                    config.googleMap.clearRoutes();
+                                    config.googleMap.addRoute(userLocation, stopLocation, "walking");
                                 }
                             );
                         })(stopLocation);

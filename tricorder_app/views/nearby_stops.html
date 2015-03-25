@@ -11,7 +11,14 @@
         <p class="hint">Double click on any stop marker to generate walking route</p>
 
         <div class="nearby-stops-container" id="nearby-stops-container">
-            <div id="nearby-stops-map-container" {% if stops.length == 0 %} hidden="" {% endif %}></div>
+            <div class="nearby-stops-map-wrapper">
+                <div id="nearby-stops-map-container" {% if stops.length == 0 %} hidden="" {% endif %}></div>
+                <div class="exit-full-screen-map" hidden="">Exit Full Screen</div>
+            </div>
+
+            <div class="enter-full-screen-map-wrapper"><a href="#" class="enter-full-screen-map">View full screen map</a></div>
+            <hr class="divider">
+
             <div class="filter-container">
                 <div class="left">
                     <div class="number-filter">
