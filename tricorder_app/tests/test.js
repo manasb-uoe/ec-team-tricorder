@@ -416,7 +416,7 @@ describe("test suite", function () {
         });
     });
 
-    describe("test sign in, sign up and sign out with unauthenticated users", function () {
+    describe("test sign in and sign up pages with unauthenticated user", function () {
         before(function (done) {
             testUtil.clearDB(mongoose.connection, function () {
                 done();
@@ -430,7 +430,7 @@ describe("test suite", function () {
                 .expect(200, done);
         });
 
-        it("POST " + util.urls.sign_in + " should return error message since incorrect user details are provided", function (done) {
+        it("POST " + util.urls.sign_in + " should respond with status code 200 if incorrect user details are provided", function (done) {
             request
                 .post(util.urls.sign_in)
                 .send({"username": testUtil.sampleUserOne.username, "password": testUtil.sampleUserOne.password})
@@ -445,7 +445,7 @@ describe("test suite", function () {
                 .expect(200, done);
         });
 
-        it("POST " + util.urls.sign_up + " should respond with status code 302 and create a new user since appropriate user details are provided", function (done) {
+        it("POST " + util.urls.sign_up + " should respond with status code 302 and create a new user if correct user details are provided", function (done) {
             request
                 .post(util.urls.sign_up)
                 .send({"username": testUtil.sampleUserOne.username, "password": testUtil.sampleUserOne.password})
@@ -459,6 +459,35 @@ describe("test suite", function () {
                         done();
                     });
                 });
+        });
+    });
+
+    describe("test sign in and sign up pages with unauthenticated users", function () {
+        var cookies;
+
+        before(function (done) {
+            testUtil.clearDB(mongoose.connection, function () {
+                request
+                    .post(util.urls.sign_up)
+                    .send({"username": testUtil.sampleUserOne.username, "password": testUtil.sampleUserOne.password})
+                    .end(function (err, res) {
+                        if (err) {throw err;}
+                        cookies = res.headers['set-cookie'].pop().split(';')[0];
+                        done();
+                    });
+            });
+        });
+
+        it("GET " + util.urls.sign_up + " should respond with status code 302", function (done) {
+            var req = request.get(util.urls.sign_up);
+            req.cookies = cookies;
+            req.expect(302, done);
+        });
+
+        it("GET " + util.urls.sign_in + " should respond with status code 302", function (done) {
+            var req = request.get(util.urls.sign_in);
+            req.cookies = cookies;
+            req.expect(302, done);
         });
     });
 });
