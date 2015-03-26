@@ -2,13 +2,13 @@
  * Created by Manas on 25-03-2015.
  */
 
-var request = require('supertest');
 var assert = require('assert');
 var mongoose = require('mongoose');
 var async = require('async');
 var dbConfig = require("../utilities/db");
 var testUtil = require("./util");
 var util = require("../utilities/util");
+var request = require('supertest')(util.urls.localhost_base);
 
 // import models
 var Stop = require("../models/stop").Stop;
@@ -383,7 +383,7 @@ describe("test suite", function () {
 
     describe("test nearby stops page", function () {
         it("GET " + util.urls.nearby_stops + " should respond with html", function (done) {
-            request(util.urls.localhost_base)
+            request
                 .get(util.urls.nearby_stops)
                 .expect('Content-Type', /html/)
                 .expect(200, done);
@@ -392,14 +392,14 @@ describe("test suite", function () {
 
     describe("test stop page", function () {
         it("GET " + util.urls.stop + " should respond with status code 404 if no stop_id is provided", function (done) {
-            request(util.urls.localhost_base)
+            request
                 .get(util.urls.stop)
                 .expect('Content-Type', /html/)
                 .expect(404, done);
         });
 
         it("GET " + util.urls.stop + " should respond with status code 404 if incorrect stop_id is provided", function (done) {
-            request(util.urls.localhost_base)
+            request
                 .get(util.urls.stop + "/0")
                 .expect('Content-Type', /html/)
                 .expect(404, done);
@@ -408,7 +408,7 @@ describe("test suite", function () {
         it("GET " + util.urls.stop + " should respond with status code 200 if correct stop_id is provided", function (done) {
             var newStop = new Stop(testUtil.sampleStopOne);
             newStop.save(function (err, stop) {
-                request(util.urls.localhost_base)
+                request
                     .get(util.urls.stop + "/" + stop.stop_id)
                     .expect('Content-Type', /html/)
                     .expect(200, done);
@@ -424,14 +424,14 @@ describe("test suite", function () {
         });
 
         it("GET " + util.urls.sign_in + " should respond with status code 200", function (done) {
-            request(util.urls.localhost_base)
+            request
                 .get(util.urls.sign_in)
                 .expect('Content-Type', /html/)
                 .expect(200, done);
         });
 
         it("POST " + util.urls.sign_in + " should return error message since incorrect user details are provided", function (done) {
-            request(util.urls.localhost_base)
+            request
                 .post(util.urls.sign_in)
                 .send({"username": testUtil.sampleUserOne.username, "password": testUtil.sampleUserOne.password})
                 .expect('Content-Type', /html/)
@@ -439,14 +439,14 @@ describe("test suite", function () {
         });
 
         it("GET " + util.urls.sign_up + " should respond with status code 200", function (done) {
-            request(util.urls.localhost_base)
+            request
                 .get(util.urls.sign_up)
                 .expect('Content-Type', /html/)
                 .expect(200, done);
         });
 
         it("POST " + util.urls.sign_up + " should respond with status code 302 and create a new user since appropriate user details are provided", function (done) {
-            request(util.urls.localhost_base)
+            request
                 .post(util.urls.sign_up)
                 .send({"username": testUtil.sampleUserOne.username, "password": testUtil.sampleUserOne.password})
                 .expect(302)
