@@ -10,6 +10,7 @@ var util = require("./util");
 var User = require('../models/user').User;
 
 module.exports.urls = {
+    localhost_base: "http://localhost:3000",
     home: "/",
     nearby_stops: "/nearby-stops",
     stop: "/stop",
