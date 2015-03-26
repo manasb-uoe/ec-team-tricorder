@@ -415,6 +415,52 @@ describe("test suite", function () {
             });
         });
     });
+
+    describe("test sign in, sign up and sign out with unauthenticated users", function () {
+        before(function (done) {
+            testUtil.clearDB(mongoose.connection, function () {
+                done();
+            });
+        });
+
+        it("GET " + util.urls.sign_in + " should respond with status code 200", function (done) {
+            request(util.urls.localhost_base)
+                .get(util.urls.sign_in)
+                .expect('Content-Type', /html/)
+                .expect(200, done);
+        });
+
+        it("POST " + util.urls.sign_in + " should return error message since incorrect user details are provided", function (done) {
+            request(util.urls.localhost_base)
+                .post(util.urls.sign_in)
+                .send({"username": testUtil.sampleUserOne.username, "password": testUtil.sampleUserOne.password})
+                .expect('Content-Type', /html/)
+                .expect(200, done);
+        });
+
+        it("GET " + util.urls.sign_up + " should respond with status code 200", function (done) {
+            request(util.urls.localhost_base)
+                .get(util.urls.sign_up)
+                .expect('Content-Type', /html/)
+                .expect(200, done);
+        });
+
+        it("POST " + util.urls.sign_up + " should respond with status code 302 and create a new user since appropriate user details are provided", function (done) {
+            request(util.urls.localhost_base)
+                .post(util.urls.sign_up)
+                .send({"username": testUtil.sampleUserOne.username, "password": testUtil.sampleUserOne.password})
+                .expect(302)
+                .end(function (err) {
+                    if (err) {throw err;}
+                    // check if new user has been created
+                    User.find({}, function (err, users) {
+                        assert.equal(users.length, 1);
+                        assert.equal(users[0].username, testUtil.sampleUserOne.username);
+                        done();
+                    });
+                });
+        });
+    });
 });
 
 
