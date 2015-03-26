@@ -16,7 +16,7 @@ var routesIndex = require('./routes/index');
 var app = express();
 
 // database setup
-mongoose.connect(dbConfig.url);
+mongoose.connect(dbConfig.dev_db_url);
 
 // view engine setup
 app.engine('html', swig.renderFile);

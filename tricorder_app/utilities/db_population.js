@@ -693,7 +693,7 @@ function updateStats() {
 
 
 // function calls go here
-mongoose.connect(dbConfig.url);
+mongoose.connect(dbConfig.dev_db_url);
 mongoose.connection.once('open', function() {
     var arg = process.argv[2];
     var finalCallback = function (err) {
