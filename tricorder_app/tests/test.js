@@ -8,6 +8,7 @@ var mongoose = require('mongoose');
 var async = require('async');
 var dbConfig = require("../utilities/db");
 var testUtil = require("./util");
+var util = require("../utilities/util");
 
 // import models
 var Stop = require("../models/stop").Stop;
@@ -28,7 +29,9 @@ describe("test suite", function () {
     describe("test create, read and delete operations on all models", function () {
         describe("stop", function () {
             before(function (done) {
-                testUtil.clearDB(mongoose.connection, done);
+                testUtil.clearDB(mongoose.connection, function () {
+                    done();
+                });
             });
 
             it("should add new stop successfully", function (done) {
@@ -85,7 +88,9 @@ describe("test suite", function () {
 
         describe("service", function () {
             before(function (done) {
-                testUtil.clearDB(mongoose.connection, done);
+                testUtil.clearDB(mongoose.connection, function () {
+                    done();
+                });
             });
 
             it("should add new service successfully", function (done) {
@@ -138,7 +143,9 @@ describe("test suite", function () {
 
         describe("live location", function () {
             before(function (done) {
-                testUtil.clearDB(mongoose.connection, done);
+                testUtil.clearDB(mongoose.connection, function () {
+                    done();
+                });
             });
 
             it("should add new live location successfully", function (done) {
@@ -192,7 +199,9 @@ describe("test suite", function () {
 
         describe("timetable", function () {
             before(function (done) {
-                testUtil.clearDB(mongoose.connection, done);
+                testUtil.clearDB(mongoose.connection, function () {
+                    done();
+                });
             });
 
             it("should add new timetable successfully", function (done) {
@@ -248,7 +257,9 @@ describe("test suite", function () {
 
         describe("user", function () {
             before(function (done) {
-                testUtil.clearDB(mongoose.connection, done);
+                testUtil.clearDB(mongoose.connection, function () {
+                    done();
+                });
             });
 
             it("should add new user successfully", function (done) {
@@ -299,7 +310,9 @@ describe("test suite", function () {
 
         describe("favourites stop", function () {
             before(function (done) {
-                testUtil.clearDB(mongoose.connection, done);
+                testUtil.clearDB(mongoose.connection, function () {
+                    done();
+                });
             });
 
             it("should add new favourite stop successfully", function (done) {
@@ -364,6 +377,41 @@ describe("test suite", function () {
                         });
                     });
                 });
+            });
+        });
+    });
+
+    describe("test nearby stops page", function () {
+        it("GET " + util.urls.nearby_stops + " should respond with html", function (done) {
+            request(util.urls.localhost_base)
+                .get(util.urls.nearby_stops)
+                .expect('Content-Type', /html/)
+                .expect(200, done);
+        });
+    });
+
+    describe("test stop page", function () {
+        it("GET " + util.urls.stop + " should respond with status code 404 if no stop_id is provided", function (done) {
+            request(util.urls.localhost_base)
+                .get(util.urls.stop)
+                .expect('Content-Type', /html/)
+                .expect(404, done);
+        });
+
+        it("GET " + util.urls.stop + " should respond with status code 404 if incorrect stop_id is provided", function (done) {
+            request(util.urls.localhost_base)
+                .get(util.urls.stop + "/0")
+                .expect('Content-Type', /html/)
+                .expect(404, done);
+        });
+
+        it("GET " + util.urls.stop + " should respond with status code 200 if correct stop_id is provided", function (done) {
+            var newStop = new Stop(testUtil.sampleStopOne);
+            newStop.save(function (err, stop) {
+                request(util.urls.localhost_base)
+                    .get(util.urls.stop + "/" + stop.stop_id)
+                    .expect('Content-Type', /html/)
+                    .expect(200, done);
             });
         });
     });

@@ -5,10 +5,10 @@
 // import models
 var Stop = require("../models/stop").Stop;
 
-module.exports.clearDB = function (mongooseConnection, done) {
+module.exports.clearDB = function (mongooseConnection, callback) {
     mongooseConnection.db.dropDatabase(function (err) {
         if (err) {throw err;}
-        done();
+        callback();
     });
 };
 
@@ -51,6 +51,7 @@ module.exports.sampleTimetableOne = {
 
 module.exports.sampleUserOne = {
     username: "username_1",
+    password: "password_1",
     hash: "hash_!"
 };
 
