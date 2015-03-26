@@ -486,6 +486,96 @@ describe("test suite", function () {
             req.expect(302, done);
         });
     });
+
+    describe("test favourite stops page with unauthenticated user", function () {
+        before(function (done) {
+            testUtil.clearDB(mongoose.connection, function () {
+                done();
+            });
+        });
+
+        it("GET " + util.urls.favourites + " should respond with status code 302", function (done) {
+            request
+                .get(util.urls.favourites)
+                .expect(302, done);
+        });
+    });
+
+    describe("test favourite stops page with authenticated user", function () {
+        var cookies;
+
+        before(function (done) {
+            testUtil.clearDB(mongoose.connection, function () {
+                testUtil.signUpAndSignIn(request, testUtil.sampleUserOne, function (result) {
+                    cookies = result;
+                    done();
+                });
+            });
+        });
+
+        it("GET " + util.urls.favourites + " should respond with status code 200", function (done) {
+            var req = request.get(util.urls.favourites);
+            req.cookies = cookies;
+            req
+                .expect("Content-Type", /html/)
+                .expect(200, done);
+        });
+    });
+
+    describe("test sign up form validation", function () {
+        it("should return appropriate errors", function (done) {
+            async.series(
+                [
+                    function (callback) {
+                        util.validateSignUpOrSignInForm(undefined, undefined, function (err) {
+                            assert.equal(err.message, "Username is required");
+                            callback(null);
+                        });
+                    },
+                    function (callback) {
+                        util.validateSignUpOrSignInForm("u", undefined, function (err) {
+                            assert.equal(err.message, "Password is required");
+                            callback(null);
+                        });
+                    },
+                    function (callback) {
+                        util.validateSignUpOrSignInForm("u", "p", function (err) {
+                            assert.equal(err.message, "Username must be at least 6 characters long");
+                            callback(null);
+                        });
+                    },
+                    function (callback) {
+                        util.validateSignUpOrSignInForm("username", "p", function (err) {
+                            assert.equal(err.message, "Password must be at least 6 characters long");
+                            callback(null);
+                        });
+                    },
+                    function (callback) {
+                        util.validateSignUpOrSignInForm("username username", "password", function (err) {
+                            assert.equal(err.message, "Username cannot contain spaces");
+                            callback(null);
+                        });
+                    },
+                    function (callback) {
+                        util.validateSignUpOrSignInForm("username", "password password", function (err) {
+                            assert.equal(err.message, "Password cannot contain spaces");
+                            callback(null);
+                        });
+                    },
+                    function (callback) {
+                        util.validateSignUpOrSignInForm("username", "password", function (err) {
+                            assert.equal(typeof err, "undefined");
+                            callback(null);
+                        });
+                    }
+                ],
+                function (err) {
+                    if (err) {throw err;}
+                    done();
+                }
+            )
+        });
+    });
 });
 
 
