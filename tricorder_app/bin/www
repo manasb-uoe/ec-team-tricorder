@@ -9,6 +9,16 @@ var debug = require('debug')('tricorder_app:server');
 var http = require('http');
 
 /**
+ * Configure app using the provided database type ('dev' or 'test')
+ */
+if (process.argv.length > 2) {
+    app.set("dbType", process.argv[2]);
+} else {
+    app.set("dbType", "dev");
+}
+app.configure();
+
+/**
  * Get port from environment and store in Express.
  */
 

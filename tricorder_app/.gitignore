@@ -11,6 +11,7 @@ start_mongodb.bat
 
 # windows script for starting app
 start_app.bat
+start_app_test.bat
 
 # mongodb
 data
