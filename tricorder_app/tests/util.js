@@ -2,6 +2,8 @@
  * Created by Manas on 26-03-2015.
  */
 
+var util = require("../utilities/util");
+
 // import models
 var Stop = require("../models/stop").Stop;
 
@@ -59,4 +61,15 @@ module.exports.sampleFavouriteStop = {
     user_object_id: undefined,
     stop_id: 0,
     alt_name: "alt_name_1"
+};
+
+module.exports.signUpAndSignIn = function (request, sampleUser, callback) {
+    request
+        .post(util.urls.sign_up)
+        .send({"username": sampleUser.username, "password": sampleUser.password})
+        .end(function (err, res) {
+            if (err) {throw err;}
+            var cookies = res.headers['set-cookie'].pop().split(';')[0];
+            callback(cookies);
+        });
 };

@@ -467,14 +467,10 @@ describe("test suite", function () {
 
         before(function (done) {
             testUtil.clearDB(mongoose.connection, function () {
-                request
-                    .post(util.urls.sign_up)
-                    .send({"username": testUtil.sampleUserOne.username, "password": testUtil.sampleUserOne.password})
-                    .end(function (err, res) {
-                        if (err) {throw err;}
-                        cookies = res.headers['set-cookie'].pop().split(';')[0];
-                        done();
-                    });
+                testUtil.signUpAndSignIn(request, testUtil.sampleUserOne, function (result) {
+                    cookies = result;
+                    done();
+                });
             });
         });
 
