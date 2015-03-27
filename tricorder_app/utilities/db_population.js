@@ -33,6 +33,7 @@ function populateStops(callbackA) {
 
                 res.on('end', function() {
                     var json = JSON.parse(body);
+                    var i = 1;
                     async.each(
                         json.stops,
                         function (stopJson, callbackB) {
@@ -45,16 +46,26 @@ function populateStops(callbackA) {
                             delete stopJson.longitude;
 
                             var stop = new Stop(stopJson);
+
                             stop.save(function(err) {
-                                if (!err) {
+                                //clean or duplicate index error
+                                if (!err || err.code === 11000) {
+                                    console.log('saving stop ' + i++);
                                     callbackB();
+                                }
+                                else {
+                                    console.log('err ' + JSON.stringify(err));
                                 }
                             });
                         },
                         function (err) {
+
                             if (!err) {
                                 console.log("DONE\n");
                                 callbackA(err, null);
+                            }
+                            else {
+                                console.log('error ' + err);
                             }
                         }
                     );
@@ -116,7 +127,7 @@ function populateTimetables(callbackA) {
                     stopsArrays.push(stops.slice(i, i += size));
                 }
                 var i = 0;
-
+                var j = 0;
                 async.eachSeries(stopsArrays, function(stops, callbackC) {
                     console.log('series ' + i++);
                     async.each(
@@ -149,10 +160,18 @@ function populateTimetables(callbackA) {
                                                 if(!err) {
                                                     callbackC();
                                                 }
+                                                else {
+                                                    console.log('err ' + JSON.stringify(err));
+                                                }
                                             });
                                         },
                                         function (err) {
-                                            callbackB(err, null);
+                                            if(!err) {
+                                                callbackB(err, null);
+                                            }
+                                            else {
+                                                console.log('err ' + JSON.stringify(err));
+                                            }
                                         }
                                     );
                                 });
@@ -162,12 +181,18 @@ function populateTimetables(callbackA) {
                             if (!err) {
                                 callbackC(err, null);
                             }
+                            else {
+                                console.log('err ' + JSON.stringify(err));
+                            }
                         }
                     );
                 }, function(err) {
                     if (!err) {
                         console.log("DONE\n");
                         callbackA(err, null);
+                    }
+                    else {
+                        console.log('err ' + JSON.stringify(err));
                     }
                 });
 
@@ -242,8 +267,11 @@ function populateLiveLocations(callbackA) {
 
                             var liveLocation = new LiveLocation(vehicleJson);
                             liveLocation.save(function(err) {
-                                if (!err) {
+                                if (!err || err.code === 11000) {
                                     callbackB();
+                                }
+                                else {
+                                    console.log('err ' + JSON.stringify(err));
                                 }
                             });
 
@@ -252,6 +280,9 @@ function populateLiveLocations(callbackA) {
                             if (!err) {
                                 console.log("DONE\n");
                                 callbackA(err, null);
+                            }
+                            else {
+                                console.log('err ' + JSON.stringify(err));
                             }
                         }
                     )
@@ -391,27 +422,26 @@ function updateStats() {
                     //Clear the old data
                     LiveLocation.remove({}, function (err) {
 
-                        if (err) {return next(err);}
+                        if (!err) {
+                            https.get(API_BASE_URL + "/vehicle_locations", function (res) {
 
-                        https.get(API_BASE_URL + "/vehicle_locations", function (res) {
+                                var body = '';
 
-                            var body = '';
+                                res.on('data', function (chunk) {
 
-                            res.on('data', function (chunk) {
+                                    body += chunk;
 
-                                body += chunk;
+                                });
 
+                                res.on('end', function () {
+
+                                    console.log('end data');
+
+                                    callback(null, body);
+
+                                });
                             });
-
-                            res.on('end', function () {
-
-                                console.log('end data');
-
-                                callback(null, body);
-
-                            });
-                        });
-
+                        }
                     });
 
                 },
@@ -432,16 +462,23 @@ function updateStats() {
                         var loc = new LiveLocation(vehicleDoc);
 
                         loc.save(function (err, post) {
-
-                            if (err) {return next(err);}
-
-                            callbackA();
+                            if (!err || err.code === 11000) {
+                                callbackA();
+                            }
+                            else {
+                                console.log('err ' + JSON.stringify(err));
+                            }
                         });
                     }, function(err) {
 
-                        if(err){next(err);}
+                        if(!err){
+                            callback();
+                        }
+                        else {
+                            console.log('err ' + JSON.stringify(err));
+                        }
 
-                        callback();
+
 
                     });
 
@@ -452,11 +489,14 @@ function updateStats() {
                     // return these fields of each location document in the database
                     LiveLocation.find({}, 'service_name coordinates vehicle_id last_gps_fix', function (err, doc) {
 
-                        if (err) {
-                            return next(err);
+                        if (!err) {
+                            callback(err, doc);
+                        }
+                        else {
+                            console.log('err ' + JSON.stringify(err));
                         }
 
-                        callback(err, doc);
+
 
                     });
                 },
@@ -472,42 +512,50 @@ function updateStats() {
                         Stop.findOne({
                             coordinates: {$near: bus.coordinates, $maxDistance: .0001}
                         }, function (err, stop) {
-                            if (err) {
-                                return next(err);
-                            }
+                            if (!err) {
 
-                            if (stop !== null && bus.service_name !== null) {
+                                if (stop !== null && bus.service_name !== null) {
 
-                                var service_name_of_bus = bus.service_name;
+                                    var service_name_of_bus = bus.service_name;
 
-                                var services_of_stop = stop.services;
+                                    var services_of_stop = stop.services;
 
-                                async.eachSeries(services_of_stop, function (service_id, callbackC) {
-                                    if (service_name_of_bus === service_id) {
-                                        buses_near_stops.push(
-                                            {
-                                                time: bus.last_gps_fix,
-                                                bus_coords: bus.coordinates,
-                                                stop_coords: stop.coordinates,
-                                                vehicle_id: bus.vehicle_id,
-                                                stop_id: stop.stop_id,
-                                                service_name: service_name_of_bus
-                                            });
-                                    }
+                                    async.eachSeries(services_of_stop, function (service_id, callbackC) {
+                                        if (service_name_of_bus === service_id) {
+                                            buses_near_stops.push(
+                                                {
+                                                    time: bus.last_gps_fix,
+                                                    bus_coords: bus.coordinates,
+                                                    stop_coords: stop.coordinates,
+                                                    vehicle_id: bus.vehicle_id,
+                                                    stop_id: stop.stop_id,
+                                                    service_name: service_name_of_bus
+                                                });
+                                        }
 
-                                    callbackC();
+                                        callbackC();
 
-                                });
-                                callbackA();
+                                    });
+                                    callbackA();
+                                }
+                                else {
+                                    callbackA();
+                                }
                             }
                             else {
-                                callbackA();
+                                console.log('err ' + JSON.stringify(err));
                             }
 
                         });
 
                     }, function (err) {
-                        callback(null, buses_near_stops);
+                        if(!err) {
+                            callback(null, buses_near_stops);
+                        }
+                        else {
+                            console.log('err ' + JSON.stringify(err));
+                        }
+
                     });
 
 
@@ -527,271 +575,281 @@ function updateStats() {
 
                         }, 'timestamp time', function (err, timestamps) {
 
-                            if (err) {return next(err);}
-
-                            if(timestamps.length > 0) {
+                            if (!err) {
 
 
-                                //Out of all the timetables for this stop and service, find the one that is closest in time
-                                //to the time of the last gps_fix of this bus
+                                if (timestamps.length > 0) {
 
-                                var minDif = null;
 
-                                for (var t in timestamps) {
-                                    var timestamp = timestamps[t].timestamp;
+                                    //Out of all the timetables for this stop and service, find the one that is closest in time
+                                    //to the time of the last gps_fix of this bus
 
-                                    //Negative if early, positive if late
-                                    var negDif = bus.time - timestamp;
-                                    var absDif = Math.abs(negDif);
+                                    var minDif = null;
 
-                                    if (minDif === null || absDif < Math.abs(minDif)) {
+                                    for (var t in timestamps) {
+                                        var timestamp = timestamps[t].timestamp;
 
-                                        minDif = negDif;
+                                        //Negative if early, positive if late
+                                        var negDif = bus.time - timestamp;
+                                        var absDif = Math.abs(negDif);
 
+                                        if (minDif === null || absDif < Math.abs(minDif)) {
+
+                                            minDif = negDif;
+
+                                        }
                                     }
+
+                                    //Determine how late/early the bus is, update the vehicle stat corresponding to this bus
+                                    VehicleStat.findOne({
+                                        vehicle_id: bus.vehicle_id,
+                                        date: moment().format('YYYY MM DD')
+                                    }, function (err, vehicleStat) {
+
+                                        //Not sure why vehicleStat goes out of scope
+                                        var vehicleStatNew = vehicleStat;
+
+                                        StopStat.findOne({
+                                            stop_id: bus.stop_id,
+                                            date: moment().format('YYYY MM DD')
+                                        }, function (err, stopStat) {
+
+
+                                            if (!err) {
+
+                                                console.log('vehicle error');
+
+                                            }
+
+
+                                            // If a new vehicle comes online after stats are first built
+                                            if (vehicleStatNew === null) {
+
+                                                vehicleStatNew = new VehicleStat({
+                                                    date: moment().format('YYYY MM DD'),
+                                                    timestamp: bus.last_gps_fix * 1000,
+                                                    vehicle_id: bus.vehicle_id,
+                                                    early_10_plus: 0,
+                                                    early_10: 0,
+                                                    early_9: 0,
+                                                    early_8: 0,
+                                                    early_7: 0,
+                                                    early_6: 0,
+                                                    early_5: 0,
+                                                    early_4: 0,
+                                                    early_3: 0,
+                                                    early_2: 0,
+                                                    on_time: 0,
+                                                    late_2: 0,
+                                                    late_3: 0,
+                                                    late_4: 0,
+                                                    late_5: 0,
+                                                    late_6: 0,
+                                                    late_7: 0,
+                                                    late_8: 0,
+                                                    late_9: 0,
+                                                    late_10: 0,
+                                                    late_10_plus: 0,
+                                                    total_count: 0
+                                                });
+
+                                                //var vStat = new VehicleStat(vehicleStat);
+                                                //
+                                                //vStat.save(function(err, post) {
+                                                //
+                                                //    if (err) {return next(err);}
+                                                //
+                                                //    callbackA();
+                                                //
+                                                //});
+
+                                                //console.log('null stat ' + bus.vehicle_id);
+                                                //console.log('There is a mismatch between locations and vehiclestats');
+                                                //callbackA();
+
+                                            }
+                                            //In case one was missed by the daily construction
+                                            if (stopStat === null) {
+
+                                                stopStat = new StopStat({
+                                                    date: moment().format('YYYY MM DD'),
+                                                    timestamp: new Date.getTime(),
+                                                    vehicle_id: bus.vehicle_id,
+                                                    early_10_plus: 0,
+                                                    early_10: 0,
+                                                    early_9: 0,
+                                                    early_8: 0,
+                                                    early_7: 0,
+                                                    early_6: 0,
+                                                    early_5: 0,
+                                                    early_4: 0,
+                                                    early_3: 0,
+                                                    early_2: 0,
+                                                    on_time: 0,
+                                                    late_2: 0,
+                                                    late_3: 0,
+                                                    late_4: 0,
+                                                    late_5: 0,
+                                                    late_6: 0,
+                                                    late_7: 0,
+                                                    late_8: 0,
+                                                    late_9: 0,
+                                                    late_10: 0,
+                                                    late_10_plus: 0,
+                                                    total_count: 0
+                                                });
+
+                                            }
+
+                                            var minutesDif = minDif / 60;
+                                            console.log('minDif ' + minDif);
+                                            console.log('minutesDif: ' + minutesDif);
+
+                                            if (minutesDif > 10) {
+                                                stopStat.early_10_plus++;
+                                                vehicleStatNew.early_10_plus++;
+                                                console.log('1');
+                                            }
+
+                                            else if (minutesDif >= -10 && minutesDif < -9) {
+                                                stopStat.early_9++;
+                                                vehicleStatNew.early_9++;
+                                                console.log('2');
+                                            }
+
+                                            else if (minutesDif >= -9 && minutesDif < -8) {
+                                                stopStat.early_8++;
+                                                vehicleStatNew.early_8++;
+                                                console.log('3');
+                                            }
+
+                                            else if (minutesDif >= -8 && minutesDif < -7) {
+                                                stopStat.early_7++;
+                                                vehicleStatNew.early_7++;
+                                                console.log('4');
+                                            }
+
+                                            else if (minutesDif >= -7 && minutesDif < -6) {
+                                                stopStat.early_6++;
+                                                vehicleStatNew.early_6++;
+                                                console.log('5');
+                                            }
+
+                                            else if (minutesDif >= -6 && minutesDif < -5) {
+                                                stopStat.early_5++;
+                                                vehicleStatNew.early_5++;
+                                                console.log('6');
+                                            }
+
+                                            else if (minutesDif >= -4 && minutesDif < -3) {
+                                                stopStat.early_4++;
+                                                vehicleStatNew.early_4++;
+                                                console.log('7');
+                                            }
+
+                                            else if (minutesDif >= -3 && minutesDif < -2) {
+                                                stopStat.early_3++;
+                                                vehicleStatNew.early_3++;
+                                                console.log('8');
+                                            }
+
+                                            else if (minutesDif >= -2 && minutesDif < -1) {
+                                                stopStat.early_2++;
+                                                vehicleStatNew.early_2++;
+                                                console.log('9');
+                                            }
+
+                                            else if (minutesDif <= 2 && minutesDif > 1) {
+                                                stopStat.late_2++;
+                                                vehicleStatNew.late_2++;
+                                                console.log('10');
+                                            }
+
+                                            else if (minutesDif <= 3 && minutesDif > 2) {
+                                                stopStat.late_3++;
+                                                vehicleStatNew.late_3++;
+                                                console.log('11');
+                                            }
+
+                                            else if (minutesDif <= 4 && minutesDif > 3) {
+                                                stopStat.late_4++;
+                                                vehicleStatNew.late_4++;
+                                                console.log('12');
+                                            }
+                                            else if (minutesDif <= 5 && minutesDif > 4) {
+                                                stopStat.late_5++;
+                                                vehicleStatNew.late_5++;
+                                                console.log('13');
+                                            }
+                                            else if (minutesDif <= 6 && minutesDif > 5) {
+                                                stopStat.late_6++;
+                                                vehicleStatNew.late_6++;
+                                                console.log('14');
+                                            }
+
+                                            else if (minutesDif <= 7 && minutesDif > 6) {
+                                                stopStat.late_7++;
+                                                vehicleStatNew.late_7++;
+                                                console.log('15');
+                                            }
+
+                                            else if (minutesDif <= 8 && minutesDif > 7) {
+                                                stopStat.late_8++;
+                                                vehicleStatNew.late_8++;
+                                                console.log('16');
+                                            }
+
+                                            else if (minutesDif <= 9 && minutesDif > 8) {
+                                                stopStat.late_9++;
+                                                vehicleStatNew.late_9++;
+                                                console.log('17');
+                                            }
+
+                                            else if (minutesDif <= 10 && minutesDif > 9) {
+                                                stopStat.late_10++;
+                                                vehicleStatNew.late_10++;
+                                                console.log('18');
+                                            }
+
+                                            else if (minutesDif > 10) {
+                                                stopStat.late_10_plus++;
+                                                vehicleStatNew.late_10_plus++;
+                                                console.log('19');
+                                            }
+
+                                            else {
+                                                console.log('20');
+                                                stopStat.on_time++;
+                                                vehicleStatNew.on_time++;
+
+                                            }
+
+                                            vehicleStatNew.modified = true;
+                                            stopStat.modified = true;
+
+                                            vehicleStatNew.save(function (err, product, numberAffected) {
+
+                                                stopStat.save(function (err, product, numberAffected) {
+                                                    callbackA();
+
+                                                });
+                                            });
+
+                                        })
+
+                                    });
+
                                 }
+                                else {
 
-                                //Determine how late/early the bus is, update the vehicle stat corresponding to this bus
-                                VehicleStat.findOne({vehicle_id: bus.vehicle_id, date: moment().format('YYYY MM DD')}, function (err, vehicleStat) {
+                                    callbackA();
+                                    console.log('no timestamps');
 
-                                    //Not sure why vehicleStat goes out of scope
-                                    var vehicleStatNew = vehicleStat;
-
-                                    StopStat.findOne({stop_id: bus.stop_id, date: moment().format('YYYY MM DD')}, function(err, stopStat){
-
-
-
-                                        if (err) {
-
-                                            console.log('vehicle error');
-                                            return next(err);
-
-                                        }
-
-
-                                        // If a new vehicle comes online after stats are first built
-                                        if(vehicleStatNew === null) {
-
-                                            vehicleStatNew = new VehicleStat({
-                                                date: moment().format('YYYY MM DD'),
-                                                timestamp: bus.last_gps_fix * 1000,
-                                                vehicle_id: bus.vehicle_id,
-                                                early_10_plus: 0,
-                                                early_10: 0,
-                                                early_9: 0,
-                                                early_8: 0,
-                                                early_7: 0,
-                                                early_6: 0,
-                                                early_5: 0,
-                                                early_4: 0,
-                                                early_3: 0,
-                                                early_2: 0,
-                                                on_time: 0,
-                                                late_2: 0,
-                                                late_3: 0,
-                                                late_4: 0,
-                                                late_5: 0,
-                                                late_6: 0,
-                                                late_7: 0,
-                                                late_8: 0,
-                                                late_9: 0,
-                                                late_10: 0,
-                                                late_10_plus: 0,
-                                                total_count: 0
-                                            });
-
-                                            //var vStat = new VehicleStat(vehicleStat);
-                                            //
-                                            //vStat.save(function(err, post) {
-                                            //
-                                            //    if (err) {return next(err);}
-                                            //
-                                            //    callbackA();
-                                            //
-                                            //});
-
-                                            //console.log('null stat ' + bus.vehicle_id);
-                                            //console.log('There is a mismatch between locations and vehiclestats');
-                                            //callbackA();
-
-                                        }
-                                        //In case one was missed by the daily construction
-                                        if(stopStat === null) {
-
-                                            stopStat = new StopStat({
-                                                date: moment().format('YYYY MM DD'),
-                                                timestamp: new Date.getTime(),
-                                                vehicle_id: bus.vehicle_id,
-                                                early_10_plus: 0,
-                                                early_10: 0,
-                                                early_9: 0,
-                                                early_8: 0,
-                                                early_7: 0,
-                                                early_6: 0,
-                                                early_5: 0,
-                                                early_4: 0,
-                                                early_3: 0,
-                                                early_2: 0,
-                                                on_time: 0,
-                                                late_2: 0,
-                                                late_3: 0,
-                                                late_4: 0,
-                                                late_5: 0,
-                                                late_6: 0,
-                                                late_7: 0,
-                                                late_8: 0,
-                                                late_9: 0,
-                                                late_10: 0,
-                                                late_10_plus: 0,
-                                                total_count: 0
-                                            });
-
-                                        }
-
-                                        var minutesDif = minDif / 60;
-                                        console.log('minDif ' + minDif);
-                                        console.log('minutesDif: ' + minutesDif);
-
-                                        if (minutesDif > 10) {
-                                            stopStat.early_10_plus++;
-                                            vehicleStatNew.early_10_plus++;
-                                            console.log('1');
-                                        }
-
-                                        else if (minutesDif >= -10 && minutesDif < -9) {
-                                            stopStat.early_9++;
-                                            vehicleStatNew.early_9++;
-                                            console.log('2');
-                                        }
-
-                                        else if (minutesDif >= -9 && minutesDif < -8) {
-                                            stopStat.early_8++;
-                                            vehicleStatNew.early_8++;
-                                            console.log('3');
-                                        }
-
-                                        else if (minutesDif >= -8 && minutesDif < -7) {
-                                            stopStat.early_7++;
-                                            vehicleStatNew.early_7++;
-                                            console.log('4');
-                                        }
-
-                                        else if (minutesDif >= -7 && minutesDif < -6) {
-                                            stopStat.early_6++;
-                                            vehicleStatNew.early_6++;
-                                            console.log('5');
-                                        }
-
-                                        else if (minutesDif >= -6 && minutesDif < -5) {
-                                            stopStat.early_5++;
-                                            vehicleStatNew.early_5++;
-                                            console.log('6');
-                                        }
-
-                                        else if (minutesDif >= -4 && minutesDif < -3) {
-                                            stopStat.early_4++;
-                                            vehicleStatNew.early_4++;
-                                            console.log('7');
-                                        }
-
-                                        else if (minutesDif >= -3 && minutesDif < -2) {
-                                            stopStat.early_3++;
-                                            vehicleStatNew.early_3++;
-                                            console.log('8');
-                                        }
-
-                                        else if (minutesDif >= -2 && minutesDif < -1) {
-                                            stopStat.early_2++;
-                                            vehicleStatNew.early_2++;
-                                            console.log('9');
-                                        }
-
-                                        else if (minutesDif <= 2 && minutesDif > 1) {
-                                            stopStat.late_2++;
-                                            vehicleStatNew.late_2++;
-                                            console.log('10');
-                                        }
-
-                                        else if (minutesDif <= 3 && minutesDif > 2) {
-                                            stopStat.late_3++;
-                                            vehicleStatNew.late_3++;
-                                            console.log('11');
-                                        }
-
-                                        else if (minutesDif <= 4 && minutesDif > 3) {
-                                            stopStat.late_4++;
-                                            vehicleStatNew.late_4++;
-                                            console.log('12');
-                                        }
-                                        else if (minutesDif <= 5 && minutesDif > 4) {
-                                            stopStat.late_5++;
-                                            vehicleStatNew.late_5++;
-                                            console.log('13');
-                                        }
-                                        else if (minutesDif <= 6 && minutesDif > 5) {
-                                            stopStat.late_6++;
-                                            vehicleStatNew.late_6++;
-                                            console.log('14');
-                                        }
-
-                                        else if (minutesDif <= 7 && minutesDif > 6) {
-                                            stopStat.late_7++;
-                                            vehicleStatNew.late_7++;
-                                            console.log('15');
-                                        }
-
-                                        else if (minutesDif <= 8 && minutesDif > 7) {
-                                            stopStat.late_8++;
-                                            vehicleStatNew.late_8++;
-                                            console.log('16');
-                                        }
-
-                                        else if (minutesDif <= 9 && minutesDif > 8) {
-                                            stopStat.late_9++;
-                                            vehicleStatNew.late_9++;
-                                            console.log('17');
-                                        }
-
-                                        else if (minutesDif <= 10 && minutesDif > 9) {
-                                            stopStat.late_10++;
-                                            vehicleStatNew.late_10++;
-                                            console.log('18');
-                                        }
-
-                                        else if (minutesDif > 10) {
-                                            stopStat.late_10_plus++;
-                                            vehicleStatNew.late_10_plus++;
-                                            console.log('19');
-                                        }
-
-                                        else {
-                                            console.log('20');
-                                            stopStat.on_time++;
-                                            vehicleStatNew.on_time++;
-
-                                        }
-
-                                        vehicleStatNew.modified = true;
-                                        stopStat.modified = true;
-
-                                        vehicleStatNew.save(function (err, product, numberAffected) {
-
-                                            stopStat.save(function(err, product,numberAffected){
-                                                callbackA();
-
-                                            });
-                                        });
-
-                                    })
-
-                                });
+                                }
 
                             }
                             else {
-
-                                callbackA();
-                                console.log('no timestamps');
-
+                                console.log('err ' + JSON.stringify(err));
                             }
                         });
 

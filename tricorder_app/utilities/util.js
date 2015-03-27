@@ -68,6 +68,7 @@ module.exports.aggStops = function(id, period) {
 
     switch(period) {
         case 'day':
+            sinceWhen = d;
             break;
         case 'week':
             sinceWhen = d-week;
@@ -85,6 +86,79 @@ module.exports.aggStops = function(id, period) {
 
     //Aggregate all stats from sinceWhen, onwards
     StopStat.find({timestamp: {$gte: sinceWhen}, stop_id: id}, function (stops) {
+        if (!err) {
+
+            var resultStat = {
+                stop_id: stop[0].stop_id,
+                early_10_plus: 0,
+                early_10: 0,
+                early_9: 0,
+                early_8: 0,
+                early_7: 0,
+                early_6: 0,
+                early_4: 0,
+                early_3: 0,
+                early_2: 0,
+                on_time: 0,
+                late_2: 0,
+                late_3: 0,
+                late_4: 0,
+                late_5: 0,
+                late_6: 0,
+                late_7: 0,
+                late_8: 0,
+                late_9: 0,
+                late_10: 0,
+                late_10_plus: 0,
+                total_count: 0
+            };
+
+            async.eachSeries(
+                stops,
+                function (stop, callback) {
+                    for (var field in stop) {
+                        resultStat[field] += stop[field];
+                    }
+                    callback();
+                },
+                function (err, resultStat) {
+                    if(!err) {
+                        return resultStat;
+                    }
+                });
+
+        }
+
+    });
+};
+
+module.exports.aggVehicles = function(id, period) {
+
+    //midnight of current day
+    var d = new Date().setHours(0,0,0,0);
+
+    var sinceWhen;
+
+    switch(period) {
+        case 'day':
+            sinceWhen = d;
+            break;
+        case 'week':
+            sinceWhen = d-week;
+            break;
+        case 'month':
+            sinceWhen = d-month;
+            break;
+        case 'year':
+            sinceWhen = d-year;
+            break;
+        default:
+            sinceWhen = d.setYear(1970);
+            break;
+    }
+
+    //Aggregate all stats from sinceWhen, onwards
+    VehicleStat.find({timestamp: {$gte: sinceWhen}, stop_id: id}, function (stops) {
         if (!err) {
 
             var resultStat = {

@@ -232,17 +232,8 @@ module.exports.apiVehicle = function(req, res, next) {
     var period = req.query["period"],
         id = req.query["id"];
 
-    switch(period) {
-        case 'day':
-            break;
-        case 'week':
-            break;
-        case 'month':
-            break;
-        case 'year':
-            break;
-        case 'all':
-            break;
-    }
+    res.render("api/vehicle.html", {
+        data: util.aggVehicles(id, period)
+    });
 
 };
