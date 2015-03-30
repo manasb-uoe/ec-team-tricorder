@@ -19,6 +19,8 @@
     "moment": "*",
     "bcrypt-nodejs": "*",
     "connect-mongo": "*",
+  },
+  "devDependencies": {
     "supertest": "*"
   }
 }
