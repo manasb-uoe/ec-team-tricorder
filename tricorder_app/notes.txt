@@ -82,3 +82,5 @@ busses_near_stops.forEach(function(j,k){
 	
 });
 
+2015-03-29
+vehicleStat with null vehicle_id gets into database if I skip populateStats and just rely on update_stats

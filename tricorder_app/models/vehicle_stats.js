@@ -2,7 +2,7 @@ var mongoose = require('mongoose');
 
 var VehicleStatsSchema = new mongoose.Schema({
     date: String,
-    timestamp: {type: Date, index: true},
+    timestamp: {type: Number, index: true},
     vehicle_id : {type: String, index: true},
     early_10_plus: Number,
     early_10: Number,

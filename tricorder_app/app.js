@@ -33,8 +33,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.get(globals.urls.home, routesIndex.home);
 app.get(globals.urls.nearby_stops, routesIndex.nearbyStops);
 app.get(globals.urls.stop + "/:id", routesIndex.stop);
-app.get(globals.urls.api_stop + "/:id/:period", routesIndex.apiStop);
-app.get(globals.urls.api_vehicle + "/:id/:period", routesIndex.apiVehicle)
+app.get(globals.urls.api_stop, routesIndex.apiStop);
+app.get(globals.urls.api_vehicle, routesIndex.apiVehicle);
+app.get('/test', routesIndex.test);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
