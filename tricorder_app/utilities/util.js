@@ -20,7 +20,9 @@ module.exports.urls = {
     add_stop_to_favourites: "/add-stop-to-favourites",
     remove_stop_from_favourites: "/remove-stop-from-favourites",
     favourites: "/favourites",
-    get_service_timetable_for_stop: "/get-service-timetable-for-stop"
+    get_service_timetable_for_stop: "/get-service-timetable-for-stop",
+    api_stop: '/api/stop/',
+    api_vehicle: '/api/vehicle/'
 };
 
 module.exports.raise404 = function(next) {

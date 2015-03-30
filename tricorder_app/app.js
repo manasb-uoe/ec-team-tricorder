@@ -58,6 +58,8 @@ app.configure = function () {
     app.post(util.urls.remove_stop_from_favourites, routesIndex.remove_stop_from_favourites);
     app.get(util.urls.favourites, util.restrictUnauthenticatedUser, routesIndex.favourites);
     app.get(util.urls.get_service_timetable_for_stop, routesIndex.get_service_timetable_for_stop);
+    app.get(util.urls.api_stop, routesIndex.apiStop);
+    app.get(util.urls.api_vehicle, routesIndex.apiVehicle);
 
     // catch 404 and forward to error handler
     app.use(function(req, res, next) {

@@ -11,6 +11,13 @@ var Timetable = require("../models/timetable").Timetable;
 var LiveLocation = require("../models/live_location").LiveLocation;
 var User = require("../models/user").User;
 var FavouriteStop = require("../models/favourite_stops").FavouriteStop;
+var VehicleStat = require("../models/vehicle_stats").VehicleStat;
+var StopStat = require("../models/stop_stats").StopStat;
+
+// conversions
+var week = 7*24*60*60*100;
+var month = week * 4;
+var year = month * 12;
 
 /* GET home page. */
 module.exports.home = function(req, res) {
@@ -483,3 +490,186 @@ module.exports.get_service_timetable_for_stop = function (req, res, next) {
         });
 };
 
+/* GET stats for a particular stop during a particular time period */
+module.exports.apiStop = function(req, res, next) {
+    var period = req.query["period"],
+        id = req.query["id"];
+
+    //midnight of current day
+    var d = new Date();
+    d.setHours(0,0,0,0);
+
+    var sinceWhen;
+
+    switch(period) {
+        case 'day':
+            sinceWhen = d.getTime();
+            break;
+        case 'week':
+            sinceWhen = d.getTime()-week;
+            break;
+        case 'month':
+            sinceWhen = d.getTime()-month;
+            break;
+        case 'year':
+            sinceWhen = d.getTime()-year;
+            break;
+        default:
+            sinceWhen = d.setYear(1970);
+            break;
+    }
+
+    //Aggregate all stats from sinceWhen, onwards
+    StopStat.find({timestamp: {$gte: sinceWhen}, vehicle_id: id}, function (err, items) {
+
+        if (!err) {
+
+            var resultStat = {
+                id_num: id,
+                early_10_plus: 0,
+                early_10: 0,
+                early_9: 0,
+                early_8: 0,
+                early_7: 0,
+                early_6: 0,
+                early_4: 0,
+                early_3: 0,
+                early_2: 0,
+                on_time: 0,
+                late_2: 0,
+                late_3: 0,
+                late_4: 0,
+                late_5: 0,
+                late_6: 0,
+                late_7: 0,
+                late_8: 0,
+                late_9: 0,
+                late_10: 0,
+                late_10_plus: 0,
+                total_count: 0
+            };
+
+
+            async.eachSeries(
+                items,
+                function (item, callback) {
+                    for (var field in resultStat) {
+                        if(field !== 'id_num') {
+                            resultStat[field] += item[field];
+                        }
+                    }
+                    callback();
+                },
+                function (err) {
+                    if(!err) {
+                        console.log('result ' + resultStat);
+                        res.send(resultStat);
+                    }
+                    else {
+                        console.log('err ' + JSON.stringify(err));
+                    }
+                });
+
+        }
+        else {
+            console.log('err ' + JSON.stringify(err));
+        }
+
+    });
+
+};
+
+/* GET stats for a particular vehicle during a particular time period */
+module.exports.apiVehicle = function(req, res, next) {
+
+    var period = req.query["period"],
+        id = req.query["id"];
+
+    //midnight of current day
+    var d = new Date();
+
+    d.setHours(0,0,0,0);
+
+    var sinceWhen;
+
+    switch(period) {
+        case 'day':
+            sinceWhen = d.getTime();
+            console.log('sinceWhen 1' + sinceWhen);
+            break;
+        case 'week':
+            sinceWhen = d.getTime()-week;
+            console.log('sinceWhen 2' + sinceWhen);
+            break;
+        case 'month':
+            sinceWhen = d.getTime()-month;
+            break;
+        case 'year':
+            sinceWhen = d.getTime()-year;
+            break;
+        default:
+            sinceWhen = d.setYear(1970);
+            break;
+    }
+
+    console.log('id ' + id);
+
+    //Aggregate all stats from sinceWhen, onwards
+    VehicleStat.find({timestamp: {$gte: sinceWhen}, vehicle_id: id}, function (err, items) {
+        if (!err) {
+            var resultStat = {
+                id_num: id,
+                early_10_plus: 0,
+                early_10: 0,
+                early_9: 0,
+                early_8: 0,
+                early_7: 0,
+                early_6: 0,
+                early_4: 0,
+                early_3: 0,
+                early_2: 0,
+                on_time: 0,
+                late_2: 0,
+                late_3: 0,
+                late_4: 0,
+                late_5: 0,
+                late_6: 0,
+                late_7: 0,
+                late_8: 0,
+                late_9: 0,
+                late_10: 0,
+                late_10_plus: 0,
+                total_count: 0
+            };
+
+
+            async.eachSeries(
+                items,
+                function (item, callback) {
+                    console.log(item);
+                    for (var field in resultStat) {
+                        if(field !== 'id_num') {
+                            resultStat[field] += item[field];
+                        }
+                    }
+                    callback();
+                },
+                function (err) {
+                    if (!err) {
+                        console.log('result ' + resultStat);
+                        res.render('vehicleStats.html', {
+                            data: resultStat
+                        });
+                    }
+                    else {
+                        console.log('err ' + JSON.stringify(err));
+                    }
+                });
+
+        }
+        else {
+            console.log('err ' + JSON.stringify(err));
+        }
+    });
+
+};
