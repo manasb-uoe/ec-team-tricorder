@@ -224,12 +224,9 @@ module.exports.apiStop = function(req, res, next) {
     var period = req.query["period"],
         id = req.query["id"];
 
-
-    var period = req.query["period"],
-        id = req.query["id"];
-
     //midnight of current day
-    var d = new Date().setHours(0,0,0,0);
+    var d = new Date();
+    d.setHours(0,0,0,0);
 
     var sinceWhen;
 
@@ -257,7 +254,7 @@ module.exports.apiStop = function(req, res, next) {
         if (!err) {
 
             var resultStat = {
-                id_num: items[0].vehicle_id,
+                id_num: id,
                 early_10_plus: 0,
                 early_10: 0,
                 early_9: 0,
@@ -285,9 +282,10 @@ module.exports.apiStop = function(req, res, next) {
             async.eachSeries(
                 items,
                 function (item, callback) {
-                    console.log(item);
                     for (var field in resultStat) {
-                        resultStat[field] += item[field];
+                        if(field !== 'id_num') {
+                            resultStat[field] += item[field];
+                        }
                     }
                     callback();
                 },
