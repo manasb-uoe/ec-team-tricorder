@@ -232,16 +232,16 @@ module.exports.apiStop = function(req, res, next) {
 
     switch(period) {
         case 'day':
-            sinceWhen = d;
+            sinceWhen = d.getTime();
             break;
         case 'week':
-            sinceWhen = d-week;
+            sinceWhen = d.getTime()-week;
             break;
         case 'month':
-            sinceWhen = d-month;
+            sinceWhen = d.getTime()-month;
             break;
         case 'year':
-            sinceWhen = d-year;
+            sinceWhen = d.getTime()-year;
             break;
         default:
             sinceWhen = d.setYear(1970);
@@ -292,9 +292,7 @@ module.exports.apiStop = function(req, res, next) {
                 function (err) {
                     if(!err) {
                         console.log('result ' + resultStat);
-                        res.render('stopStats.html', {
-                            data: resultStat
-                        });
+                        res.send(resultStat);
                     }
                     else {
                         console.log('err ' + JSON.stringify(err));
@@ -325,16 +323,18 @@ module.exports.apiVehicle = function(req, res, next) {
 
     switch(period) {
         case 'day':
-            sinceWhen = d;
+            sinceWhen = d.getTime();
+            console.log('sinceWhen 1' + sinceWhen);
             break;
         case 'week':
-            sinceWhen = d-week;
+            sinceWhen = d.getTime()-week;
+            console.log('sinceWhen 2' + sinceWhen);
             break;
         case 'month':
-            sinceWhen = d-month;
+            sinceWhen = d.getTime()-month;
             break;
         case 'year':
-            sinceWhen = d-year;
+            sinceWhen = d.getTime()-year;
             break;
         default:
             sinceWhen = d.setYear(1970);
@@ -345,9 +345,7 @@ module.exports.apiVehicle = function(req, res, next) {
 
     //Aggregate all stats from sinceWhen, onwards
     VehicleStat.find({timestamp: {$gte: sinceWhen}, vehicle_id: id}, function (err, items) {
-        if (items.length > 0) {
-
-            if (!err) {
+        if (!err) {
                 var resultStat = {
                     id_num: id,
                     early_10_plus: 0,
@@ -401,7 +399,6 @@ module.exports.apiVehicle = function(req, res, next) {
             else {
                 console.log('err ' + JSON.stringify(err));
             }
-        }
     });
 
 };
