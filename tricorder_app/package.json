@@ -19,6 +19,7 @@
     "moment": "*",
     "bcrypt-nodejs": "*",
     "connect-mongo": "*",
+    "node-schedule": "0.2.6"
   },
   "devDependencies": {
     "supertest": "*"

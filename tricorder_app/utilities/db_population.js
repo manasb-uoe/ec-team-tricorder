@@ -7,6 +7,7 @@ var mongoose = require('mongoose');
 var async = require('async');
 var moment = require('moment');
 var dbConfig = require("./db");
+var schedule = require('node-schedule');
 
 // models
 var Stop = require('../models/stop').Stop;
@@ -897,7 +898,7 @@ mongoose.connection.once('open', function() {
         process.exit(0);
     };
 
-    if (arg == "all") {
+    if (arg === "all") {
         console.time("total execution time");
         async.series(
             [
@@ -910,14 +911,46 @@ mongoose.connection.once('open', function() {
             ],
             finalCallback
         );
-    } else if (arg == "live") {
+    } else if (arg === "live") {
         console.time("total execution time");
         populateLiveLocations(finalCallback);
     }
-    else if (arg == "update_stats") {
+    else if (arg === "update_stats") {
         console.time("total execution time");
         updateStats();
-    } else {
+    }
+
+    else if (arg === "repeat") {
+        //begin at 04:00 every day and shutdown at 23:00 every day
+        var a = schedule.scheduleJob('0 4 * * *', function(){
+            console.log('beginning update at' + new Date());
+            var r = setInterval(
+                updateStats
+            );
+
+            //19 hours later
+            setTimeout(function(){
+                console.log('ending update at ' + new Date());
+                clearInterval(r);
+            },68400000, r);
+        });
+        //update documents every dat at 02:00
+        var b = schedule.scheduleJob('* 2 * * *', function(){
+            async.series(
+                [
+                    populateStops,
+                    populateServices,
+                    populateTimetables,
+                    populateServiceStatuses,
+                    populateLiveLocations,
+                    populateStats
+                ],
+                finalCallback
+            );
+        });
+    }
+
+    else {
         console.log("Invalid arguments. Only 'all', 'live' and 'update_stats' are allowed.");
         process.exit(1);
     }
