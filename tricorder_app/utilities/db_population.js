@@ -960,7 +960,7 @@ mongoose.connection.once('open', function() {
 
     else if (arg === "repeat") {
         //begin at 04:00 every day and shutdown at 23:00 every day
-        var a = schedule.scheduleJob('12 11 * * *', function(){
+        var a = schedule.scheduleJob('0 4 * * *', function(){
             console.log('beginning update at' + new Date());
             var r = setInterval(
                 updateStats
@@ -973,7 +973,7 @@ mongoose.connection.once('open', function() {
             },68400000, r);
         });
         //update documents every dat at 02:00
-        var b = schedule.scheduleJob('10 11 * * *', function(){
+        var b = schedule.scheduleJob('0 2 * * *', function(){
             async.series(
                 [
                     populateStops,
