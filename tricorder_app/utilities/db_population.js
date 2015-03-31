@@ -130,7 +130,7 @@ function populateTimetables(callbackA) {
                 var j = 0;
                 async.eachSeries(stopsArrays, function(stops, callbackC) {
                     console.log('series ' + i++);
-                    async.each(
+                    async.eachSeries(
                         stops,
                         function (stop, callbackB) {
                             https.get(API_BASE_URL + "/timetables/" + stop.stop_id, function(res) {
@@ -943,11 +943,11 @@ mongoose.connection.once('open', function() {
         console.time("total execution time");
         async.series(
             [
-                //populateStops,
-                //populateServices,
-                //populateTimetables,
-                //populateServiceStatuses,
-                //populateLiveLocations,
+                populateStops,
+                populateServices,
+                populateTimetables,
+                populateServiceStatuses,
+                populateLiveLocations,
                 populateStats
             ],
             finalCallback
