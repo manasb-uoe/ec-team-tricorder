@@ -110,72 +110,92 @@ function populateServices(callbackA) {
 function populateTimetables(callbackA) {
     console.log("Populating Timetables...");
 
-
-
     Timetable.remove(function (err) {
         if (!err) {
             Stop.find({}, 'stop_id', function(err, stops) {
+
                 var n = 30;
 
-                var len = stops.length,
-                    stopsArrays = [],
-                    i = 0;
+                var len = stops.length,stopsArrays = [], i = 0;
                 while (i < len) {
                     var size = Math.ceil((len - i) / n--);
                     stopsArrays.push(stops.slice(i, i += size));
                 }
-                console.log('length ' + stopsArrays.length);
-                async.eachSeries(
-                    stopsArrays,
-                    function (stop, callbackB) {
-                        https.get(API_BASE_URL + "/timetables/" + stop.stop_id, function(res) {
-                            var body = '';
-                            res.on('data', function(chunk){
-                                body += chunk;
-                            });
+                var i = 0;
+                var j = 0;
+                async.eachSeries(stopsArrays, function(stops, callbackC) {
+                    console.log('series ' + i++);
+                    async.eachSeries(
+                        stops,
+                        function (stop, callbackB) {
+                            https.get(API_BASE_URL + "/timetables/" + stop.stop_id, function(res) {
+                                var body = '';
+                                res.on('data', function(chunk){
+                                    body += chunk;
+                                });
 
-                            res.on('end', function() {
-                                var json = JSON.parse(body);
+                                res.on('end', function() {
+                                    var json = JSON.parse(body);
 
-                                async.each(
-                                    json["departures"],
-                                    function (departure, callbackC) {
-                                        var timetableDoc = {
-                                            stop_id: json["stop_id"],
-                                            stop_name: json["stop_name"],
-                                            service_name: departure["service_name"],
-                                            time: departure["time"],
-                                            timestamp: moment(departure["time"], "HH:mm").unix(),
-                                            destination: departure["destination"],
-                                            day: departure["day"]
-                                        };
+                                    async.each(
+                                        json["departures"],
+                                        function (departure, callbackC) {
+                                            var timetableDoc = {
+                                                stop_id: json["stop_id"],
+                                                stop_name: json["stop_name"],
+                                                service_name: departure["service_name"],
+                                                time: departure["time"],
+                                                timestamp: moment(departure["time"], "HH:mm").unix(),
+                                                destination: departure["destination"],
+                                                day: departure["day"]
+                                            };
 
-                                        var timetable = new Timetable(timetableDoc);
-                                        timetable.save(function(err) {
+                                            var timetable = new Timetable(timetableDoc);
+                                            timetable.save(function(err) {
+                                                if(!err) {
+                                                    callbackC();
+                                                }
+                                                else {
+                                                    console.log('err 3' + JSON.stringify(err));
+                                                }
+                                            });
+                                        },
+                                        function (err) {
                                             if(!err) {
-                                                callbackC();
+                                                callbackB(err, null);
                                             }
-                                        });
-                                    },
-                                    function (err) {
-                                        console.log('batch ' + i++);
-                                        callbackB(err, null);
-                                    }
-                                );
+                                            else {
+                                                console.log('err 4' + JSON.stringify(err));
+                                            }
+                                        }
+                                    );
+                                });
                             });
-                        });
-                    },
-                    function (err) {
-                        if (!err) {
-                            console.log("DONE\n");
-                            callbackA(err, null);
+                        },
+                        function (err) {
+                            if (!err) {
+                                callbackC(err, null);
+                            }
+                            else {
+                                console.log('err 5' + JSON.stringify(err));
+                            }
                         }
+                    );
+                }, function(err) {
+                    if (!err) {
+                        console.log("DONE\n");
+                        callbackA(err, null);
                     }
-                );
+                    else {
+                        console.log('err 6' + JSON.stringify(err));
+                    }
+                });
+
             });
         }
     });
 }
+
 
 function populateServiceStatuses(callbackA) {
     console.log("Populating Service Statuses...");
