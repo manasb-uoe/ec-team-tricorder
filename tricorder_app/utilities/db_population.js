@@ -47,14 +47,19 @@ function populateStops(callbackA) {
 
                             var stop = new Stop(stopJson);
                             stop.save(function(err) {
-                                if (!err) {
-                                    callbackB();
+                                if (err) {
+                                    console.log('err 1' + JSON.stringify(err));
                                 }
+                                callbackB();
                             });
                         },
                         function (err) {
                             if (!err) {
                                 console.log("DONE\n");
+                                callbackA(err, null);
+                            }
+                            else {
+                                console.log('err 2' + JSON.stringify(err));
                                 callbackA(err, null);
                             }
                         }
@@ -105,11 +110,20 @@ function populateServices(callbackA) {
 function populateTimetables(callbackA) {
     console.log("Populating Timetables...");
 
+
+
     Timetable.remove(function (err) {
         if (!err) {
             Stop.find({}, 'stop_id', function(err, stops) {
-                async.each(
-                    stops,
+                var n = 30;
+
+                var len = stops.length,stopsArrays = [], i = 0;
+                while (i < len) {
+                    var size = Math.ceil((len - i) / n--);
+                    stopsArrays.push(stops.slice(i, i += size));
+                }
+                async.eachSeries(
+                    stopsArrays,
                     function (stop, callbackB) {
                         https.get(API_BASE_URL + "/timetables/" + stop.stop_id, function(res) {
                             var body = '';
