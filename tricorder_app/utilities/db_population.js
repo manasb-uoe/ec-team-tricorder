@@ -117,11 +117,14 @@ function populateTimetables(callbackA) {
             Stop.find({}, 'stop_id', function(err, stops) {
                 var n = 30;
 
-                var len = stops.length,stopsArrays = [], i = 0;
+                var len = stops.length,
+                    stopsArrays = [],
+                    i = 0;
                 while (i < len) {
                     var size = Math.ceil((len - i) / n--);
                     stopsArrays.push(stops.slice(i, i += size));
                 }
+                console.log('length ' + stopsArrays.length);
                 async.eachSeries(
                     stopsArrays,
                     function (stop, callbackB) {
@@ -155,6 +158,7 @@ function populateTimetables(callbackA) {
                                         });
                                     },
                                     function (err) {
+                                        console.log('batch ' + i++);
                                         callbackB(err, null);
                                     }
                                 );
