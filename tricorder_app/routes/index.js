@@ -183,14 +183,12 @@ module.exports.stop = function (req, res, next) {
 
                                                 callbackB(err, null);
                                             });
-                                    },
-                                    function(err) {
-                                        if (err) {
-                                            console.log(err.message);
-                                        }
-                                        callbackA();
                                     }
-                                ]
+                                ],
+                                function (err) {
+                                    if (err) {throw err;}
+                                    callbackA();
+                                }
                             );
                         },
                         function (err) {
@@ -468,6 +466,7 @@ module.exports.favourites = function (req, res, next) {
         });
 };
 
+/* GET service timetable for the provided stop */
 module.exports.get_service_timetable_for_stop = function (req, res, next) {
     var serviceName = req.query["service"];
     var stop_id = req.query["stop"];
