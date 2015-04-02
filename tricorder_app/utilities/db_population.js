@@ -110,7 +110,7 @@ function populateServices(callbackA) {
 function populateTimetables(callbackA) {
     console.log("Populating Timetables...");
     var repeat = true;
-    var batch_num = 10;
+    var batch_num = 30;
 
     //EC2 instance doesn't have enough bandwith to process all requests in parallel.
     //Break requests into batches, and if the socket hangs up, repeat with 10 more batches
@@ -133,6 +133,7 @@ function populateTimetables(callbackA) {
                             async.eachSeries(
                                 stops,
                                 function (stop, callbackB) {
+                                    //console.log('each');
                                     https.get(API_BASE_URL + "/timetables/" + stop.stop_id, function (res) {
                                         var body = '';
                                         res.on('data', function (chunk) {
@@ -140,11 +141,13 @@ function populateTimetables(callbackA) {
                                         });
 
                                         res.on('end', function () {
+                                            //console.log('received');
                                             var json = JSON.parse(body);
 
                                             async.each(
                                                 json["departures"],
                                                 function (departure, callbackC) {
+                                                    //console.log('2nd each');
                                                     var timetableDoc = {
                                                         stop_id: json["stop_id"],
                                                         stop_name: json["stop_name"],
@@ -159,9 +162,9 @@ function populateTimetables(callbackA) {
                                                     timetable.save(function (err) {
                                                         if (!err) {
                                                             j++;
-                                                            if(!j%10) {
-                                                                console.log('saving ' + j);
-                                                            }
+                                                            //if(!j%10) {
+                                                                //console.log('saving ' + j);
+                                                            //}
                                                             callbackC();
                                                         }
                                                         else {
