@@ -109,91 +109,104 @@ function populateServices(callbackA) {
 
 function populateTimetables(callbackA) {
     console.log("Populating Timetables...");
+    var repeat = true;
+    var batch_num = 10;
 
-    Timetable.remove(function (err) {
-        if (!err) {
-            Stop.find({}, 'stop_id', function(err, stops) {
+    //EC2 instance doesn't have enough bandwith to process all requests in parallel.
+    //Break requests into batches, and if the socket hangs up, repeat with 10 more batches
+    while(repeat) {
+        try {
+            repeat = false;
+            Timetable.remove(function (err) {
+                if (!err) {
+                    Stop.find({}, 'stop_id', function (err, stops) {
+                        var n = batch_num;
+                        var len = stops.length, stopsArrays = [], i = 0;
+                        while (i < len) {
+                            var size = Math.ceil((len - i) / n--);
+                            stopsArrays.push(stops.slice(i, i += size));
+                        }
+                        var i = 0;
+                        var j = 0;
+                        async.eachSeries(stopsArrays, function (stops, callbackC) {
+                            console.log('series ' + i++);
+                            async.eachSeries(
+                                stops,
+                                function (stop, callbackB) {
+                                    https.get(API_BASE_URL + "/timetables/" + stop.stop_id, function (res) {
+                                        var body = '';
+                                        res.on('data', function (chunk) {
+                                            body += chunk;
+                                        });
 
-                var n = 30;
+                                        res.on('end', function () {
+                                            var json = JSON.parse(body);
 
-                var len = stops.length,stopsArrays = [], i = 0;
-                while (i < len) {
-                    var size = Math.ceil((len - i) / n--);
-                    stopsArrays.push(stops.slice(i, i += size));
-                }
-                var i = 0;
-                var j = 0;
-                async.eachSeries(stopsArrays, function(stops, callbackC) {
-                    console.log('series ' + i++);
-                    async.eachSeries(
-                        stops,
-                        function (stop, callbackB) {
-                            https.get(API_BASE_URL + "/timetables/" + stop.stop_id, function(res) {
-                                var body = '';
-                                res.on('data', function(chunk){
-                                    body += chunk;
-                                });
+                                            async.each(
+                                                json["departures"],
+                                                function (departure, callbackC) {
+                                                    var timetableDoc = {
+                                                        stop_id: json["stop_id"],
+                                                        stop_name: json["stop_name"],
+                                                        service_name: departure["service_name"],
+                                                        time: departure["time"],
+                                                        timestamp: moment(departure["time"], "HH:mm").unix(),
+                                                        destination: departure["destination"],
+                                                        day: departure["day"]
+                                                    };
 
-                                res.on('end', function() {
-                                    var json = JSON.parse(body);
-
-                                    async.each(
-                                        json["departures"],
-                                        function (departure, callbackC) {
-                                            var timetableDoc = {
-                                                stop_id: json["stop_id"],
-                                                stop_name: json["stop_name"],
-                                                service_name: departure["service_name"],
-                                                time: departure["time"],
-                                                timestamp: moment(departure["time"], "HH:mm").unix(),
-                                                destination: departure["destination"],
-                                                day: departure["day"]
-                                            };
-
-                                            var timetable = new Timetable(timetableDoc);
-                                            timetable.save(function(err) {
-                                                if(!err) {
-                                                    callbackC();
+                                                    var timetable = new Timetable(timetableDoc);
+                                                    timetable.save(function (err) {
+                                                        if (!err) {
+                                                            callbackC();
+                                                        }
+                                                        else {
+                                                            console.log('err 3' + JSON.stringify(err));
+                                                        }
+                                                    });
+                                                },
+                                                function (err) {
+                                                    if (!err) {
+                                                        callbackB(err, null);
+                                                    }
+                                                    else {
+                                                        console.log('err 4' + JSON.stringify(err));
+                                                    }
                                                 }
-                                                else {
-                                                    console.log('err 3' + JSON.stringify(err));
-                                                }
-                                            });
-                                        },
-                                        function (err) {
-                                            if(!err) {
-                                                callbackB(err, null);
-                                            }
-                                            else {
-                                                console.log('err 4' + JSON.stringify(err));
-                                            }
-                                        }
-                                    );
-                                });
-                            });
-                        },
-                        function (err) {
+                                            );
+                                        });
+                                    });
+                                },
+                                function (err) {
+                                    if (!err) {
+                                        callbackC(err, null);
+                                    }
+                                    else {
+                                        console.log('err 5' + JSON.stringify(err));
+                                    }
+                                }
+                            );
+                        }, function (err) {
                             if (!err) {
-                                callbackC(err, null);
+                                console.log("DONE\n");
+                                callbackA(err, null);
                             }
                             else {
-                                console.log('err 5' + JSON.stringify(err));
+                                console.log('err 6' + JSON.stringify(err));
                             }
-                        }
-                    );
-                }, function(err) {
-                    if (!err) {
-                        console.log("DONE\n");
-                        callbackA(err, null);
-                    }
-                    else {
-                        console.log('err 6' + JSON.stringify(err));
-                    }
-                });
+                        });
 
+                    });
+                }
             });
         }
-    });
+        catch (err) {
+            console.log(err);
+            console.log('Incrementing batches and trying again');
+            repeat = true;
+            batch_num += 10;
+        }
+    }
 }
 
 
