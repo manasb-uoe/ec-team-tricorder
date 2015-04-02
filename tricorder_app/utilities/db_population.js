@@ -158,6 +158,10 @@ function populateTimetables(callbackA) {
                                                     var timetable = new Timetable(timetableDoc);
                                                     timetable.save(function (err) {
                                                         if (!err) {
+                                                            j++;
+                                                            if(!j%10) {
+                                                                console.log('saving ' + j);
+                                                            }
                                                             callbackC();
                                                         }
                                                         else {
