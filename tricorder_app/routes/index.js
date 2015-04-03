@@ -16,7 +16,7 @@ var VehicleStat = require("../models/vehicle_stats").VehicleStat;
 var StopStat = require("../models/stop_stats").StopStat;
 
 // conversions
-var week = 7*24*60*60*100;
+var week = 7*24*60*60*1000;
 var month = week * 4;
 var year = month * 12;
 
@@ -595,11 +595,11 @@ module.exports.apiVehicle = function(req, res, next) {
     switch(period) {
         case 'day':
             sinceWhen = d.getTime();
-            console.log('sinceWhen 1' + sinceWhen);
+            console.log('sinceWhen 1 ' + sinceWhen);
             break;
         case 'week':
             sinceWhen = d.getTime()-week;
-            console.log('sinceWhen 2' + sinceWhen);
+            console.log('sinceWhen 2 ' + sinceWhen);
             break;
         case 'month':
             sinceWhen = d.getTime()-month;
@@ -617,6 +617,8 @@ module.exports.apiVehicle = function(req, res, next) {
     //Aggregate all stats from sinceWhen, onwards
     VehicleStat.find({timestamp: {$gte: sinceWhen}, vehicle_id: id}, function (err, items) {
         if (!err) {
+            console.log('length ' + items.length);
+            console.log('since ' + sinceWhen);
             var resultStat = {
                 id_num: id,
                 early_10_plus: 0,
@@ -646,7 +648,7 @@ module.exports.apiVehicle = function(req, res, next) {
             async.eachSeries(
                 items,
                 function (item, callback) {
-                    console.log(item);
+                    //console.log(item);
                     for (var field in resultStat) {
                         if(field !== 'id_num') {
                             resultStat[field] += item[field];
@@ -656,10 +658,8 @@ module.exports.apiVehicle = function(req, res, next) {
                 },
                 function (err) {
                     if (!err) {
-                        console.log('result ' + resultStat);
-                        res.render('vehicleStats.html', {
-                            data: resultStat
-                        });
+                        //console.log('result ' + resultStat);
+                        res.send(resultStat);
                     }
                     else {
                         console.log('err ' + JSON.stringify(err));
