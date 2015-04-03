@@ -33,6 +33,22 @@
             <div class="exit-full-screen-map" hidden="">Exit Full Screen</div>
         </div>
         <div class="wrapper"><a href="#" class="enter-full-screen-map">View full screen map</a></div>
+
+        <div class="row">
+            <div class="col-lg-3 col-md-3 col-sm-3"></div>
+            <div class="col-lg-6 col-md-6 col-sm-12">
+                <div class="btn-group btn-group-justified" role="group" aria-label="...">
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-primary" id="map-view-stop-button">View Stop</button>
+                    </div>
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-default" id="map-view-buses-and-routes-button" data-href="{{ urls.get_service_routes }}" data-service-name="{{ service.name }}">View Buses & Routes</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-3 col-sm-3"></div>
+        </div>
+
         <p class="lat" hidden="">{{ stop.coordinates[1] }}</p>
         <p class="lng" hidden="">{{ stop.coordinates[0] }}</p>
         <hr class="divider">

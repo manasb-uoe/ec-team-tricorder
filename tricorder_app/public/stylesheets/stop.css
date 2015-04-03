@@ -59,6 +59,7 @@
 .main-container .wrapper  {
     text-align: right;
     width: 100%;
+    margin-bottom: 5px;
 }
 
 .main-container .upcoming-services-container {

@@ -288,7 +288,9 @@ var StopHandler = function () {
         googleMapHeight: null,
         viewLiveLocationsOnMapLink: $(".view-live-locations-on-map"),
         enterFullScreenMap: $(".enter-full-screen-map"),
-        exitFullScreenMap: $(".exit-full-screen-map")
+        exitFullScreenMap: $(".exit-full-screen-map"),
+        mapViewStopButton: $("#map-view-stop-button"),
+        mapViewBusesAndRoutesButton: $("#map-view-buses-and-routes-button")
     };
 
     function init() {
@@ -309,22 +311,23 @@ var StopHandler = function () {
         setupMap(userLocation);
 
         // since hashchange event is not fired when the page is loaded with the hash,
-        // navigateToActiveTab must be called once, and bus markers would also need to be
-        // reset once
+        // navigateToActiveTab must be called once
         navigateToActiveTab();
-        resetBusLocationsOnMap();
-
+        showUserAndStopLocationOnMap(userLocation);
 
         // navigate to active tab every time the hash changes
         $(window).on('hashchange', function () {
             navigateToActiveTab();
-            resetBusLocationsOnMap();
+
+            if (config.mapViewBusesAndRoutesButton.attr("class").indexOf("btn-primary") > -1) {
+                showBusLocationAndRoutesOnMap();
+            }
         });
 
-        bindUIActions();
+        bindUIActions(userLocation);
     }
 
-    function bindUIActions() {
+    function bindUIActions(userLocation) {
         // if favourite button is disabled, enable its tooltip
         if (config.favouriteButton.attr("class").indexOf("disabled") > -1) {
             $('[data-toggle="tooltip"]').tooltip();
@@ -393,6 +396,26 @@ var StopHandler = function () {
 
             $(this).hide();
         });
+
+        config.mapViewStopButton.click(function () {
+            if ($(this).attr("class").indexOf("btn-primary") == -1) {
+                $(this).removeClass("btn-default");
+                $(this).addClass("btn-primary");
+                config.mapViewBusesAndRoutesButton.removeClass("btn-primary");
+                config.mapViewBusesAndRoutesButton.addClass("btn-default");
+                showUserAndStopLocationOnMap(userLocation);
+            }
+        });
+
+        config.mapViewBusesAndRoutesButton.click(function () {
+            if ($(this).attr("class").indexOf("btn-primary") == -1) {
+                $(this).removeClass("btn-default");
+                $(this).addClass("btn-primary");
+                config.mapViewStopButton.removeClass("btn-primary");
+                config.mapViewStopButton.addClass("btn-default");
+                showBusLocationAndRoutesOnMap();
+            }
+        });
     }
 
     function showFavouriteModal() {
@@ -426,35 +449,11 @@ var StopHandler = function () {
     }
 
     function setupMap(userLocation) {
-        // get stop location since it would be used as the center of the map
-        var stopLocation = {lat: config.mainContainer.find(".lat").text(), lng: config.mainContainer.find(".lng").text()};
-
-        config.googleMap = new GoogleMapsApiWrapper(stopLocation, 17, config.mapContainer[0]);
+        config.googleMap = new GoogleMapsApiWrapper(userLocation, 17, config.mapContainer[0]);
 
         // get initial dimensions so that we can switch back to them later
         config.googleMapWidth = config.mapContainer.css('width');
         config.googleMapHeight = config.mapContainer.css('height');
-
-        // add user marker
-        config.googleMap.addMarker(
-            userLocation,
-            "<div class='map-info-window'><strong>You are here</strong></div>",
-            true,
-            "red",
-            "user"
-        );
-
-        // add stop marker
-        config.googleMap.addMarker(
-            stopLocation,
-            "<div class='map-info-window'>" + config.mainContainer.find(".main-title").text() + "</div>",
-            true,
-            "yellow",
-            "stop"
-        );
-
-        // add route between user and stop
-        config.googleMap.addRoute(userLocation, stopLocation, "walking");
     }
 
     function navigateToActiveTab() {
@@ -502,14 +501,39 @@ var StopHandler = function () {
         });
     }
 
-    function resetBusLocationsOnMap() {
-        // remove all previous mus markers
-        var markers = config.googleMap.getMarkers();
-        for (var i=0; i<markers.length; i++) {
-            if (markers[i].id == "bus") {
-                markers[i].remove();
+    function showBusLocationAndRoutesOnMap() {
+        config.googleMap.clearPolylines();
+        config.googleMap.clearMarkers();
+        config.googleMap.clearRoutes();
+
+        config.googleMap.setZoom(12);
+
+        // get service name from active tab
+        var serviceName = $(".tab[class*='active']").children("a").attr("href").substring(1);
+
+        // get routes for selected service from server and mark them on map
+        $.ajax({
+            url: config.mapViewBusesAndRoutesButton.attr("data-href") + "?service=" + serviceName,
+            type: "GET",
+            dataType: "json",
+            success: function (routes) {
+                var destinations = Object.keys(routes);
+                var polylineColors = ["#ff0040", "#64e125", "##005567"];
+                for (var i=0; i<destinations.length; i++) {
+                    var route = routes[destinations[i]];
+                    var coordinates = [];
+                    for (var j=0; j<route.length; j++) {
+                        if (route[j] != null) {
+                            coordinates.push({lat: route[j].coordinates[1], lng: route[j].coordinates[0]});
+                        }
+                    }
+                    config.googleMap.addPolyline(coordinates, {
+                        strokeColor: polylineColors[i],
+                        strokeWeight: 3
+                    });
+                }
             }
-        }
+        });
 
         // get all bus locations
         var busLocations = {};
@@ -535,6 +559,38 @@ var StopHandler = function () {
                 )
             }
         }
+    }
+
+    function showUserAndStopLocationOnMap(userLocation) {
+        config.googleMap.clearPolylines();
+        config.googleMap.clearMarkers();
+        config.googleMap.clearRoutes();
+
+        config.googleMap.setZoom(17);
+
+        // add user marker
+        config.googleMap.addMarker(
+            userLocation,
+            "<div class='map-info-window'><strong>You are here</strong></div>",
+            true,
+            "red",
+            "user"
+        );
+
+        // get stop location since it would be used as the center of the map
+        var stopLocation = {lat: config.mainContainer.find(".lat").text(), lng: config.mainContainer.find(".lng").text()};
+
+        // add stop marker
+        config.googleMap.addMarker(
+            stopLocation,
+            "<div class='map-info-window'>" + config.mainContainer.find(".main-title").text() + "</div>",
+            true,
+            "yellow",
+            "stop"
+        );
+
+        // add route between user and stop
+        config.googleMap.addRoute(userLocation, stopLocation, "walking");
     }
 
     return {
@@ -592,6 +648,7 @@ function GoogleMapsApiWrapper(centerLocation, zoomLevel, mapContainer) {
         directionsRenderer: null,
         directionsService: null,
         markers: [],
+        polylines: [],
         markerIcons: {
             purple: "http://maps.google.com/intl/en_us/mapfiles/ms/micons/purple-dot.png",
             yellow: "http://maps.google.com/intl/en_us/mapfiles/ms/micons/yellow-dot.png",
@@ -683,6 +740,28 @@ function GoogleMapsApiWrapper(centerLocation, zoomLevel, mapContainer) {
         });
     };
 
+    this.addPolyline = function (pathCoordinates, options) {
+        for (var i=0; i<pathCoordinates.length; i++) {
+            pathCoordinates[i] = new google.maps.LatLng(pathCoordinates[i]["lat"], pathCoordinates[i]["lng"]);
+        }
+        var path = new google.maps.Polyline({
+            path: pathCoordinates,
+            geodesic: options.geodesic || true,
+            strokeColor: options.strokeColor || '#FF0000',
+            strokeOpacity: options.strokeOpacity || 1.0,
+            strokeWeight: options.strokeWeight || 2
+        });
+        path.setMap(config.map);
+
+        // add remove method to marker
+        path.remove = function () {
+            path.setMap(null);
+        };
+
+        // keep polyline reference for later use
+        config.polylines.push(path);
+    };
+
     this.clearRoutes = function () {
         config.directionsRenderer.setDirections({routes: []});
     };
@@ -693,6 +772,12 @@ function GoogleMapsApiWrapper(centerLocation, zoomLevel, mapContainer) {
         }
     };
 
+    this.clearPolylines = function () {
+        for (var i=0; i<config.polylines.length; i++) {
+            config.polylines[i].remove();
+        }
+    };
+
     this.getMarkers = function () {
         return config.markers;
     };
@@ -700,6 +785,10 @@ function GoogleMapsApiWrapper(centerLocation, zoomLevel, mapContainer) {
     this.triggerResize = function () {
         google.maps.event.trigger(config.map, 'resize');
     };
+
+    this.setZoom = function (zoomLevel) {
+        config.map.setZoom(zoomLevel);
+    }
 }
 
 // function calls go here
