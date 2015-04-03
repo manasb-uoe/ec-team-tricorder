@@ -518,7 +518,7 @@ var StopHandler = function () {
             dataType: "json",
             success: function (routes) {
                 var destinations = Object.keys(routes);
-                var polylineColors = ["#ff0040", "#64e125", "##005567"];
+                var polylineColors = ["#34dbff", "#ff3497", "#ff0040", "#64e125", "#005567", "#9c34ff"];
                 for (var i=0; i<destinations.length; i++) {
                     var route = routes[destinations[i]];
                     var coordinates = [];
