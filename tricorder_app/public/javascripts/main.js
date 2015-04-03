@@ -290,7 +290,8 @@ var StopHandler = function () {
         enterFullScreenMap: $(".enter-full-screen-map"),
         exitFullScreenMap: $(".exit-full-screen-map"),
         mapViewStopButton: $("#map-view-stop-button"),
-        mapViewBusesAndRoutesButton: $("#map-view-buses-and-routes-button")
+        mapViewBusesAndRoutesButton: $("#map-view-buses-and-routes-button"),
+        busContainer: $(".bus-container")
     };
 
     function init() {
@@ -415,6 +416,29 @@ var StopHandler = function () {
                 config.mapViewStopButton.addClass("btn-default");
                 showBusLocationAndRoutesOnMap();
             }
+        });
+
+        config.busContainer.click(function () {
+            console.log(config.googleMap.getMarkers().length);
+            if (config.mapViewBusesAndRoutesButton.attr("class").indexOf("btn-primary") == -1) {
+                config.mapViewBusesAndRoutesButton.trigger("click");
+            }
+
+            var busLocation = {lat: $(this).attr("data-lat"), lng: $(this).attr("data-lng")};
+            var busMarkers  = config.googleMap.getMarkers("bus");
+            for (var i=0; i<busMarkers.length; i++) {
+                if (busMarkers[i].getPosition().lat().toFixed(6) == parseFloat(busLocation["lat"]).toFixed(6) && busMarkers[i].getPosition().lng().toFixed(6) == parseFloat(busLocation["lng"]).toFixed(6)) {
+                    config.googleMap.setCenter(busLocation);
+                    config.googleMap.setZoom(17);
+                    busMarkers[i].infoWindow("show");
+                } else {
+                    busMarkers[i].infoWindow("hide");
+                }
+            }
+
+            // scroll to top of page
+            $("html, body").animate({ scrollTop: 0 }, "300");
+
         });
     }
 
@@ -566,6 +590,7 @@ var StopHandler = function () {
         config.googleMap.clearMarkers();
         config.googleMap.clearRoutes();
 
+        config.googleMap.setCenter(userLocation);
         config.googleMap.setZoom(17);
 
         // add user marker
@@ -699,9 +724,13 @@ function GoogleMapsApiWrapper(centerLocation, zoomLevel, mapContainer) {
         // add id property to each marker so that it can easily be recognized later
         marker.id = markerId;
 
-        // add remove method to marker
-        marker.remove = function () {
-            marker.setMap(null);
+        // add method to open info window
+        marker.infoWindow = function (state) {
+            if (state == "show") {
+                infoWindow.open(config.map, marker);
+            } else if (state == "hide") {
+                infoWindow.close(config.map, marker);
+            }
         };
 
         //show info window when marker is clicked
@@ -753,11 +782,6 @@ function GoogleMapsApiWrapper(centerLocation, zoomLevel, mapContainer) {
         });
         path.setMap(config.map);
 
-        // add remove method to marker
-        path.remove = function () {
-            path.setMap(null);
-        };
-
         // keep polyline reference for later use
         config.polylines.push(path);
     };
@@ -768,18 +792,30 @@ function GoogleMapsApiWrapper(centerLocation, zoomLevel, mapContainer) {
 
     this.clearMarkers = function () {
         for (var i=0; i<config.markers.length; i++) {
-            config.markers[i].remove();
+            config.markers[i].setMap(null);
         }
+        config.markers = [];
     };
 
     this.clearPolylines = function () {
         for (var i=0; i<config.polylines.length; i++) {
-            config.polylines[i].remove();
+            config.polylines[i].setMap(null);
         }
+        config.polylines = [];
     };
 
-    this.getMarkers = function () {
-        return config.markers;
+    this.getMarkers = function (markerId) {
+        if (markerId) {
+            var filteredMarkers = [];
+            for (var i=0; i<config.markers.length; i++) {
+                if (config.markers[i].id == markerId) {
+                    filteredMarkers.push(config.markers[i]);
+                }
+            }
+            return filteredMarkers;
+        } else {
+            return config.markers;
+        }
     };
 
     this.triggerResize = function () {
@@ -788,6 +824,10 @@ function GoogleMapsApiWrapper(centerLocation, zoomLevel, mapContainer) {
 
     this.setZoom = function (zoomLevel) {
         config.map.setZoom(zoomLevel);
+    };
+
+    this.setCenter = function (centerLocation) {
+        config.map.setCenter(new google.maps.LatLng(centerLocation["lat"], centerLocation["lng"]));
     }
 }
 
