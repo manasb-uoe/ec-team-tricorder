@@ -21,6 +21,7 @@ module.exports.urls = {
     remove_stop_from_favourites: "/remove-stop-from-favourites",
     favourites: "/favourites",
     get_service_timetable_for_stop: "/get-service-timetable-for-stop",
+    get_service_routes: "/get-service-routes",
     api_stop: '/api/stop/',
     api_vehicle: '/api/vehicle/'
 };
