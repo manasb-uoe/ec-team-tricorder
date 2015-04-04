@@ -68,6 +68,7 @@
 
     <!-- Filter modal -->
     <div id="filter-modal" class="modal fade">
+        <p id="stop-query" hidden="">{{ stop_query }}</p>
         <p id="count-selected" hidden="">{{ count_selected }}</p>
         <p id="service-selected" hidden="">{{ service_selected }}</p>
         <div class="modal-dialog">
@@ -77,6 +78,9 @@
                     <h4 class="modal-title"><strong>Change Filter</strong></h4>
                 </div>
                 <div id="filter-modal-body" class="modal-body">
+                    <p>Filter by stop name or locality:</p>
+                    <input class="form-control" id="filter-modal-stop-query">
+                    <br>
                     <p>Number of stops to display:</p>
                     <select class="form-control" id="filter-modal-count-select">
                         {% for count in count_choices %}
@@ -84,7 +88,7 @@
                         {% endfor %}
                     </select>
                     <br>
-                    <p>Services to display:</p>
+                    <p>Services to display: (multiple options can be selected by holding CTRL key)</p>
                     <select class="form-control" size="10" id="filter-modal-service-select" multiple>
                         {% for service in service_choices %}
                             <option value="{{ service }}">{{ service }}</option>

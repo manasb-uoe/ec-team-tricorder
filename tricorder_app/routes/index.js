@@ -35,6 +35,7 @@ module.exports.home = function(req, res) {
 module.exports.nearbyStops = function (req, res) {
     var allServices = ["All"];
     var requestedServices = req.query["service"] || [];
+    var stop_query = req.query["stop"] || "";
 
     async.series(
         [
@@ -59,6 +60,7 @@ module.exports.nearbyStops = function (req, res) {
                     .find()
                     .where("services")
                     .in(requestedServices)
+                    .or([{"name": new RegExp("^" + stop_query, "i")}, {"locality": new RegExp("^" + stop_query, "i")}])
                     .exec(function (err, stops) {
                         if (!err) {
                             var currentUserLocation = {lat: req.query["lat"], lng: req.query["lng"]};
@@ -93,6 +95,7 @@ module.exports.nearbyStops = function (req, res) {
                                     current_url: util.urls.nearby_stops,
                                     urls: util.urls,
                                     stops: requestedStops,
+                                    stop_query: stop_query,
                                     count_choices: [10, 50, 100, "All"],
                                     count_selected: count == stops.length ? "All" : count,
                                     service_choices: allServices,

@@ -89,12 +89,14 @@ var NearbyStopsHandler = function () {
         nearbyStopsTab: $("#nearby-stops-tab"),
         mapContainer: $("#nearby-stops-map-container"),
         changeFilterButton: $("#change-filter-button"),
+        stopQuery: $("#stop-query").text(),
         countSelected: $("#count-selected").text(),
         serviceSelected: $("#service-selected").text().split(","),
         filterModal: $("#filter-modal"),
         filterModalBody: $("#filter-modal-body"),
         filterModalCountSelect: $("#filter-modal-count-select"),
         filterModalServiceSelect: $("#filter-modal-service-select"),
+        filterModalStopQueryInput: $("#filter-modal-stop-query"),
         filterModalPositiveButton: $("#filter-modal-positive-button"),
         stopContainer: $(".stop-container"),
         googleMap: null,
@@ -127,6 +129,7 @@ var NearbyStopsHandler = function () {
             var params = getLocationParamsFromUrl();
             params["count"] = config.filterModalCountSelect.val();
             params["service"] = config.filterModalServiceSelect.val();
+            params["stop"] = config.filterModalStopQueryInput.val();
             window.location.href = generateUrl(params);
         });
 
@@ -168,6 +171,7 @@ var NearbyStopsHandler = function () {
     }
 
     function showFilterModal() {
+        config.filterModalStopQueryInput.val(config.stopQuery);
         config.filterModalCountSelect.find("option[value='" + config.countSelected + "']").attr("selected", true);
         for (var i=0; i<config.serviceSelected.length; i++) {
             config.filterModalServiceSelect.find("option[value='" + config.serviceSelected[i] + "']").attr("selected", true);
@@ -249,12 +253,13 @@ var NearbyStopsHandler = function () {
         var lng = params["lng"] || 0;
         var count = params["count"] || 10;
         var service = params["service"] || ["All"];
+        var stop = params["stop"] || "";
 
         var url = window.location.href;
         if (url.indexOf('?') > -1) {
             url = url.substr(0, url.indexOf('?'));
         }
-        url += '?lat=' + lat + '&lng=' + lng + '&count=' + count;
+        url += '?lat=' + lat + '&lng=' + lng + '&stop=' + stop + '&count=' + count;
         for (var i=0; i<service.length; i++) {
             url += "&service[]=" + service[i];
         }
