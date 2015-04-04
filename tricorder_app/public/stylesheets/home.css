@@ -1,0 +1,33 @@
+.jumbotron-home {
+    margin: 0;
+    padding: 0;
+    height: 300px;
+    background-image: url('/images/default/edinburgh_jumbotron.jpg');
+    background-position: center 25%;
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+
+.jumbotron-home .mask {
+    height: 100%;
+    color: #ffffff;
+    background-color: rgba(0,0,0,0.1);
+}
+
+.jumbotron-home .mask .title {
+    text-shadow: 0 0 20px rgba(0,0,0,.5);
+}
+
+.jumbotron-home .mask .subtitle {
+    text-shadow: 0 0 20px rgba(0,0,0,.5);
+}
+
+.intro-container {
+    text-align: center;
+}
+
+.intro-container .intro-title {
+    display: inline-block;
+    border-bottom: 1px solid dimgray;
+    margin-bottom: 20px;
+}
