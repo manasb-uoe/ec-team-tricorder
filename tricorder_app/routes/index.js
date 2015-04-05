@@ -503,39 +503,41 @@ module.exports.get_service_routes = function (req, res, next) {
         .exec(function (err, service) {
             if (err) { return next(err); }
 
-            async.eachSeries(
-                service.routes,
-                function (route, callbackA) {
-                    var destination = route.destination;
+            if (service != null) {
+                async.eachSeries(
+                    service.routes,
+                    function (route, callbackA) {
+                        var destination = route.destination;
 
-                    // find stops corresponding to each of the stop ids
-                    var stopIds = route.stops;
-                    var stops = [];
-                    async.eachSeries(
-                        stopIds,
-                        function (stopId, callbackB) {
-                            Stop
-                                .findOne({stop_id: stopId})
-                                .exec(function (err, stop) {
-                                    if (err) { return next(err); }
+                        // find stops corresponding to each of the stop ids
+                        var stopIds = route.stops;
+                        var stops = [];
+                        async.eachSeries(
+                            stopIds,
+                            function (stopId, callbackB) {
+                                Stop
+                                    .findOne({stop_id: stopId})
+                                    .exec(function (err, stop) {
+                                        if (err) { return next(err); }
 
-                                    stops.push(stop);
-                                    callbackB();
-                                })
-                        },
-                        function (err) {
-                            if (err) { return next(err); }
-                            routes[destination] = stops;
-                            callbackA();
-                        }
-                    );
-                },
-                function (err) {
-                    if (err) { return next(err); }
-                    res.contentType('json');
-                    res.send(routes);
-                }
-            );
+                                        stops.push(stop);
+                                        callbackB();
+                                    })
+                            },
+                            function (err) {
+                                if (err) { return next(err); }
+                                routes[destination] = stops;
+                                callbackA();
+                            }
+                        );
+                    },
+                    function (err) {
+                        if (err) { return next(err); }
+                        res.contentType('json');
+                        res.send(routes);
+                    }
+                );
+            }
         });
 };
 
