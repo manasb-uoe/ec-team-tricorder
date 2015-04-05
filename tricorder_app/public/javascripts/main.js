@@ -201,25 +201,22 @@ var NearbyStopsHandler = function () {
 
             // add user marker
             var userLocation = {lat: params["lat"], lng: params["lng"]};
-            config.googleMap.addMarker(
-                userLocation,
-                "<div class='map-info-window'><strong>You are here</strong></div>",
-                true,
-                "red",
-                "user"
-            );
+            config.googleMap.addMarker("user", userLocation, {
+                icon: "red",
+                infoWindowContent: "<div class='map-info-window'><strong>You are here</strong></div>",
+                shouldOpenInfoWindowInitially: true
+            });
 
-            config.googleMap.addMarker(
-                nearestStopLocation,
-                "<div class='map-info-window'>" + "<strong>Nearest stop: </strong>" + Object.keys(stopLocations)[0] + "</div>",
-                true,
-                "yellow",
-                "stop",
-                function () {
+            // add nearest stop marker
+            config.googleMap.addMarker("stop", nearestStopLocation, {
+                icon: "yellow",
+                infoWindowContent: "<div class='map-info-window'>" + "<strong>Nearest stop: </strong>" + Object.keys(stopLocations)[0] + "</div>",
+                shouldOpenInfoWindowInitially: true,
+                doubleClickCallback: function () {
                     config.googleMap.clearRoutes();
                     config.googleMap.addRoute(userLocation, nearestStopLocation, "walking");
                 }
-            );
+            });
 
             // add remaining stop markers
             var loopCounter = 0;
@@ -229,18 +226,16 @@ var NearbyStopsHandler = function () {
                         var stopLocation = {lat: stopLocations[key]["lat"], lng: stopLocations[key]["lng"]};
 
                         (function (stopLocation) {
-                            config.googleMap.addMarker(
-                                stopLocation,
-                                "<div class='map-info-window'>" + key + "</div>",
-                                false,
-                                "yellow",
-                                "stop",
-                                function () {
+                            config.googleMap.addMarker("stop", stopLocation, {
+                                icon: "yellow",
+                                infoWindowContent: "<div class='map-info-window'>" + key + "</div>",
+                                shouldOpenInfoWindowInitially: false,
+                                doubleClickCallback: function () {
                                     config.googleMap.clearRoutes();
                                     config.googleMap.addRoute(userLocation, stopLocation, "walking");
                                 }
-                            );
-                        })(stopLocation);
+                            });
+                        }(stopLocation));
                     }
                     loopCounter++;
                 }
@@ -579,13 +574,11 @@ var StopHandler = function () {
             if (busLocations.hasOwnProperty(key)) {
                 var busLocation = {lat: busLocations[key]["lat"], lng: busLocations[key]["lng"]};
 
-                config.googleMap.addMarker(
-                    busLocation,
-                    "<div class='map-info-window'>" + key + "</div>",
-                    false,
-                    "bus",
-                    "bus"
-                )
+                config.googleMap.addMarker("bus", busLocation, {
+                    icon: "bus",
+                    infoWindowContent: "<div class='map-info-window'>" + key + "</div>",
+                    shouldOpenInfoWindowInitially: false
+                });
             }
         }
     }
@@ -599,25 +592,21 @@ var StopHandler = function () {
         config.googleMap.setZoom(17);
 
         // add user marker
-        config.googleMap.addMarker(
-            userLocation,
-            "<div class='map-info-window'><strong>You are here</strong></div>",
-            true,
-            "red",
-            "user"
-        );
+        config.googleMap.addMarker("user", userLocation, {
+            icon: "red",
+            infoWindowContent: "<div class='map-info-window'><strong>You are here</strong></div>",
+            shouldOpenInfoWindowInitially: true
+        });
 
         // get stop location since it would be used as the center of the map
         var stopLocation = {lat: config.mainContainer.find(".lat").text(), lng: config.mainContainer.find(".lng").text()};
 
         // add stop marker
-        config.googleMap.addMarker(
-            stopLocation,
-            "<div class='map-info-window'>" + config.mainContainer.find(".main-title").text() + "</div>",
-            true,
-            "yellow",
-            "stop"
-        );
+        config.googleMap.addMarker("stop", stopLocation, {
+            icon: "yellow",
+            infoWindowContent: "<div class='map-info-window'>" + config.mainContainer.find(".main-title").text() + "</div>",
+            shouldOpenInfoWindowInitially: true
+        });
 
         // add route between user and stop
         config.googleMap.addRoute(userLocation, stopLocation, "walking");
@@ -696,7 +685,7 @@ function GoogleMapsApiWrapper(centerLocation, zoomLevel, mapContainer) {
     };
 
     // self invoking initialization method
-    var init = function () {
+    (function init() {
         // setup map
         var options = {
             zoom: zoomLevel,
@@ -712,50 +701,69 @@ function GoogleMapsApiWrapper(centerLocation, zoomLevel, mapContainer) {
 
         // setup directions service which will retrieve the required route
         config.directionsService = new google.maps.DirectionsService();
-    }();
+    })();
 
-    this.addMarker = function (location, infoWindowContent, shouldOpenInfoWindowInitially, markerIcon, markerId, doubleClickCallback) {
-        var infoWindow = new google.maps.InfoWindow({
-            content: infoWindowContent
-        });
+    this.addMarker = function (id, position, options) {
+        var markerOptions = {
+            icon: options.icon || config.markerIcons.red,
+            singleClickCallback: options.singleClickCallback,
+            doubleClickCallback: options.doubleClickCallback,
+            infoWindowContent: options.infoWindowContent,
+            shouldOpenInfoWindowInitially: options.shouldOpenInfoWindowInitially || false
+        };
 
         var marker = new google.maps.Marker({
-            position: new google.maps.LatLng(location["lat"], location["lng"]),
+            position: new google.maps.LatLng(position["lat"], position["lng"]),
             map: config.map,
-            icon: new google.maps.MarkerImage(config.markerIcons[markerIcon] || config.markerIcons.red)
+            icon: new google.maps.MarkerImage(config.markerIcons[markerOptions.icon])
         });
+
+        var infoWindow;
+        if (markerOptions.infoWindowContent) {
+            infoWindow = new google.maps.InfoWindow({
+                content: markerOptions.infoWindowContent
+            });
+        }
+
         marker.setMap(config.map);
 
         // add id property to each marker so that it can easily be recognized later
-        marker.id = markerId;
+        marker.id = id;
 
         // add method to open info window
         marker.infoWindow = function (state) {
-            if (state == "show") {
-                infoWindow.open(config.map, marker);
-            } else if (state == "hide") {
-                infoWindow.close(config.map, marker);
+            if (infoWindow) {
+                if (state == "show") {
+                    infoWindow.open(config.map, marker);
+                } else if (state == "hide") {
+                    infoWindow.close(config.map, marker);
+                }
+            } else {
+                throw new Error("Info window content was not provided when marker was created");
             }
         };
 
-        //show info window when marker is clicked
-        google.maps.event.addListener(marker, 'click', function() {
-            infoWindow.open(config.map, marker);
-        });
-
-        if (shouldOpenInfoWindowInitially) {
-            // initially show info window
-            infoWindow.open(config.map, marker);
+        if (markerOptions.shouldOpenInfoWindowInitially) {
+            if (infoWindow) {
+                infoWindow.open(config.map, marker);
+            }
         }
 
+        // handle single click using the callback provided
+        google.maps.event.addListener(marker, 'click', function () {
+            marker.infoWindow("show");
+            if (markerOptions.singleClickCallback) {
+                markerOptions.singleClickCallback();
+            }
+        });
+
         // handle double click using the callback provided
-        if (doubleClickCallback != undefined) {
-            google.maps.event.addListener(marker, 'dblclick', doubleClickCallback);
+        if (markerOptions.doubleClickCallback) {
+            google.maps.event.addListener(marker, 'dblclick', markerOptions.doubleClickCallback);
         }
 
         // keep marker reference for later use
         config.markers.push(marker);
-
     };
 
     this.addRoute = function (origin, destination, travelMode) {
