@@ -995,7 +995,7 @@ mongoose.connection.once('open', function() {
             setTimeout(function(){
                 console.log('ending update at ' + new Date());
                 clearInterval(r);
-            },12*60*60*1000, r);
+            },15*60*60*1000 + 59*60*1000, r);
         });
         //update documents every dat at 02:00
         var b = schedule.scheduleJob('0 2 * * *', function(){
