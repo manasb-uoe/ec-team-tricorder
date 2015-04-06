@@ -82,7 +82,7 @@
                                 </div>
                             </div>
                             <div class="panel panel-default">
-                                <div class="panel-heading"><strong>Buses</strong> (Last updated {{ service.buses[0].lastSeen }}) <a class="panel-heading-right view-live-locations-on-map">View live locations on map</a> </div>
+                                <div class="panel-heading"><strong>Buses</strong> (Last updated {{ service.buses[0].lastSeen }}) <p class="panel-heading-right">Click on bus to view exact location on map</p> </div>
                                 <div class="panel-body">
                                     <div class="row">
                                         {% for bus in service.buses %}
