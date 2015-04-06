@@ -705,7 +705,7 @@ function GoogleMapsApiWrapper(centerLocation, zoomLevel, mapContainer) {
 
     this.addMarker = function (id, position, options) {
         var markerOptions = {
-            icon: options.icon || config.markerIcons.red,
+            icon: options.icon || "red",
             singleClickCallback: options.singleClickCallback,
             doubleClickCallback: options.doubleClickCallback,
             infoWindowContent: options.infoWindowContent,
