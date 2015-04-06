@@ -6,150 +6,157 @@
 {% endblock %}
 
 {% block body %}
-    <div class="container main-container">
-        <div class="title-container">
-            <p class="main-title">{{ stop.name }} ({{ stop.direction }})</p>
-            {% if user %}
-                {% if isStopFavourite %}
-                    <button type="button" class="btn btn-danger favourite-button">
-                        <span class="glyphicon glyphicon-star" aria-hidden="true"></span> <span class="favourite-button-text">Remove from Favourites</span>
-                    </button>
-                {% else %}
-                    <button type="button" class="btn btn-primary favourite-button">
-                        <span class="glyphicon glyphicon-star" aria-hidden="true"></span> <span class="favourite-button-text">Add to Favourites</span>
-                    </button>
-                {% endif %}
+<div class="container main-container">
+    <div class="title-container">
+        <p class="main-title">{{ stop.name }} ({{ stop.direction }})</p>
+        {% if user %}
+            {% if isStopFavourite %}
+                <button type="button" class="btn btn-danger favourite-button">
+                    <span class="glyphicon glyphicon-star" aria-hidden="true"></span> <span class="favourite-button-text">Remove from Favourites</span>
+                </button>
             {% else %}
-                <div style="display: inline-block;" data-toggle="tooltip" data-placement="right" title="Sign in to perform this action">
-                    <button type="button" class="btn btn-primary favourite-button disabled">
-                        <span class="glyphicon glyphicon-star" aria-hidden="true"></span> <span class="favourite-button-text">Add to Favourites</span>
-                    </button>
-                </div>
+                <button type="button" class="btn btn-primary favourite-button">
+                    <span class="glyphicon glyphicon-star" aria-hidden="true"></span> <span class="favourite-button-text">Add to Favourites</span>
+                </button>
             {% endif %}
-            <p class="distance-from-user">{{ stop.distanceFromUser }} away from you</p>
-        </div>
-        <div class="stop-map-wrapper">
-            <div id="stop-map-container"></div>
-            <div class="exit-full-screen-map" hidden="">Exit Full Screen</div>
-        </div>
-        <div class="wrapper"><a href="#" class="enter-full-screen-map">View full screen map</a></div>
+        {% else %}
+            <div style="display: inline-block;" data-toggle="tooltip" data-placement="right" title="Sign in to perform this action">
+                <button type="button" class="btn btn-primary favourite-button disabled">
+                    <span class="glyphicon glyphicon-star" aria-hidden="true"></span> <span class="favourite-button-text">Add to Favourites</span>
+                </button>
+            </div>
+        {% endif %}
+        <p class="distance-from-user">{{ stop.distanceFromUser }} away from you</p>
+    </div>
+    <div class="stop-map-wrapper">
+        <div id="stop-map-container"></div>
+        <div class="exit-full-screen-map" hidden="">Exit Full Screen</div>
+    </div>
+    <div class="wrapper"><a href="#" class="enter-full-screen-map">View full screen map</a></div>
 
-        <div class="row">
-            <div class="col-lg-3 col-md-3 col-sm-3"></div>
-            <div class="col-lg-6 col-md-6 col-sm-12">
-                <div class="btn-group btn-group-justified" role="group" aria-label="...">
-                    <div class="btn-group" role="group">
-                        <button type="button" class="btn btn-primary" id="map-view-stop-button">View Stop</button>
-                    </div>
-                    <div class="btn-group" role="group">
-                        <button type="button" class="btn btn-default" id="map-view-buses-and-routes-button" data-href="{{ urls.get_service_routes }}" data-service-name="{{ service.name }}">View Buses & Routes</button>
-                    </div>
+    <div class="row">
+        <div class="col-lg-3 col-md-3 col-sm-3"></div>
+        <div class="col-lg-6 col-md-6 col-sm-12">
+            <div class="btn-group btn-group-justified" role="group" aria-label="...">
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-primary" id="map-view-stop-button">View Stop</button>
+                </div>
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-default" id="map-view-buses-and-routes-button" data-href="{{ urls.get_service_routes }}" data-service-name="{{ service.name }}">View Buses & Routes</button>
                 </div>
             </div>
-            <div class="col-lg-3 col-md-3 col-sm-3"></div>
         </div>
-
-        <p class="lat" hidden="">{{ stop.coordinates[1] }}</p>
-        <p class="lng" hidden="">{{ stop.coordinates[0] }}</p>
-        <hr class="divider">
-
-        <div class="upcoming-services-container">
-            <p class="title">Upcoming Services</p>
-
-            <ul class="nav nav-tabs tabs">
-                {% for service in services %}
-                    <li role="presentation" class="tab">
-                        <a href="#{{ service.name }}"><span class="service-name">{{ service.name }}</span>  to {{ service.destination }}
-                            {% if service.timetables[0] %}
-                                <br> <span class="text-success">due {{ service.timetables[0].humanizedTime }}</span>
-                            {% else %}
-                                <br> <span class="text-danger">service inactive</span>
-                            {% endif %}
-                        </a>
-                    </li>
-                {% endfor %}
-            </ul>
-            <div class="tab-content-container">
-                {% for service in services %}
-                    <div class="tab-content {{ service.name }}" hidden="">
-                        {% if service.timetables.length > 0 and service.buses.length > 0 %}
-                            <div class="panel panel-default">
-                                <div class="panel-heading"><strong>Arrival Times</strong><a class="panel-heading-right view-all-arrival-times" href="{{ urls.get_service_timetable_for_stop }}" data-service-name="{{ service.name }}" data-stop-id="{{ stop.stop_id }}" data-stop-name="{{ stop.name }}">View all arrival times</a></div>
-                                <div class="panel-body">
-                                    {% for timetable in service.timetables %}
-                                        <p><span class="time">{{ timetable.time }}</span> ({{ timetable.humanizedTime }})</p>
-                                    {% endfor %}
-                                </div>
-                            </div>
-                            <div class="panel panel-default">
-                                <div class="panel-heading"><strong>Buses</strong> (Last updated {{ service.buses[0].lastSeen }}) <p class="panel-heading-right">Click on bus to view exact location on map</p> </div>
-                                <div class="panel-body">
-                                    <div class="row">
-                                        {% for bus in service.buses %}
-                                        <div class="col-lg-3 col-sm-6">
-                                            <div class="bus-container" data-lat="{{ bus.coordinates[1] }}" data-lng="{{ bus.coordinates[0] }}">
-                                                <p class="title">Bus #{{ bus.vehicle_id }} to {{ bus.destination }}</p>
-                                                <p class="distance-from-user">{{ bus.distanceFromUser }} away</p>
-                                            </div>
-                                        </div>
-                                        {% if loop.index % 4 == 0 %}
-                                        </div>
-                                        <div class="row">
-                                            {% endif %}
-                                            {% endfor %}
-                                        </div>
-                                    </div>
-                                </div>
-                        {% else %}
-                            <div class="nothing-to-see-here-container">
-                                <p>Nothing To See Here...</p>
-                            </div>
-                        {% endif %}
-                    </div>
-                {% endfor %}
-            </div>
-        </div>
+        <div class="col-lg-3 col-md-3 col-sm-3"></div>
     </div>
 
-    <!-- Favourite modal -->
-    <div id="favourite-modal" class="modal fade">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                    <h4 class="modal-title"><strong>Add To Favourites</strong></h4>
-                </div>
-                <div id="favourite-modal-body" class="modal-body">
-                    <div class="alert-danger" id="favourite-modal-error-container"></div>
-                    <p>Stop Name: <strong>{{ stop.name }}</strong></p>
-                    <form id="favourite-form" data-add-action="{{ urls.add_stop_to_favourites }}" data-remove-action="{{ urls.remove_stop_from_favourites }}" method="post">
-                        <p>Choose an easy to remember name: (Optional)</p>
-                        <input id="favourite-modal-alt-name-input" class="form-control">
-                        <input id="favourite-modal-stop-id-input" hidden="" value="{{ stop.stop_id }}">
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button id="favourite-modal-negative-button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                    <button id="favourite-modal-positive-button" type="submit" form="favourite-form" class="btn btn-primary">Add</button>
-                </div>
-            </div><!-- /.modal-content -->
-        </div><!-- /.modal-dialog -->
-    </div><!-- /.modal -->
+    <p class="lat" hidden="">{{ stop.coordinates[1] }}</p>
+    <p class="lng" hidden="">{{ stop.coordinates[0] }}</p>
+    <hr class="divider">
 
-    <!-- Timetable modal -->
-    <div id="timetable-modal" class="modal fade">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                    <h4 class="modal-title" id="timetable-modal-title"></h4>
+    <div class="upcoming-services-container">
+        <p class="title">Upcoming Services</p>
+
+        <ul class="nav nav-tabs tabs">
+            {% for service in services %}
+                <li role="presentation" class="tab">
+                    <a href="#{{ service.name }}"><span class="service-name">{{ service.name }}</span>  to {{ service.destination }}
+                        {% if service.timetables[0] %}
+                            <br> <span class="text-success">due {{ service.timetables[0].humanizedTime }}</span>
+                        {% else %}
+                            <br> <span class="text-danger">service inactive</span>
+                        {% endif %}
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
+        <div class="tab-content-container">
+            {% for service in services %}
+                <div class="tab-content {{ service.name }}" hidden="">
+                    <div class="panel panel-default">
+                        <div class="panel-heading"><strong>Arrival Times</strong><a class="panel-heading-right view-all-arrival-times" href="{{ urls.get_service_timetable_for_stop }}" data-service-name="{{ service.name }}" data-stop-id="{{ stop.stop_id }}" data-stop-name="{{ stop.name }}">View all arrival times</a></div>
+                        <div class="panel-body">
+                            {% if service.timetables.length > 0 %}
+                                {% for timetable in service.timetables %}
+                                    <p><span class="time">{{ timetable.time }}</span> ({{ timetable.humanizedTime }})</p>
+                                {% endfor %}
+                            {% else %}
+                                <div class="nothing-to-see-here-container">
+                                    <p>Nothing To See Here...</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="panel panel-default">
+                        <div class="panel-heading"><strong>Buses</strong> {% if service.buses.length > 0 %} (Last updated {{ service.buses[0].lastSeen }}) {% endif %}<p class="panel-heading-right">Click on bus to view exact location on map</p> </div>
+                        <div class="panel-body">
+                            {% if service.buses.length > 0 %}
+                                <div class="row">
+                                {% for bus in service.buses %}
+                                    <div class="col-lg-3 col-sm-6">
+                                        <div class="bus-container" data-lat="{{ bus.coordinates[1] }}" data-lng="{{ bus.coordinates[0] }}">
+                                            <p class="title">Bus #{{ bus.vehicle_id }} to {{ bus.destination }}</p>
+                                            <p class="distance-from-user">{{ bus.distanceFromUser }} away</p>
+                                        </div>
+                                    </div>
+                                    {% if loop.index % 4 == 0 %}
+                                        </div>
+                                        <div class="row">
+                                    {% endif %}
+                                {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="nothing-to-see-here-container">
+                                    <p>Nothing To See Here...</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
-                <div id="timetable-modal-body" class="modal-body">
-                    {# html will be loaded here #}
-                </div>
-                <div class="modal-footer">
-                    <button id="timetable-modal-negative-button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                </div>
-            </div><!-- /.modal-content -->
-        </div><!-- /.modal-dialog -->
-    </div><!-- /.modal -->
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Favourite modal -->
+<div id="favourite-modal" class="modal fade">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title"><strong>Add To Favourites</strong></h4>
+            </div>
+            <div id="favourite-modal-body" class="modal-body">
+                <div class="alert-danger" id="favourite-modal-error-container"></div>
+                <p>Stop Name: <strong>{{ stop.name }}</strong></p>
+                <form id="favourite-form" data-add-action="{{ urls.add_stop_to_favourites }}" data-remove-action="{{ urls.remove_stop_from_favourites }}" method="post">
+                    <p>Choose an easy to remember name: (Optional)</p>
+                    <input id="favourite-modal-alt-name-input" class="form-control">
+                    <input id="favourite-modal-stop-id-input" hidden="" value="{{ stop.stop_id }}">
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button id="favourite-modal-negative-button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="favourite-modal-positive-button" type="submit" form="favourite-form" class="btn btn-primary">Add</button>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+<!-- Timetable modal -->
+<div id="timetable-modal" class="modal fade">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="timetable-modal-title"></h4>
+            </div>
+            <div id="timetable-modal-body" class="modal-body">
+                {# html will be loaded here #}
+            </div>
+            <div class="modal-footer">
+                <button id="timetable-modal-negative-button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
