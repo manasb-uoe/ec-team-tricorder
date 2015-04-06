@@ -687,6 +687,8 @@ function updateStats() {
                                                 date: moment().format('YYYY MM DD')
                                             }, function (err, stopStat) {
                                                 if (!err) {
+                                                    var stopStatNew = stopStat;
+
                                                     // If a new vehicle comes online after stats are first built
                                                     if (vehicleStatNew === null) {
 
@@ -721,11 +723,11 @@ function updateStats() {
 
                                                     }
                                                     //In case one was missed by the daily construction
-                                                    if (stopStat === null) {
+                                                    if (stopStatNew === null) {
 
                                                         var timestamp = new Date().getTime();
 
-                                                        stopStat = new StopStat({
+                                                        stopStatNew = new StopStat({
                                                             date: moment().format('YYYY MM DD'),
                                                             timestamp: new Date().getTime(),
                                                             vehicle_id: bus.vehicle_id,
@@ -760,120 +762,120 @@ function updateStats() {
                                                     //console.log('minutesDif: ' + minutesDif);
 
                                                     if (minutesDif > 10) {
-                                                        stopStat.early_10_plus++;
+                                                        stopStatNew.early_10_plus++;
                                                         vehicleStatNew.early_10_plus++;
                                                         console.log('1');
                                                     }
 
                                                     else if (minutesDif >= -10 && minutesDif < -9) {
-                                                        stopStat.early_9++;
+                                                        stopStatNew.early_9++;
                                                         vehicleStatNew.early_9++;
                                                         console.log('2');
                                                     }
 
                                                     else if (minutesDif >= -9 && minutesDif < -8) {
-                                                        stopStat.early_8++;
+                                                        stopStatNew.early_8++;
                                                         vehicleStatNew.early_8++;
                                                         console.log('3');
                                                     }
 
                                                     else if (minutesDif >= -8 && minutesDif < -7) {
-                                                        stopStat.early_7++;
+                                                        stopStatNew.early_7++;
                                                         vehicleStatNew.early_7++;
                                                         console.log('4');
                                                     }
 
                                                     else if (minutesDif >= -7 && minutesDif < -6) {
-                                                        stopStat.early_6++;
+                                                        stopStatNew.early_6++;
                                                         vehicleStatNew.early_6++;
                                                         console.log('5');
                                                     }
 
                                                     else if (minutesDif >= -6 && minutesDif < -5) {
-                                                        stopStat.early_5++;
+                                                        stopStatNew.early_5++;
                                                         vehicleStatNew.early_5++;
                                                         console.log('6');
                                                     }
 
                                                     else if (minutesDif >= -4 && minutesDif < -3) {
-                                                        stopStat.early_4++;
+                                                        stopStatNew.early_4++;
                                                         vehicleStatNew.early_4++;
                                                         console.log('7');
                                                     }
 
                                                     else if (minutesDif >= -3 && minutesDif < -2) {
-                                                        stopStat.early_3++;
+                                                        stopStatNew.early_3++;
                                                         vehicleStatNew.early_3++;
                                                         console.log('8');
                                                     }
 
                                                     else if (minutesDif >= -2 && minutesDif < -1) {
-                                                        stopStat.early_2++;
+                                                        stopStatNew.early_2++;
                                                         vehicleStatNew.early_2++;
                                                         console.log('9');
                                                     }
 
                                                     else if (minutesDif <= 2 && minutesDif > 1) {
-                                                        stopStat.late_2++;
+                                                        stopStatNew.late_2++;
                                                         vehicleStatNew.late_2++;
                                                         console.log('10');
                                                     }
 
                                                     else if (minutesDif <= 3 && minutesDif > 2) {
-                                                        stopStat.late_3++;
+                                                        stopStatNew.late_3++;
                                                         vehicleStatNew.late_3++;
                                                         console.log('11');
                                                     }
 
                                                     else if (minutesDif <= 4 && minutesDif > 3) {
-                                                        stopStat.late_4++;
+                                                        stopStatNew.late_4++;
                                                         vehicleStatNew.late_4++;
                                                         console.log('12');
                                                     }
                                                     else if (minutesDif <= 5 && minutesDif > 4) {
-                                                        stopStat.late_5++;
+                                                        stopStatNew.late_5++;
                                                         vehicleStatNew.late_5++;
                                                         console.log('13');
                                                     }
                                                     else if (minutesDif <= 6 && minutesDif > 5) {
-                                                        stopStat.late_6++;
+                                                        stopStatNew.late_6++;
                                                         vehicleStatNew.late_6++;
                                                         console.log('14');
                                                     }
 
                                                     else if (minutesDif <= 7 && minutesDif > 6) {
-                                                        stopStat.late_7++;
+                                                        stopStatNew.late_7++;
                                                         vehicleStatNew.late_7++;
                                                         console.log('15');
                                                     }
 
                                                     else if (minutesDif <= 8 && minutesDif > 7) {
-                                                        stopStat.late_8++;
+                                                        stopStatNew.late_8++;
                                                         vehicleStatNew.late_8++;
                                                         console.log('16');
                                                     }
 
                                                     else if (minutesDif <= 9 && minutesDif > 8) {
-                                                        stopStat.late_9++;
+                                                        stopStatNew.late_9++;
                                                         vehicleStatNew.late_9++;
                                                         console.log('17');
                                                     }
 
                                                     else if (minutesDif <= 10 && minutesDif > 9) {
-                                                        stopStat.late_10++;
+                                                        stopStatNew.late_10++;
                                                         vehicleStatNew.late_10++;
                                                         console.log('18');
                                                     }
 
                                                     else if (minutesDif > 10) {
-                                                        stopStat.late_10_plus++;
+                                                        stopStatNew.late_10_plus++;
                                                         vehicleStatNew.late_10_plus++;
                                                         console.log('19');
                                                     }
 
                                                     else {
                                                         console.log('20');
-                                                        stopStat.on_time++;
+                                                        stopStatNew.on_time++;
                                                         vehicleStatNew.on_time++;
 
                                                     }
@@ -881,7 +883,10 @@ function updateStats() {
                                                     vehicleStatNew.save(function (err, product, numberAffected) {
                                                         if (!err) {
                                                             console.log('vehicle_id ' +  vehicleStatNew.vehicle_id);
-                                                            stopStat.save(function (err, product, numberAffected) {
+                                                            stopStatNew.save(function (err, product, numberAffected) {
+                                                                if(!err) {
+                                                                    console.log('stop_id' + stopStatNew.stop_id);
+                                                                }
                                                                 if (err) {
                                                                     console.log('err 18' + JSON.stringify(err));
                                                                 }
