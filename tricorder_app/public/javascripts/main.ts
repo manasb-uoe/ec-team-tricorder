@@ -4,11 +4,12 @@
 /// <reference path="./ts_definitions/jquery.d.ts" />
 /// <reference path="./ts_definitions/google.maps.d.ts" />
 /// <reference path="./ts_definitions/bootstrap.d.ts" />
+
 function getLocationParamsFromUrl() {
     var params = window.location.search.substr(1).split('&');
-    var lat = null;
-    var lng = null;
-    for (var i = 0; i < params.length; i++) {
+    var lat: String = null;
+    var lng: String = null;
+    for (var i=0; i < params.length; i++) {
         if (params[i].indexOf('lat') > -1) {
             lat = params[i].substr(4);
         }
@@ -19,8 +20,9 @@ function getLocationParamsFromUrl() {
     return {
         lat: lat,
         lng: lng
-    };
+    }
 }
+
 function sendAjaxPost(url, data, successCallback) {
     $.ajax({
         url: url,
@@ -30,6 +32,7 @@ function sendAjaxPost(url, data, successCallback) {
         success: successCallback
     });
 }
+
 var LocationFetcher = function () {
     function getCurrenPosition(successCallback) {
         if (navigator.geolocation) {
@@ -39,9 +42,10 @@ var LocationFetcher = function () {
             console.log("Geolocation is not supported by this browser");
         }
     }
+
     function failureCallback(error) {
-        var error_message = null;
-        switch (error.code) {
+        var error_message: String = null;
+        switch(error.code) {
             case error.PERMISSION_DENIED:
                 error_message = "User denied the request for Geolocation.";
                 break;
@@ -54,17 +58,21 @@ var LocationFetcher = function () {
         }
         console.log(error_message);
     }
+
     return {
         getCurrentPosition: getCurrenPosition
     };
 }();
+
 var TabNavigationHandler = function () {
     var config = {
         nearbyStopsTab: $("#nearby-stops-tab")
     };
+
     function init() {
         bindUIActions();
     }
+
     function bindUIActions() {
         config.nearbyStopsTab.click(function (event) {
             event.preventDefault();
@@ -73,10 +81,12 @@ var TabNavigationHandler = function () {
             });
         });
     }
+
     return {
         init: init
     };
 }();
+
 var NearbyStopsHandler = function () {
     var config = {
         nearbyStopsTab: $("#nearby-stops-tab"),
@@ -98,6 +108,7 @@ var NearbyStopsHandler = function () {
         enterFullScreenMap: $(".enter-full-screen-map"),
         exitFullScreenMap: $(".exit-full-screen-map")
     };
+
     function init() {
         var params = getLocationParamsFromUrl();
         if (params["lat"] == null || params["lng"] == null) {
@@ -106,13 +117,17 @@ var NearbyStopsHandler = function () {
                 window.location.href = config.nearbyStopsTab.attr("href") + "?lat=" + position.coords.latitude + "&lng=" + position.coords.longitude;
             });
         }
+
         setupMap(params);
+
         bindUIActions();
     }
+
     function bindUIActions() {
         config.changeFilterButton.click(function () {
             showFilterModal();
         });
+
         config.filterModalPositiveButton.click(function () {
             var params = getLocationParamsFromUrl();
             params["count"] = config.filterModalCountSelect.val();
@@ -120,6 +135,7 @@ var NearbyStopsHandler = function () {
             params["stop"] = config.filterModalStopQueryInput.val();
             window.location.href = generateUrl(params);
         });
+
         config.stopContainer.click(function (event) {
             event.preventDefault();
             var self = $(this);
@@ -127,8 +143,10 @@ var NearbyStopsHandler = function () {
                 window.location.href = self.attr("href") + "?lat=" + position.coords.latitude + "&lng=" + position.coords.longitude;
             });
         });
+
         config.enterFullScreenMap.click(function (event) {
             event.preventDefault();
+
             config.mapContainer.css({
                 "position": "fixed",
                 "top": "50px",
@@ -137,8 +155,10 @@ var NearbyStopsHandler = function () {
                 "z-index": "1000"
             });
             config.googleMap.triggerResize();
+
             config.exitFullScreenMap.show();
         });
+
         config.exitFullScreenMap.click(function () {
             config.mapContainer.css({
                 "position": "relative",
@@ -148,17 +168,20 @@ var NearbyStopsHandler = function () {
                 "z-index": config.googleMapWidth
             });
             config.googleMap.triggerResize();
+
             $(this).hide();
         });
     }
+
     function showFilterModal() {
         config.filterModalStopQueryInput.val(config.stopQuery);
         config.filterModalCountSelect.find("option[value='" + config.countSelected + "']").attr("selected", true);
-        for (var i = 0; i < config.serviceSelected.length; i++) {
+        for (var i=0; i<config.serviceSelected.length; i++) {
             config.filterModalServiceSelect.find("option[value='" + config.serviceSelected[i] + "']").attr("selected", true);
         }
         config.filterModal.modal("show");
     }
+
     function setupMap(params) {
         // get locations of all stops
         var stopLocations = {};
@@ -169,20 +192,24 @@ var NearbyStopsHandler = function () {
                 lng: stopContainer.children(".lng").text()
             };
         });
+
         if (Object.keys(stopLocations).length > 0) {
             // user nearest stop as the center of the map
-            var nearestStopLocation = { lat: stopLocations[Object.keys(stopLocations)[0]]["lat"], lng: stopLocations[Object.keys(stopLocations)[0]]["lng"] };
+            var nearestStopLocation = {lat: stopLocations[Object.keys(stopLocations)[0]]["lat"], lng: stopLocations[Object.keys(stopLocations)[0]]["lng"]};
             config.googleMap = new GoogleMapsApiWrapper(nearestStopLocation, 17, config.mapContainer[0]);
+
             // get initial dimensions so that we can switch back to them later
             config.googleMapWidth = config.mapContainer.css('width');
             config.googleMapHeight = config.mapContainer.css('height');
+
             // add user marker
-            var userLocation = { lat: params["lat"], lng: params["lng"] };
+            var userLocation = {lat: params["lat"], lng: params["lng"]};
             config.googleMap.addMarker("user", userLocation, {
                 icon: "red",
                 infoWindowContent: "<div class='map-info-window'><strong>You are here</strong></div>",
                 shouldOpenInfoWindowInitially: true
             });
+
             // add nearest stop marker
             config.googleMap.addMarker("stop", nearestStopLocation, {
                 icon: "yellow",
@@ -193,12 +220,14 @@ var NearbyStopsHandler = function () {
                     config.googleMap.addRoute(userLocation, nearestStopLocation, "walking");
                 }
             });
+
             // add remaining stop markers
             var loopCounter = 0;
             for (var key in stopLocations) {
                 if (stopLocations.hasOwnProperty(key)) {
-                    if (loopCounter != 0) {
-                        var stopLocation = { lat: stopLocations[key]["lat"], lng: stopLocations[key]["lng"] };
+                    if (loopCounter != 0) { // exclude nearest stop
+                        var stopLocation = {lat: stopLocations[key]["lat"], lng: stopLocations[key]["lng"]};
+
                         (function (stopLocation) {
                             config.googleMap.addMarker("stop", stopLocation, {
                                 icon: "yellow",
@@ -216,27 +245,32 @@ var NearbyStopsHandler = function () {
             }
         }
     }
+
     function generateUrl(params) {
         var lat = params["lat"] || 0;
         var lng = params["lng"] || 0;
         var count = params["count"] || 10;
         var service = params["service"] || ["All"];
         var stop = params["stop"] || "";
+
         var url = window.location.href;
         if (url.indexOf('?') > -1) {
             url = url.substr(0, url.indexOf('?'));
         }
         url += '?lat=' + lat + '&lng=' + lng + '&stop=' + stop + '&count=' + count;
-        for (var i = 0; i < service.length; i++) {
+        for (var i=0; i<service.length; i++) {
             url += "&service[]=" + service[i];
         }
         return url;
     }
+
     return {
         init: init
     };
 }();
+
 var StopHandler = function () {
+
     var config = {
         mainContainer: $(".main-container"),
         mapContainer: $("#stop-map-container"),
@@ -246,7 +280,7 @@ var StopHandler = function () {
         favouriteModal: $("#favourite-modal"),
         favouriteForm: $("#favourite-form"),
         favouriteModalAltNameInput: $("#favourite-modal-alt-name-input"),
-        favouriteModalStopIdInput: $("#favourite-modal-stop-id-input"),
+        favouriteModalStopIdInput : $("#favourite-modal-stop-id-input"),
         favouriteModalErrorContainer: $("#favourite-modal-error-container"),
         viewAllArrivalTimesLink: $(".view-all-arrival-times"),
         timetableModal: $("#timetable-modal"),
@@ -262,6 +296,7 @@ var StopHandler = function () {
         mapViewBusesAndRoutesButton: $("#map-view-buses-and-routes-button"),
         busContainer: $(".bus-container")
     };
+
     function init() {
         var userLocation = getLocationParamsFromUrl();
         if (userLocation["lat"] == null || userLocation["lng"] == null) {
@@ -270,64 +305,77 @@ var StopHandler = function () {
                 window.location.href = window.location.href + "?lat=" + position.coords.latitude + "&lng=" + position.coords.longitude;
             });
         }
+
         // if no hash found, add hash for the first tab
         if (window.location.hash == '') {
             var hash = config.upcomingServiceTab.first().find("a").attr("href");
             window.location.href = window.location.href + hash;
         }
+
         setupMap(userLocation);
+
         // since hashchange event is not fired when the page is loaded with the hash,
         // navigateToActiveTab must be called once
         navigateToActiveTab();
         showUserAndStopLocationOnMap(userLocation);
+
         // navigate to active tab every time the hash changes
         $(window).on('hashchange', function () {
             navigateToActiveTab();
+
             if (config.mapViewBusesAndRoutesButton.attr("class").indexOf("btn-primary") > -1) {
                 showBusLocationAndRoutesOnMap();
             }
         });
+
         bindUIActions(userLocation);
     }
+
     function bindUIActions(userLocation) {
         // if favourite button is disabled, enable its tooltip
         if (config.favouriteButton.attr("class").indexOf("disabled") > -1) {
             $('[data-toggle="tooltip"]').tooltip();
-        }
-        else {
+        } else {
             config.favouriteButton.click(function () {
                 // show favourite modal if stop not in favourites already (blue button)
                 if (config.favouriteButton.attr("class").indexOf("btn-primary") > -1) {
                     showFavouriteModal();
-                }
-                else {
-                    sendAjaxPost(config.favouriteForm.attr("data-remove-action"), { stop_id: config.favouriteModalStopIdInput.val() }, function (response) {
-                        if (!response.error) {
-                            config.favouriteButton.removeClass("btn-danger");
-                            config.favouriteButton.addClass("btn-primary");
-                            config.favouriteButton.find(".favourite-button-text").text("Add to Favourites");
+                } else { // else send ajax post request to remove stop from favourites (red button)
+                    sendAjaxPost(
+                        config.favouriteForm.attr("data-remove-action"),
+                        {stop_id: config.favouriteModalStopIdInput.val()},
+                        function (response) {
+                            if (!response.error) {
+                                config.favouriteButton.removeClass("btn-danger");
+                                config.favouriteButton.addClass("btn-primary");
+                                config.favouriteButton.find(".favourite-button-text").text("Add to Favourites");
+                            } else {
+                                alert("Error: " + response.error);
+                            }
                         }
-                        else {
-                            alert("Error: " + response.error);
-                        }
-                    });
+                    );
                 }
             });
         }
+
         config.viewAllArrivalTimesLink.click(function (event) {
             event.preventDefault();
+
             var serviceName = $(this).attr("data-service-name");
             var stopId = $(this).attr("data-stop-id");
             var stopName = $(this).attr("data-stop-name");
-            var url = $(this).attr("href") + "?service=" + serviceName + "&stop=" + stopId;
+            var url = $(this).attr("href") + "?service=" + serviceName  + "&stop=" + stopId;
             showTimetableModal(url, serviceName, stopName);
         });
+
         config.viewLiveLocationsOnMapLink.click(function () {
             // scroll to top of page
             $("html, body").animate({ scrollTop: 0 }, "300");
         });
+
         config.enterFullScreenMap.click(function (event) {
             event.preventDefault();
+
             config.mapContainer.css({
                 "position": "fixed",
                 "top": "50px",
@@ -336,8 +384,10 @@ var StopHandler = function () {
                 "z-index": "1000"
             });
             config.googleMap.triggerResize();
+
             config.exitFullScreenMap.show();
         });
+
         config.exitFullScreenMap.click(function () {
             config.mapContainer.css({
                 "position": "relative",
@@ -347,8 +397,10 @@ var StopHandler = function () {
                 "z-index": config.googleMapWidth
             });
             config.googleMap.triggerResize();
+
             $(this).hide();
         });
+
         config.mapViewStopButton.click(function () {
             if ($(this).attr("class").indexOf("btn-primary") == -1) {
                 $(this).removeClass("btn-default");
@@ -358,6 +410,7 @@ var StopHandler = function () {
                 showUserAndStopLocationOnMap(userLocation);
             }
         });
+
         config.mapViewBusesAndRoutesButton.click(function () {
             if ($(this).attr("class").indexOf("btn-primary") == -1) {
                 $(this).removeClass("btn-default");
@@ -367,70 +420,87 @@ var StopHandler = function () {
                 showBusLocationAndRoutesOnMap();
             }
         });
+
         config.busContainer.click(function () {
             console.log(config.googleMap.getMarkers().length);
             if (config.mapViewBusesAndRoutesButton.attr("class").indexOf("btn-primary") == -1) {
                 config.mapViewBusesAndRoutesButton.trigger("click");
             }
-            var busLocation = { lat: $(this).attr("data-lat"), lng: $(this).attr("data-lng") };
-            var busMarkers = config.googleMap.getMarkers("bus");
-            for (var i = 0; i < busMarkers.length; i++) {
+
+            var busLocation = {lat: $(this).attr("data-lat"), lng: $(this).attr("data-lng")};
+            var busMarkers  = config.googleMap.getMarkers("bus");
+            for (var i=0; i<busMarkers.length; i++) {
                 if (busMarkers[i].getPosition().lat().toFixed(6) == parseFloat(busLocation["lat"]).toFixed(6) && busMarkers[i].getPosition().lng().toFixed(6) == parseFloat(busLocation["lng"]).toFixed(6)) {
                     config.googleMap.setCenter(busLocation);
                     config.googleMap.setZoom(17);
                     busMarkers[i].infoWindow("show");
-                }
-                else {
+                } else {
                     busMarkers[i].infoWindow("hide");
                 }
             }
+
             // scroll to top of page
             $("html, body").animate({ scrollTop: 0 }, "300");
+
         });
     }
+
     function showFavouriteModal() {
         // hide error container initially
         config.favouriteModalErrorContainer.hide();
+
         config.favouriteForm.submit(function (event) {
             // prevent default form submission
             event.preventDefault();
+
             // submit form data using ajax
-            sendAjaxPost(config.favouriteForm.attr("data-add-action"), { alt_name: config.favouriteModalAltNameInput.val(), stop_id: config.favouriteModalStopIdInput.val() }, function (response) {
-                if (response.error) {
-                    config.favouriteModalErrorContainer.empty();
-                    config.favouriteModalErrorContainer.append("<strong>Error!</strong> " + response.error);
-                    config.favouriteModalErrorContainer.show();
+            sendAjaxPost(
+                config.favouriteForm.attr("data-add-action"),
+                {alt_name: config.favouriteModalAltNameInput.val(), stop_id: config.favouriteModalStopIdInput.val()},
+                function (response) {
+                    if (response.error) {
+                        config.favouriteModalErrorContainer.empty();
+                        config.favouriteModalErrorContainer.append("<strong>Error!</strong> " + response.error);
+                        config.favouriteModalErrorContainer.show();
+                    } else {
+                        config.favouriteModal.modal("hide");
+                        config.favouriteButton.removeClass("btn-primary");
+                        config.favouriteButton.addClass("btn-danger");
+                        config.favouriteButton.find(".favourite-button-text").text("Remove from Favourites");
+                    }
                 }
-                else {
-                    config.favouriteModal.modal("hide");
-                    config.favouriteButton.removeClass("btn-primary");
-                    config.favouriteButton.addClass("btn-danger");
-                    config.favouriteButton.find(".favourite-button-text").text("Remove from Favourites");
-                }
-            });
+            );
         });
+
         config.favouriteModal.modal("show");
     }
+
     function setupMap(userLocation) {
         config.googleMap = new GoogleMapsApiWrapper(userLocation, 17, config.mapContainer[0]);
+
         // get initial dimensions so that we can switch back to them later
         config.googleMapWidth = config.mapContainer.css('width');
         config.googleMapHeight = config.mapContainer.css('height');
     }
+
     function navigateToActiveTab() {
         var hash = window.location.hash;
+
         // make selected tab active
-        var activeLink = $('a[href="' + hash + '"]');
+        var activeLink = $('a[href="' + hash +'"]');
         var activeTab = activeLink.parent();
         activeTab.addClass("active");
+
         // make all the other tabs inactive
         activeTab.siblings().removeClass("active");
+
         // only show the content of the clicked tab
         var activeContentDivClassName = activeTab.find(".service-name").text();
         var activeContentDiv = config.tabContentContainer.find("." + activeContentDivClassName);
         activeContentDiv.show();
         activeContentDiv.siblings().hide();
     }
+
     function showTimetableModal(url, serviceName, stopName) {
         // load timetables html into modal body
         $.ajax({
@@ -443,11 +513,13 @@ var StopHandler = function () {
                 config.timetableModalBody.html(html);
             }
         });
+
         // handle tab navigation
         config.timetableModalBody.on("click", ".day-tab", function () {
             // only mark selected tab as active
             $(this).addClass("active");
             $(this).siblings().removeClass("active");
+
             // only show the content of the clicked tab
             var activeTabContentClass = "." + $(this).text().toLowerCase() + "-tab-content";
             var activeTabContent = $(activeTabContentClass);
@@ -455,13 +527,17 @@ var StopHandler = function () {
             activeTabContent.siblings().hide();
         });
     }
+
     function showBusLocationAndRoutesOnMap() {
         config.googleMap.clearPolylines();
         config.googleMap.clearMarkers();
         config.googleMap.clearRoutes();
+
         config.googleMap.setZoom(12);
+
         // get service name from active tab
         var serviceName = $(".tab[class*='active']").children("a").attr("href").substring(1);
+
         // get routes for selected service from server and mark them on map
         $.ajax({
             url: config.mapViewBusesAndRoutesButton.attr("data-href") + "?service=" + serviceName,
@@ -470,12 +546,12 @@ var StopHandler = function () {
             success: function (routes) {
                 var destinations = Object.keys(routes);
                 var polylineColors = ["#34dbff", "#ff3497", "#ff0040", "#64e125", "#005567", "#9c34ff"];
-                for (var i = 0; i < destinations.length; i++) {
+                for (var i=0; i<destinations.length; i++) {
                     var route = routes[destinations[i]];
                     var coordinates = [];
-                    for (var j = 0; j < route.length; j++) {
+                    for (var j=0; j<route.length; j++) {
                         if (route[j] != null) {
-                            coordinates.push({ lat: route[j].coordinates[1], lng: route[j].coordinates[0] });
+                            coordinates.push({lat: route[j].coordinates[1], lng: route[j].coordinates[0]});
                         }
                     }
                     config.googleMap.addPolyline(coordinates, {
@@ -485,6 +561,7 @@ var StopHandler = function () {
                 }
             }
         });
+
         // get all bus locations
         var busLocations = {};
         $(".bus-container:visible").each(function () {
@@ -494,9 +571,12 @@ var StopHandler = function () {
                 lng: busContainer.attr("data-lng")
             };
         });
+
+        // add bus markers to map
         for (var key in busLocations) {
             if (busLocations.hasOwnProperty(key)) {
-                var busLocation = { lat: busLocations[key]["lat"], lng: busLocations[key]["lng"] };
+                var busLocation = {lat: busLocations[key]["lat"], lng: busLocations[key]["lng"]};
+
                 config.googleMap.addMarker("bus", busLocation, {
                     icon: "bus",
                     infoWindowContent: "<div class='map-info-window'>" + key + "</div>",
@@ -505,41 +585,51 @@ var StopHandler = function () {
             }
         }
     }
+
     function showUserAndStopLocationOnMap(userLocation) {
         config.googleMap.clearPolylines();
         config.googleMap.clearMarkers();
         config.googleMap.clearRoutes();
+
         config.googleMap.setCenter(userLocation);
         config.googleMap.setZoom(17);
+
         // add user marker
         config.googleMap.addMarker("user", userLocation, {
             icon: "red",
             infoWindowContent: "<div class='map-info-window'><strong>You are here</strong></div>",
             shouldOpenInfoWindowInitially: true
         });
+
         // get stop location since it would be used as the center of the map
-        var stopLocation = { lat: config.mainContainer.find(".lat").text(), lng: config.mainContainer.find(".lng").text() };
+        var stopLocation = {lat: config.mainContainer.find(".lat").text(), lng: config.mainContainer.find(".lng").text()};
+
         // add stop marker
         config.googleMap.addMarker("stop", stopLocation, {
             icon: "yellow",
             infoWindowContent: "<div class='map-info-window'>" + config.mainContainer.find(".main-title").text() + "</div>",
             shouldOpenInfoWindowInitially: true
         });
+
         // add route between user and stop
         config.googleMap.addRoute(userLocation, stopLocation, "walking");
     }
+
     return {
         init: init
     };
 }();
+
 var FavouritesHandler = function () {
     var config = {
         favourite: $(".favourite"),
         removeFavouriteButton: $(".remove-favourite-button")
     };
+
     function init() {
         bindUIActions();
     }
+
     function bindUIActions() {
         config.favourite.click(function (event) {
             event.preventDefault();
@@ -548,25 +638,32 @@ var FavouritesHandler = function () {
                 window.location.href = self.attr("data-href") + "?lat=" + position.coords.latitude + "&lng=" + position.coords.longitude;
             });
         });
+
         config.removeFavouriteButton.click(function (event) {
             event.stopPropagation();
             var parent = $(this).parents(".favourite");
-            sendAjaxPost(parent.attr("data-remove-href"), { stop_id: parent.attr("data-stop-id") }, function (response) {
-                if (!response.error) {
-                    window.location.reload();
+            sendAjaxPost(
+                parent.attr("data-remove-href"),
+                {stop_id: parent.attr("data-stop-id")},
+                function (response) {
+                    if (!response.error) {
+                        window.location.reload();
+                    } else {
+                        alert("Error: " + response.error);
+                    }
                 }
-                else {
-                    alert("Error: " + response.error);
-                }
-            });
+            );
         });
+
         // enable tooltips
         $('[data-toggle="tooltip"]').tooltip();
     }
+
     return {
         init: init
     };
 }();
+
 function GoogleMapsApiWrapper(centerLocation, zoomLevel, mapContainer) {
     var config = {
         map: null,
@@ -589,6 +686,7 @@ function GoogleMapsApiWrapper(centerLocation, zoomLevel, mapContainer) {
             bicycling: google.maps.TravelMode.BICYCLING
         }
     };
+
     // self invoking initialization method
     (function init() {
         // setup map
@@ -598,13 +696,16 @@ function GoogleMapsApiWrapper(centerLocation, zoomLevel, mapContainer) {
             mapTypeControl: false
         };
         config.map = new google.maps.Map(mapContainer, options);
+
         // setup directions renderer which will draw routes on map
         config.directionsRenderer = new google.maps.DirectionsRenderer();
-        config.directionsRenderer.setOptions({ suppressMarkers: true, preserveViewport: true });
+        config.directionsRenderer.setOptions({suppressMarkers: true, preserveViewport: true});
         config.directionsRenderer.setMap(config.map);
+
         // setup directions service which will retrieve the required route
         config.directionsService = new google.maps.DirectionsService();
     })();
+
     this.addMarker = function (id, position, options) {
         var markerOptions = {
             icon: options.icon || "red",
@@ -613,39 +714,44 @@ function GoogleMapsApiWrapper(centerLocation, zoomLevel, mapContainer) {
             infoWindowContent: options.infoWindowContent,
             shouldOpenInfoWindowInitially: options.shouldOpenInfoWindowInitially || false
         };
-        var marker = new google.maps.Marker({
+
+        var marker: any= new google.maps.Marker({
             position: new google.maps.LatLng(position["lat"], position["lng"]),
             map: config.map,
             icon: new google.maps.MarkerImage(config.markerIcons[markerOptions.icon])
         });
+
         var infoWindow;
         if (markerOptions.infoWindowContent) {
             infoWindow = new google.maps.InfoWindow({
                 content: markerOptions.infoWindowContent
             });
         }
+
         marker.setMap(config.map);
+
         // add id property to each marker so that it can easily be recognized later
         marker.id = id;
+
         // add method to open info window
         marker.infoWindow = function (state) {
             if (infoWindow) {
                 if (state == "show") {
                     infoWindow.open(config.map, marker);
-                }
-                else if (state == "hide") {
+                } else if (state == "hide") {
                     infoWindow.close(config.map, marker);
                 }
-            }
-            else {
+            } else {
                 throw new Error("Info window content was not provided when marker was created");
             }
         };
+
         if (markerOptions.shouldOpenInfoWindowInitially) {
             if (infoWindow) {
                 infoWindow.open(config.map, marker);
             }
         }
+
         // handle single click using the callback provided
         google.maps.event.addListener(marker, 'click', function () {
             marker.infoWindow("show");
@@ -653,30 +759,34 @@ function GoogleMapsApiWrapper(centerLocation, zoomLevel, mapContainer) {
                 markerOptions.singleClickCallback();
             }
         });
+
         // handle double click using the callback provided
         if (markerOptions.doubleClickCallback) {
             google.maps.event.addListener(marker, 'dblclick', markerOptions.doubleClickCallback);
         }
+
         // keep marker reference for later use
         config.markers.push(marker);
     };
+
     this.addRoute = function (origin, destination, travelMode) {
         var request = {
             origin: new google.maps.LatLng(origin["lat"], origin["lng"]),
             destination: new google.maps.LatLng(destination["lat"], destination["lng"]),
             travelMode: config.travelModes[travelMode] || config.travelModes.walking
         };
+
         config.directionsService.route(request, function (res, status) {
             if (status == google.maps.DirectionsStatus.OK) {
                 config.directionsRenderer.setDirections(res);
-            }
-            else {
+            } else {
                 console.log("Error occurred while adding route: " + status);
             }
         });
     };
+
     this.addPolyline = function (pathCoordinates, options) {
-        for (var i = 0; i < pathCoordinates.length; i++) {
+        for (var i=0; i<pathCoordinates.length; i++) {
             pathCoordinates[i] = new google.maps.LatLng(pathCoordinates[i]["lat"], pathCoordinates[i]["lng"]);
         }
         var path = new google.maps.Polyline({
@@ -687,59 +797,66 @@ function GoogleMapsApiWrapper(centerLocation, zoomLevel, mapContainer) {
             strokeWeight: options.strokeWeight || 2
         });
         path.setMap(config.map);
+
         // keep polyline reference for later use
         config.polylines.push(path);
     };
+
     this.clearRoutes = function () {
-        config.directionsRenderer.setDirections({ routes: [] });
+        config.directionsRenderer.setDirections({routes: []});
     };
+
     this.clearMarkers = function () {
-        for (var i = 0; i < config.markers.length; i++) {
+        for (var i=0; i<config.markers.length; i++) {
             config.markers[i].setMap(null);
         }
         config.markers = [];
     };
+
     this.clearPolylines = function () {
-        for (var i = 0; i < config.polylines.length; i++) {
+        for (var i=0; i<config.polylines.length; i++) {
             config.polylines[i].setMap(null);
         }
         config.polylines = [];
     };
+
     this.getMarkers = function (markerId) {
         if (markerId) {
             var filteredMarkers = [];
-            for (var i = 0; i < config.markers.length; i++) {
+            for (var i=0; i<config.markers.length; i++) {
                 if (config.markers[i].id == markerId) {
                     filteredMarkers.push(config.markers[i]);
                 }
             }
             return filteredMarkers;
-        }
-        else {
+        } else {
             return config.markers;
         }
     };
+
     this.triggerResize = function () {
         google.maps.event.trigger(config.map, 'resize');
     };
+
     this.setZoom = function (zoomLevel) {
         config.map.setZoom(zoomLevel);
     };
+
     this.setCenter = function (centerLocation) {
         config.map.setCenter(new google.maps.LatLng(centerLocation["lat"], centerLocation["lng"]));
-    };
+    }
 }
+
 // function calls go here
 $(document).ready(function () {
     TabNavigationHandler.init();
+
     // only initialize the modules required for the current page
     if (window.location.href.indexOf('/nearby-stops') > -1) {
         NearbyStopsHandler.init();
-    }
-    else if (window.location.href.indexOf("/stop/") > -1) {
+    } else if (window.location.href.indexOf("/stop/") > -1) {
         StopHandler.init();
-    }
-    else if (window.location.href.indexOf("/favourites") > -1) {
+    } else if (window.location.href.indexOf("/favourites") > -1) {
         FavouritesHandler.init();
     }
 });
