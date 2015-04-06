@@ -140,6 +140,7 @@ function populateTimetables(callbackA) {
                                             body += chunk;
                                         });
 
+<<<<<<< HEAD
                                         res.on('end', function () {
                                             //console.log('received');
                                             var json = JSON.parse(body);
