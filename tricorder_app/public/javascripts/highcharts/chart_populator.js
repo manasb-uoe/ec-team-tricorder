@@ -2,14 +2,14 @@
  * Created by angel on 06/04/15.
  */
 //var util = require('../../../utilities/util');
-//var index = require('../../../routes/index');
+var index = require('../../../routes/index');
 
 //var api_stop = util.urls.api_stop;
 //var stop_id = index.stop.stop_id;
 //var period = period;
-$(function (vehicle_id) {
+$(function () {
     $.ajax({
-        url: "/api/vehicle/" + "?id=" + 204 + "&period=" + "daily",
+        url: "/api/vehicle/" + "?id=" + index.vehicle.vehicle_id + "&period=" + "daily",
         type: "GET",
         dataType: "json",
         success: function (json) {
