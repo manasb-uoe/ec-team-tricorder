@@ -1,15 +1,19 @@
 /**
  * Created by angel on 06/04/15.
  */
-//var util = require('../../../utilities/util');
-var index = require('../../../routes/index');
+var bus_id_chart_raw;
+var bus_id_chart=1;
 
-//var api_stop = util.urls.api_stop;
-//var stop_id = index.stop.stop_id;
-//var period = period;
+$('.bus-container').click(function(){
+    bus_id_chart_raw = $(this).find('.title').text();
+    bus_id_chart = bus_id_chart_raw.substring(5,7);
+    console.log("bus id = " + bus_id_chart);
+})
+
+
 $(function () {
     $.ajax({
-        url: "/api/vehicle/" + "?id=" + index.vehicle.vehicle_id + "&period=" + "daily",
+        url: "/api/vehicle/" + "?id=" + bus_id_chart + "&period=" + "daily",
         type: "GET",
         dataType: "json",
         success: function (json) {
@@ -21,7 +25,7 @@ $(function () {
                     type: 'column'
                 },
                 title: {
-                    text: 'Stop statistics'
+                    text: 'Bus statistics for bus '+bus_id_chart
                 },
                 xAxis: {
                     type: 'category',
