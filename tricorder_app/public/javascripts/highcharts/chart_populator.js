@@ -36,14 +36,14 @@ $(function (vehicle_id) {
                 yAxis: {
                     min: 0,
                     title: {
-                        text: 'Population (millions)'
+                        text: 'Number of buses'
                     }
                 },
                 legend: {
                     enabled: false
                 },
                 tooltip: {
-                    pointFormat: 'Population in 2008: <b>{point.y:.1f} millions</b>'
+                    pointFormat: 'Number of buses: <b>{point.y:.1f}</b>'
                 },
                 series: [{
                     name: 'Population',
