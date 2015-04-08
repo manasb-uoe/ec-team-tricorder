@@ -651,7 +651,11 @@ var StatisticsChartHandler = function () {
                             ['Late by more than', json["late_10_plus"]]
                         ],
                         dataLabels: {
-                            enabled: false,
+                            enabled: true,
+                            formatter:function(){
+                                if(this.y > 0)
+                                    return this.y;
+                            },
                             rotation: -90,
                             color: '#FFFFFF',
                             align: 'right',
@@ -923,3 +927,4 @@ $(document).ready(function () {
         FavouritesHandler.init();
     }
 });
+//# sourceMappingURL=main.js.map
