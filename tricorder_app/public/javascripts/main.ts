@@ -709,9 +709,9 @@ var StatisticsChartHandler = function () {
                     xAxis: {
                         type: 'category',
                         labels: {
-                            rotation: -45,
+                            rotation: -90,
                             style: {
-                                fontSize: '13px',
+                                fontSize: '11px',
                                 fontFamily: 'Verdana, sans-serif'
                             }
                         }
@@ -753,14 +753,13 @@ var StatisticsChartHandler = function () {
                             ['Late by more than', json["late_10_plus"]]
                         ],
                         dataLabels: {
-                            enabled: true,
+                            enabled: false,
                             rotation: -90,
                             color: '#FFFFFF',
                             align: 'right',
-                            format: '{point.y:.1f}', // one decimal
                             y: 10, // 10 pixels down from the top
                             style: {
-                                fontSize: '13px',
+                                fontSize: '9px',
                                 fontFamily: 'Verdana, sans-serif'
                             }
                         }
