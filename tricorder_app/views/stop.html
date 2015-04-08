@@ -93,13 +93,20 @@
                             {% if service.buses.length > 0 %}
                                 <div class="row">
                                 {% for bus in service.buses %}
-                                    <div class="col-lg-3 col-sm-6">
+                                    <div class="col-lg-4 col-sm-6">
                                         <div class="bus-container" data-lat="{{ bus.coordinates[1] }}" data-lng="{{ bus.coordinates[0] }}">
-                                            <p class="title">Bus #{{ bus.vehicle_id }} to {{ bus.destination }}</p>
-                                            <p class="distance-from-user">{{ bus.distanceFromUser }} away</p>
+                                            <div class="left">
+                                                <p class="title">Bus #{{ bus.vehicle_id }} to {{ bus.destination }}</p>
+                                                <p class="distance-from-user">{{ bus.distanceFromUser }} away</p>
+                                            </div>
+                                            <div class="right">
+                                                <button type="button" class="btn btn-default btn-sm stats-button" data-toggle="tooltip" data-placement="top" title="View statistics for bus #{{ bus.vehicle_id }}">
+                                                    <span class="glyphicon glyphicon-stats" aria-hidden="true"></span>
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
-                                    {% if loop.index % 4 == 0 %}
+                                    {% if loop.index % 3 == 0 %}
                                         </div>
                                         <div class="row">
                                     {% endif %}
@@ -161,7 +168,24 @@
     </div><!-- /.modal-dialog -->
 </div><!-- /.modal -->
 
-<div id="bus-chart" style="min-width: 300px; height: 400px; margin: 0 auto"></div>
-<div id="stop-chart" style="min-width: 300px; height: 400px; margin: 0 auto"></div>
+<!-- Bus Statistics modal-->
+<div id="bus-stats-modal" class="modal fade">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="bus-stats-modal-title">Bus Statistics</h4>
+            </div>
+            <div id="bus-stats-modal-body" class="modal-body">
+                <div id="bus-chart"></div>
+            </div>
+            <div class="modal-footer">
+                <button id="bus-stats-modal-negative-button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+{#<div id="stop-chart" style="min-width: 300px; height: 400px; margin: 0 auto"></div>#}
 
 
