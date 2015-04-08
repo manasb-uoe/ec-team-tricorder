@@ -381,6 +381,15 @@ describe("test suite", function () {
         });
     });
 
+    describe("test home page", function () {
+        it("GET" + util.urls.home + " should respond with html and a status code of 200", function (done) {
+            request
+                .get(util.urls.home)
+                .expect('Content-Type', /html/)
+                .expect(200, done);
+        });
+    });
+
     describe("test nearby stops page", function () {
         it("GET " + util.urls.nearby_stops + " should respond with html", function (done) {
             request
@@ -574,6 +583,50 @@ describe("test suite", function () {
                     done();
                 }
             )
+        });
+    });
+
+    describe("test all AJAX routes", function () {
+        it("POST " + util.urls.add_stop_to_favourites + " should respond with json and a status code of 200", function (done) {
+            request
+                .post(util.urls.add_stop_to_favourites)
+                .expect('Content-Type', /json/)
+                .expect(200, done);
+        });
+
+        it("POST " + util.urls.remove_stop_from_favourites + " should respond with json and a status code of 200", function (done) {
+            request
+                .post(util.urls.remove_stop_from_favourites)
+                .expect('Content-Type', /json/)
+                .expect(200, done);
+        });
+
+        it("GET " + util.urls.get_service_timetable_for_stop + " should respond with html and a status code of 200", function (done) {
+            request
+                .get(util.urls.get_service_timetable_for_stop)
+                .expect('Content-Type', /html/)
+                .expect(200, done);
+        });
+
+        it("GET " + util.urls.get_service_routes + " should respond with json and a status code of 200", function (done) {
+            request
+                .get(util.urls.get_service_routes)
+                .expect('Content-Type', /json/)
+                .expect(200, done);
+        });
+
+        it("GET " + util.urls.api_stop + " should respond with json and a status code of 200", function (done) {
+            request
+                .get(util.urls.api_stop)
+                .expect('Content-Type', /json/)
+                .expect(200, done);
+        });
+
+        it("GET " + util.urls.api_vehicle + " should respond with json and a status code of 200", function (done) {
+            request
+                .get(util.urls.api_vehicle)
+                .expect('Content-Type', /json/)
+                .expect(200, done);
         });
     });
 });
