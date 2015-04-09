@@ -629,6 +629,15 @@ describe("test suite", function () {
                 .expect(200, done);
         });
     });
+
+    describe("test about page", function () {
+        it("GET " + util.urls.about + " should respond with html and a status code of 200", function (done) {
+            request
+                .get(util.urls.about)
+                .expect('Content-Type', /html/)
+                .expect(200, done);
+        });
+    });
 });
 
 
