@@ -93,7 +93,7 @@
                             {% if service.buses.length > 0 %}
                                 <div class="row">
                                 {% for bus in service.buses %}
-                                    <div class="col-lg-4 col-sm-6">
+                                    <div class="col-lg-4 col-sm-12">
                                         <div class="bus-container" data-lat="{{ bus.coordinates[1] }}" data-lng="{{ bus.coordinates[0] }}">
                                             <div class="left">
                                                 <p class="title">Bus #{{ bus.vehicle_id }} to {{ bus.destination }}</p>
