@@ -726,5 +726,15 @@ module.exports.apiVehicle = function(req, res, next) {
             console.log('err ' + JSON.stringify(err));
         }
     });
+};
 
+// GET about page
+module.exports.about = function (req, res) {
+    res.render('about.html', {
+            title: "About",
+            current_url: util.urls.about,
+            urls: util.urls,
+            user: req.session.user
+        }
+    );
 };

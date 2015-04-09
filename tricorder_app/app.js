@@ -61,6 +61,7 @@ app.configure = function () {
     app.get(util.urls.get_service_routes, routesIndex.get_service_routes);
     app.get(util.urls.api_stop, routesIndex.apiStop);
     app.get(util.urls.api_vehicle, routesIndex.apiVehicle);
+    app.get(util.urls.about, routesIndex.about);
 
     // catch 404 and forward to error handler
     app.use(function(req, res, next) {

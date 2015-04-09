@@ -23,7 +23,8 @@ module.exports.urls = {
     get_service_timetable_for_stop: "/get-service-timetable-for-stop",
     get_service_routes: "/get-service-routes",
     api_stop: '/api/stop/',
-    api_vehicle: '/api/vehicle/'
+    api_vehicle: '/api/vehicle/',
+    about: '/about'
 };
 
 module.exports.raise404 = function(next) {
