@@ -575,7 +575,8 @@ var StatisticsChartHandler = function () {
         busContainer: $(".bus-container"),
         currentStopId: window.location.pathname.slice(-8),
         statsButton: $(".stats-button"),
-        busStatsModal: $("#bus-stats-modal")
+        busStatsModal: $("#bus-stats-modal"),
+        busStatsModalTitle: $("#bus-stats-modal-title")
     };
     function init() {
         bindUIActions();
@@ -585,13 +586,14 @@ var StatisticsChartHandler = function () {
             event.stopPropagation();
             config.busStatsModal.modal();
             var bus_id_chart_raw = $(this).parents(".bus-container").find('.title').text();
-            var tmp = bus_id_chart_raw.substring(5, 8);
-            var bus_id_chart = tmp.replace(' ', '');
+            var tmp = bus_id_chart_raw.substring(5, 8); //get the id of the bus
+            var bus_id_chart = tmp.replace(' ', ''); // remove any extra whitespaces
+            config.busStatsModalTitle.text("Bus statistics for bus #" + bus_id_chart); //add title for the chart popup window
             busChartGenerator(bus_id_chart);
         });
     }
-    function busChartGenerator(bus_id_chart) {
-        $.ajax({
+    function busChartGenerator(bus_id_chart) { //create a Highcharts chart
+        $.ajax({ //ajax call to get the data for a specific bus
             url: "/api/vehicle/" + "?id=" + bus_id_chart + "&period=" + "daily",
             type: "GET",
             dataType: "json",
@@ -602,7 +604,7 @@ var StatisticsChartHandler = function () {
                         width: 868
                     },
                     title: {
-                        text: 'Bus statistics for bus #' + bus_id_chart
+                        text: ''
                     },
                     xAxis: {
                         type: 'category',
