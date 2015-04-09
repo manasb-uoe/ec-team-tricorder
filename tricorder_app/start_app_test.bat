@@ -1,0 +1,1 @@
+start nodemon bin\www test -e js,html,css

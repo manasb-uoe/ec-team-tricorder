@@ -1,0 +1,1 @@
+start mongod --dbpath C:\Users\Manas\Documents\Workspaces\Node_WS\ec-team-tricorder\tricorder_app\data

@@ -1,0 +1,1 @@
+start nodemon -e js,html,css

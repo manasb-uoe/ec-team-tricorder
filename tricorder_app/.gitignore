@@ -6,12 +6,5 @@ node_modules
 *.log
 *.gz
 
-# widnows script for starting mongodb and connecting to it
-start_mongodb.bat
-
-# windows script for starting app
-start_app.bat
-start_app_test.bat
-
 # mongodb
 data
