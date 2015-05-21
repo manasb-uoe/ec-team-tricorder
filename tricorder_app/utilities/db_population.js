@@ -18,14 +18,19 @@ var LiveLocation = require("../models/live_location").LiveLocation;
 var VehicleStat = require("../models/vehicle_stats").VehicleStat;
 var StopStat = require("../models/stop_stats").StopStat;
 
-var API_BASE_URL = "https://tfe-opendata.com/api/v1";
+var options = {
+    host: "tfe-opendata.com",
+    path: "",
+    headers: {"Authorization": "Token " + "0c627af5849e23b0b030bc7352550884"}
+} 
 
 function populateStops(callbackA) {
     console.log("Populating Stops...");
 
     Stop.remove(function (err) {
         if (!err) {
-            https.get(API_BASE_URL + "/stops", function(res) {
+            options.path = "/api/v1/stops";
+            https.get(options, function(res) {
                 var body = "";
 
                 res.on('data', function (chunk) {
@@ -76,7 +81,8 @@ function populateServices(callbackA) {
 
     Service.remove(function (err) {
         if (!err) {
-            https.get(API_BASE_URL + "/services", function(res) {
+            options.path = "/api/v1/services";
+            https.get(options, function(res) {
                 var body = "";
                 res.on('data', function(chunk){
                     body += chunk;
@@ -134,7 +140,8 @@ function populateTimetables(callbackA) {
                                 stops,
                                 function (stop, callbackB) {
                                     //console.log('each');
-                                    https.get(API_BASE_URL + "/timetables/" + stop.stop_id, function (res) {
+                                    options.path = "/api/v1/timetables/" + stop.stop_id
+                                    https.get(options, function (res) {
                                         var body = '';
                                         res.on('data', function (chunk) {
                                             body += chunk;
@@ -222,7 +229,8 @@ function populateServiceStatuses(callbackA) {
 
     ServiceStatus.remove(function (err) {
         if (!err) {
-            https.get(API_BASE_URL + "/status", function(res){
+            options.path = "/api/v1/status";
+            https.get(options, function(res){
                 var body = '';
                 res.on('data', function(chunk){
                     body += chunk;
@@ -258,7 +266,8 @@ function populateLiveLocations(callbackA) {
 
     LiveLocation.remove(function (err) {
         if (!err) {
-            https.get(API_BASE_URL + "/vehicle_locations", function(res){
+            options.path = "/api/v1/vehicle_locations";
+            https.get(options, function(res){
                 var body = '';
                 res.on('data', function(chunk) {
                     body += chunk;
@@ -464,7 +473,8 @@ function updateStats() {
                     LiveLocation.remove({}, function (err) {
 
                         if (!err) {
-                            https.get(API_BASE_URL + "/vehicle_locations", function (res) {
+                            options.path = "/api/v1/vehicle_locations";
+                            https.get(options, function (res) {
 
                                 var body = '';
 
